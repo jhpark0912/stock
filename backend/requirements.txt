@@ -1,0 +1,19 @@
+# FastAPI Core
+fastapi==0.109.0
+uvicorn==0.27.0
+
+# Stock Data
+yfinance==0.2.36
+requests==2.31.0
+
+# Translation
+deep-translator==1.11.4
+
+# AI Analysis
+google-generativeai==0.3.2
+
+# CORS & Middleware
+python-multipart==0.0.6
+
+# Environment Variables
+python-dotenv==1.0.0
