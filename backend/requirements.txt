@@ -3,14 +3,16 @@ fastapi==0.109.0
 uvicorn==0.27.0
 
 # Stock Data
-yfinance==0.2.36
+yahooquery==2.4.1
 requests==2.31.0
+numpy==2.1.0
+pandas==2.2.3
 
 # Translation
 deep-translator==1.11.4
 
 # AI Analysis
-google-generativeai==0.3.2
+google-genai==1.60.0
 
 # CORS & Middleware
 python-multipart==0.0.6
