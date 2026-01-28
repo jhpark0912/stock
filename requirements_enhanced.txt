@@ -1,0 +1,15 @@
+# 기존 의존성
+yfinance
+rich
+deep-translator
+
+# 🆕 기술적 지표 계산
+pandas
+numpy
+
+# 🆕 Gemini API 통합
+google-generativeai
+python-dotenv
+
+# 선택: 고급 기술적 분석 (ta 라이브러리 사용 시)
+# ta

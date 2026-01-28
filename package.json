@@ -1,0 +1,25 @@
+{
+  "name": "stock-api",
+  "version": "1.0.0",
+  "description": "n8n용 주식 정보 조회 모듈 (JavaScript)",
+  "main": "stock_api.js",
+  "scripts": {
+    "test": "node stock_api.js AAPL --pretty"
+  },
+  "keywords": [
+    "stock",
+    "finance",
+    "yfinance",
+    "n8n",
+    "yahoo-finance"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "yahoo-finance2": "^2.11.3",
+    "@vitalets/google-translate-api": "^9.2.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
