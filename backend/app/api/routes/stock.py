@@ -75,26 +75,39 @@ async def get_stock_news(
         print(f"Unhandled error in get_stock_news: {e}")
         raise HTTPException(status_code=500, detail=f"서버 내부 오류: {str(e)}")
 
-@router.get("/stock/{ticker}/analysis", response_model=AnalysisResponse)
+@router.post("/stock/{ticker}/analysis", response_model=AnalysisResponse)
 async def get_stock_analysis(
-    ticker: str
+    ticker: str,
+    stock_data: StockData
 ) -> AnalysisResponse:
     """
     Gemini AI를 이용한 종합 주식 분석
 
+    ⚠️ 이 엔드포인트는 POST 메서드를 사용합니다.
+    프론트엔드에서 이미 조회한 주식 데이터를 전송하여
+    Yahoo Finance API 중복 호출을 방지합니다.
+
     Args:
         ticker: 주식 티커 심볼 (예: AAPL, TSLA, GOOGL)
+        stock_data: 이미 조회된 주식 데이터 (기술적 지표 포함 권장)
 
     Returns:
         AnalysisResponse: AI 분석 보고서 또는 에러 정보
+
+    Example:
+        POST /api/stock/AAPL/analysis
+        Body: { "ticker": "AAPL", "timestamp": "2024-01-01T00:00:00", ... }
     """
     try:
-        # 1. 기술적 지표를 포함한 전체 주식 데이터 가져오기
-        stock_data = stock_service.get_stock_data(ticker, include_technical=True)
+        # 티커 일치 여부 확인
+        if stock_data.ticker.upper() != ticker.upper():
+            raise ValueError(
+                f"URL의 티커({ticker})와 요청 본문의 티커({stock_data.ticker})가 일치하지 않습니다."
+            )
 
-        # 2. Gemini AI로 분석
+        # Gemini AI로 분석 (전달받은 데이터 사용, Yahoo API 재호출 없음)
         analysis_result = stock_service.get_comprehensive_analysis(stock_data)
-        
+
         return AnalysisResponse(
             success=True,
             data=analysis_result,

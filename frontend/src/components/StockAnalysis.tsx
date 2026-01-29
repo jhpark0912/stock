@@ -1,32 +1,34 @@
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { AIAnalysis } from '../types/stock';
+import { AlertCircle } from 'lucide-react';
 
 interface StockAnalysisProps {
   analysis: AIAnalysis | null;
-  error: string | null;
+  error?: string | null;
 }
 
 const StockAnalysis = ({ analysis, error }: StockAnalysisProps) => {
   if (error) {
     return (
-      <div className="w-full max-w-4xl p-6 mt-6 bg-red-50 rounded-lg shadow-md">
-        <h2 className="text-2xl font-bold text-red-800 mb-4">AI 분석 오류</h2>
-        <p className="text-red-600">{error}</p>
+      <div className="flex items-center gap-2 text-red-600">
+        <AlertCircle className="w-4 h-4" />
+        <p className="text-sm">{error}</p>
       </div>
     );
   }
 
   if (!analysis) {
-    return null; // 분석 결과가 없으면 아무것도 렌더링하지 않음
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <p className="text-sm">AI 분석을 생성 중입니다...</p>
+      </div>
+    );
   }
 
   return (
-    <div className="w-full max-w-4xl p-6 mt-6 bg-gray-50 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Gemini AI 종합 분석</h2>
-      <div className="prose prose-lg max-w-none">
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{analysis.report}</ReactMarkdown>
-      </div>
+    <div className="prose prose-sm max-w-none text-gray-700">
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>{analysis.report}</ReactMarkdown>
     </div>
   );
 };

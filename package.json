@@ -16,10 +16,21 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "yahoo-finance2": "^2.11.3",
-    "@vitalets/google-translate-api": "^9.2.0"
+    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-tabs": "^1.1.13",
+    "@vitalets/google-translate-api": "^9.2.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.4.0",
+    "tailwindcss-animate": "^1.0.7",
+    "yahoo-finance2": "^2.11.3"
   },
   "engines": {
     "node": ">=14.0.0"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17"
   }
 }
