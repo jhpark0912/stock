@@ -5,6 +5,7 @@ from yahooquery import Ticker
 from datetime import datetime, timedelta
 from deep_translator import GoogleTranslator
 from typing import Dict, Tuple, List
+import pandas as pd
 from app.models.stock import (
     StockData, PriceInfo, FinancialsInfo, CompanyInfo, TechnicalIndicators,
     SMAInfo, EMAInfo, RSIInfo, MACDInfo, BollingerBandsInfo,
@@ -13,7 +14,7 @@ from app.models.stock import (
 import google.generativeai as genai
 from app.config import settings
 from app.services.mock_data import get_mock_stock_data
-from app.services.technical_indicators import calculate_all_indicators
+from app.services.technical_indicators import calculate_all_indicators, calculate_chart_data
 
 
 class StockService:
@@ -25,13 +26,14 @@ class StockService:
         self._cache: Dict[str, Tuple[StockData, datetime]] = {}
         self._cache_ttl = timedelta(minutes=5)  # 5분 캐시
 
-    def get_stock_data(self, ticker_symbol: str, include_technical: bool = False) -> StockData:
+    def get_stock_data(self, ticker_symbol: str, include_technical: bool = False, include_chart: bool = False) -> StockData:
         """
         주식 실시간 데이터 조회 (캐싱 적용)
 
         Args:
             ticker_symbol: 주식 티커 심볼 (예: AAPL, TSLA)
             include_technical: 기술적 지표 포함 여부 (기본값: False)
+            include_chart: 차트 데이터 포함 여부 (기본값: False)
 
         Returns:
             StockData 객체
@@ -150,6 +152,16 @@ class StockService:
                 except Exception as e:
                     print(f"⚠️ 기술적 지표 계산 중 오류: {e}")
 
+            # 차트 데이터 조회 (옵션)
+            chart_data_list = None
+            if include_chart:
+                try:
+                    print(f"📈 차트 데이터 조회 시작: {ticker_upper}")
+                    chart_data_list = self.get_chart_data(ticker_upper, period="1y")
+                    print(f"✅ 차트 데이터 조회 완료: {ticker_upper} ({len(chart_data_list)}개 데이터 포인트)")
+                except Exception as e:
+                    print(f"⚠️ 차트 데이터 조회 중 오류: {e}")
+
             # StockData 생성
             stock_data = StockData(
                 ticker=ticker_upper,
@@ -159,6 +171,7 @@ class StockService:
                 financials=financials,
                 company=company,
                 technical_indicators=technical_indicators,
+                chart_data=chart_data_list,
             )
 
             # 캐시 저장
@@ -178,6 +191,60 @@ class StockService:
                 )
 
             raise ValueError(f"주식 데이터 조회 실패: {error_msg}")
+
+    def get_chart_data(self, ticker_symbol: str, period: str = "2y") -> List[Dict]:
+        """
+        차트용 시계열 데이터 조회 (기술적 지표 포함)
+
+        Args:
+            ticker_symbol: 주식 티커 심볼
+            period: 조회 기간 (예: "1y", "2y", "max")
+
+        Returns:
+            차트 데이터 리스트
+        """
+        ticker_upper = ticker_symbol.upper()
+        try:
+            print(f"📈 차트 데이터 API 호출: {ticker_upper} (기간: {period})")
+            
+            ticker = Ticker(ticker_upper)
+            print(f"🔍 [DEBUG] Ticker 객체 생성 완료")
+            
+            history_df = ticker.history(period=period)
+            print(f"🔍 [DEBUG] history() 호출 완료. DataFrame shape: {history_df.shape}")
+            print(f"🔍 [DEBUG] history_df.index type: {type(history_df.index)}")
+            print(f"🔍 [DEBUG] history_df.columns: {history_df.columns.tolist()}")
+
+            if history_df.empty:
+                raise ValueError(f"'{ticker_upper}'에 대한 과거 데이터를 찾을 수 없습니다.")
+
+            # 멀티인덱스 DataFrame인 경우 인덱스 리셋
+            if isinstance(history_df.index, pd.MultiIndex):
+                print(f"🔍 [DEBUG] MultiIndex 감지. 인덱스 리셋 중...")
+                history_df = history_df.reset_index(level='symbol', drop=True)
+                print(f"🔍 [DEBUG] 인덱스 리셋 완료. 새 index type: {type(history_df.index)}")
+            
+            print(f"🔍 [DEBUG] calculate_chart_data 호출 전")
+            chart_data = calculate_chart_data(history_df)
+            print(f"✅ 차트 데이터 계산 완료: {ticker_upper} ({len(chart_data)}개 데이터 포인트)")
+
+            return chart_data
+
+        except Exception as e:
+            import traceback
+            error_msg = str(e)
+            print(f"❌ [ERROR] get_chart_data에서 예외 발생!")
+            print(f"❌ [ERROR] 예외 타입: {type(e).__name__}")
+            print(f"❌ [ERROR] 예외 메시지: {error_msg}")
+            print("❌ [ERROR] 상세 트레이스백:")
+            traceback.print_exc()
+            
+            if "429" in error_msg or "Too Many Requests" in error_msg:
+                raise ValueError(
+                    f"Yahoo Finance API 요청 제한 초과. "
+                    f"잠시 후 다시 시도하거나 다른 티커를 조회해주세요."
+                )
+            raise ValueError(f"차트 데이터 조회 실패: {error_msg}")
 
     def get_news(self, ticker_symbol: str) -> List[NewsItem]:
         """

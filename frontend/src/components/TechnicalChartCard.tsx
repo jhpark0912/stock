@@ -167,7 +167,7 @@ export default function TechnicalChartCard({ data, compact = false }: TechnicalC
           <CardDescription>주요 기술적 지표 요약</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <MovingAveragesIndicator data={{ sma: data.sma, ema: data.ema }} />
             <RsiIndicator rsi={data.rsi} />
             <MacdIndicator macd={data.macd} />

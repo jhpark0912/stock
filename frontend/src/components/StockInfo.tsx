@@ -93,13 +93,20 @@ export const FinancialMetricsCard = ({ data, className }: { data: StockData, cla
   return (
     <div className={`bg-white rounded-lg border p-4 ${className}`}>
       <h3 className="text-base font-semibold text-gray-700 mb-3">주요 재무 지표</h3>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-        <MetricItem label="PER" value={data.financials.trailing_pe} />
+      <div className="grid grid-cols-4 gap-3">
+        <MetricItem label="PER (현재)" value={data.financials.trailing_pe} />
+        <MetricItem label="PER (미래)" value={data.financials.forward_pe} />
         <MetricItem label="PBR" value={data.financials.pbr} />
         <MetricItem label="ROE" value={data.financials.roe} format="percent" />
         <MetricItem label="영업이익률" value={data.financials.opm} format="percent" />
-        <MetricItem label="부채비율" value={data.financials.debt_to_equity} />
-        <MetricItem label="유동비율" value={data.financials.current_ratio} />
+        <MetricItem label="PEG 비율" value={data.financials.peg} />
+        <MetricItem label="부채비율" value={data.financials.debt_to_equity} format="percent" />
+        <MetricItem label="유동비율" value={data.financials.current_ratio} format="percent" />
+        <MetricItem label="당좌비율" value={data.financials.quick_ratio} format="percent" />
+        <MetricItem label="배당수익률" value={data.financials.dividend_yield} format="percent" />
+        <MetricItem label="배당성향" value={data.financials.payout_ratio} format="percent" />
+        <MetricItem label="매출 성장률" value={data.financials.revenue_growth} format="percent" />
+        <MetricItem label="이익 성장률" value={data.financials.earnings_growth} format="percent" />
       </div>
     </div>
   );

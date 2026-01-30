@@ -1,6 +1,7 @@
 """
 주식 데이터 모델
 """
+from __future__ import annotations
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
 from datetime import datetime
@@ -111,6 +112,7 @@ class StockData(BaseModel):
     financials: FinancialsInfo
     company: CompanyInfo
     technical_indicators: Optional[TechnicalIndicators] = None
+    chart_data: Optional[list[ChartDataPoint]] = None  # 차트 데이터 추가
     news: Optional[list[NewsItem]] = None
     ai_analysis: Optional[AIAnalysis] = None
 
@@ -150,3 +152,26 @@ class AnalysisResponse(BaseModel):
     data: Optional[AIAnalysis] = None
     error: Optional[str] = None
 
+
+class ChartDataPoint(BaseModel):
+    """차트의 단일 데이터 포인트"""
+    date: str
+    close: Optional[float] = None
+    volume: Optional[int] = None
+    sma20: Optional[float] = None
+    sma50: Optional[float] = None
+    sma200: Optional[float] = None
+    rsi: Optional[float] = None
+    macd: Optional[float] = None
+    macd_signal: Optional[float] = None
+    macd_hist: Optional[float] = None
+    bb_upper: Optional[float] = None
+    bb_middle: Optional[float] = None
+    bb_lower: Optional[float] = None
+
+
+class ChartResponse(BaseModel):
+    """차트 데이터 API 응답 모델"""
+    success: bool
+    data: Optional[list[ChartDataPoint]] = None
+    error: Optional[str] = None

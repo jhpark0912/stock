@@ -20,9 +20,9 @@ function App() {
     setAiAnalysis(null);
 
     try {
-      // 1. 주식 데이터 조회
+      // 1. 주식 데이터 조회 (차트 데이터 포함)
       const stockResponse = await api.get<ApiResponse<StockData>>(
-        `/api/stock/${tickerSymbol}?include_technical=true`
+        `/api/stock/${tickerSymbol}?include_technical=true&include_chart=true`
       );
 
       if (stockResponse.data.success && stockResponse.data.data) {

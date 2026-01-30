@@ -80,9 +80,26 @@ export interface StockData {
   financials: StockFinancials;
   company: StockCompany;
   technical_indicators?: TechnicalIndicators | null;
+  chart_data?: ChartDataPoint[] | null;
   news?: NewsItem[] | null;
 }
 
 export interface AIAnalysis {
   report: string;
+}
+
+export interface ChartDataPoint {
+  date: string;
+  close: number | null;
+  volume: number | null;
+  sma20: number | null;
+  sma50: number | null;
+  sma200: number | null;
+  rsi: number | null;
+  macd: number | null;
+  macd_signal: number | null;
+  macd_hist: number | null;
+  bb_upper: number | null;
+  bb_middle: number | null;
+  bb_lower: number | null;
 }

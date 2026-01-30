@@ -5,15 +5,9 @@ import TechnicalChartCard from '@/components/TechnicalChartCard';
 import StockAnalysis from '@/components/StockAnalysis';
 import StockNews from '@/components/StockNews';
 import { CompanyInfoCard, PriceCard, FinancialMetricsCard } from '@/components/StockInfo';
+import DataCharts from '@/components/DataCharts'; // 차트 컴포넌트 임포트
 import type { StockData, NewsItem, AIAnalysis } from '@/types/stock';
 
-interface StockDashboardProps {
-  data: StockData | null;
-  newsData: NewsItem[] | null;
-  aiAnalysis: AIAnalysis | null;
-  onSearch: (ticker: string) => void;
-  isLoading?: boolean;
-}
 
 export default function StockDashboard({
   data,
@@ -23,6 +17,7 @@ export default function StockDashboard({
   isLoading = false,
 }: StockDashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');
+
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +40,6 @@ export default function StockDashboard({
         <main className="flex-1 flex items-center justify-center px-4">
           <div className="w-full max-w-xl text-center">
             <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-800 mb-2">종목을 검색하세요</h2>
             <p className="text-gray-500 mb-6">티커 심볼을 입력하여 분석을 시작하세요</p>
 
             <form onSubmit={handleSearch} className="flex gap-2">
@@ -124,7 +118,7 @@ export default function StockDashboard({
             {/* Row 2: 주요 재무 지표 */}
             <FinancialMetricsCard data={data} />
 
-            {/* Row 3: AI 분석 (전체 너비, 강조) */}
+            {/* Row 3: AI 분석 */}
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200 p-6 shadow-md">
               <div className="flex items-center gap-2 mb-4">
                 <Sparkles className="h-5 w-5 text-blue-600" />
@@ -133,11 +127,16 @@ export default function StockDashboard({
               <StockAnalysis analysis={aiAnalysis} error={null} />
             </div>
 
-            {/* Row 4: 기술적 지표 + 뉴스 (컴팩트) */}
+            {/* Row 4: 기술적 지표 + 뉴스 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <TechnicalChartCard data={data.technical_indicators} compact />
               <StockNews news={newsData?.slice(0, 5) || []} compact />
             </div>
+
+            {/* Row 5: 데이터 차트 */}
+            {data.chart_data && data.chart_data.length > 0 && (
+                <DataCharts chartData={data.chart_data} ticker={data.ticker} />
+            )}
           </div>
         )}
       </main>
