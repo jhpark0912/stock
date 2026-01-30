@@ -1,5 +1,7 @@
 import type { StockData } from '../types/stock';
 import { Building2, TrendingUp, TrendingDown } from 'lucide-react';
+import PurchasePriceInput from './PurchasePriceInput';
+import ProfitDisplay from './ProfitDisplay';
 
 // --- Helper Functions & Components ---
 
@@ -60,12 +62,35 @@ export const CompanyInfoCard = ({ data, className }: { data: StockData, classNam
   );
 };
 
-export const PriceCard = ({ data, className }: { data: StockData, className?: string }) => {
+export const PriceCard = ({ 
+  data, 
+  className,
+  ticker,
+  purchasePrice,
+  onUpdatePurchasePrice,
+}: { 
+  data: StockData;
+  className?: string;
+  ticker?: string;
+  purchasePrice?: number | null;
+  onUpdatePurchasePrice?: (price: number | null) => void;
+}) => {
   const priceChange = data.price.current - data.price.open;
   const priceChangePercent = data.price.open
     ? ((priceChange / data.price.open) * 100)
     : 0;
   const isPositive = priceChange > 0;
+
+  // 수익률 계산 (구매가가 있을 때만)
+  const profitInfo = purchasePrice !== null && purchasePrice !== undefined
+    ? {
+        purchasePrice,
+        currentPrice: data.price.current,
+        profitAmount: data.price.current - purchasePrice,
+        profitPercent: ((data.price.current - purchasePrice) / purchasePrice) * 100,
+        isProfit: data.price.current >= purchasePrice,
+      }
+    : null;
 
   return (
     <div className={`bg-white rounded-lg border p-4 h-full ${className}`}>
@@ -79,6 +104,29 @@ export const PriceCard = ({ data, className }: { data: StockData, className?: st
           {isPositive ? '+' : ''}{priceChange.toFixed(2)} ({isPositive ? '+' : ''}{priceChangePercent.toFixed(2)}%)
         </span>
       </div>
+
+      {/* 구매가 입력 */}
+      {ticker && onUpdatePurchasePrice && (
+        <>
+          <div className="mt-4 pt-4 border-t">
+            <PurchasePriceInput
+              ticker={ticker}
+              currentPrice={data.price.current}
+              purchasePrice={purchasePrice ?? null}
+              onUpdate={onUpdatePurchasePrice}
+            />
+          </div>
+
+          {/* 수익률 표시 (구매가가 있을 때만) */}
+          {profitInfo && (
+            <div className="mt-3">
+              <ProfitDisplay profitInfo={profitInfo} />
+            </div>
+          )}
+        </>
+      )}
+
+      {/* 시가총액 */}
       <div className="mt-4 pt-4 border-t">
         <div className="flex justify-between text-sm">
           <span className="text-gray-500">시가총액</span>
@@ -88,7 +136,6 @@ export const PriceCard = ({ data, className }: { data: StockData, className?: st
     </div>
   );
 };
-
 export const FinancialMetricsCard = ({ data, className }: { data: StockData, className?: string }) => {
   return (
     <div className={`bg-white rounded-lg border p-4 ${className}`}>

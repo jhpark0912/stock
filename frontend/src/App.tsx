@@ -1,16 +1,27 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import StockDashboard from './components/StockDashboard';
 import { api } from './lib/api';
 import type { ApiResponse } from './lib/api';
 import type { StockData, NewsItem, AIAnalysis } from './types/stock';
+import type { UserSettings, SectionVisibility } from './types/user';
+import { loadSettings, saveSettings } from './utils/storage';
 
 function App() {
+  // 주식 데이터 상태
   const [stockData, setStockData] = useState<StockData | null>(null);
   const [newsData, setNewsData] = useState<NewsItem[] | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // 사용자 설정 상태 (localStorage에서 로드)
+  const [userSettings, setUserSettings] = useState<UserSettings>(() => loadSettings());
+
+  // userSettings 변경 시 localStorage에 자동 저장
+  useEffect(() => {
+    saveSettings(userSettings);
+  }, [userSettings]);
 
   const fetchStockData = async (tickerSymbol: string) => {
     setIsLoading(true);
@@ -62,12 +73,95 @@ function App() {
     }
   };
 
+  /**
+   * 티커 추가
+   */
+  const handleAddTicker = (symbol: string) => {
+    // 중복 체크
+    if (userSettings.tickers.some(t => t.symbol === symbol)) {
+      alert(`${symbol}은 이미 추가된 종목입니다.`);
+      return;
+    }
+
+    // 티커 추가
+    setUserSettings(prev => ({
+      ...prev,
+      tickers: [
+        ...prev.tickers,
+        {
+          symbol,
+          purchasePrice: null,
+          addedAt: new Date().toISOString(),
+        },
+      ],
+    }));
+  };
+
+  /**
+   * 티커 삭제
+   */
+  const handleRemoveTicker = (symbol: string) => {
+    setUserSettings(prev => ({
+      ...prev,
+      tickers: prev.tickers.filter(t => t.symbol !== symbol),
+      // 삭제한 티커가 선택된 티커라면 선택 해제
+      selectedTicker: prev.selectedTicker === symbol ? null : prev.selectedTicker,
+    }));
+  };
+
+  /**
+   * 티커 선택 (조회)
+   */
+  const handleSelectTicker = (symbol: string) => {
+    // 선택된 티커 업데이트
+    setUserSettings(prev => ({
+      ...prev,
+      selectedTicker: symbol,
+    }));
+
+    // 주식 데이터 조회
+    fetchStockData(symbol);
+  };
+
+  /**
+   * 구매가 업데이트
+   */
+  const handleUpdatePurchasePrice = (symbol: string, price: number | null) => {
+    setUserSettings(prev => ({
+      ...prev,
+      tickers: prev.tickers.map(t =>
+        t.symbol === symbol
+          ? { ...t, purchasePrice: price }
+          : t
+      ),
+    }));
+  };
+
+  /**
+   * 섹션 토글
+   */
+  const handleToggleSection = (sectionKey: keyof SectionVisibility) => {
+    setUserSettings(prev => ({
+      ...prev,
+      sectionVisibility: {
+        ...prev.sectionVisibility,
+        [sectionKey]: !prev.sectionVisibility[sectionKey],
+      },
+    }));
+  };
+
   return (
     <StockDashboard
       data={stockData}
       newsData={newsData}
       aiAnalysis={aiAnalysis}
+      userSettings={userSettings}
       onSearch={fetchStockData}
+      onAddTicker={handleAddTicker}
+      onRemoveTicker={handleRemoveTicker}
+      onSelectTicker={handleSelectTicker}
+      onUpdatePurchasePrice={handleUpdatePurchasePrice}
+      onToggleSection={handleToggleSection}
       isLoading={isLoading}
     />
   );
