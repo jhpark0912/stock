@@ -45,14 +45,12 @@ class StockService:
 
         # Mock 데이터 모드 (429 에러 회피)
         if settings.use_mock_data:
-            print(f"🎭 Mock 데이터 사용: {ticker_upper}")
             return get_mock_stock_data(ticker_upper)
 
         # 캐시 확인
         if ticker_upper in self._cache:
             cached_data, cached_time = self._cache[ticker_upper]
             if datetime.now() - cached_time < self._cache_ttl:
-                print(f"✅ 캐시에서 반환: {ticker_upper}")
                 return cached_data
             else:
                 # 캐시 만료
@@ -60,7 +58,6 @@ class StockService:
 
         # 새로운 데이터 조회
         try:
-            print(f"🔄 API 호출: {ticker_upper}")
 
             # yahooquery Ticker 생성
             ticker = Ticker(ticker_upper)
@@ -127,7 +124,6 @@ class StockService:
             technical_indicators = None
             if include_technical:
                 try:
-                    print(f"📊 기술적 지표 계산 시작: {ticker_upper}")
                     # 과거 1년 데이터 조회
                     history_df = ticker.history(period='1y')
 
@@ -144,23 +140,16 @@ class StockService:
                                 macd=MACDInfo(**indicators_result['macd']),
                                 bollinger_bands=BollingerBandsInfo(**indicators_result['bollinger_bands'])
                             )
-                            print(f"✅ 기술적 지표 계산 완료: {ticker_upper}")
-                        else:
-                            print(f"⚠️ 기술적 지표 계산 실패: {indicators_result['error']}")
-                    else:
-                        print(f"⚠️ 과거 데이터 없음: {ticker_upper}")
                 except Exception as e:
-                    print(f"⚠️ 기술적 지표 계산 중 오류: {e}")
+                    pass
 
             # 차트 데이터 조회 (옵션)
             chart_data_list = None
             if include_chart:
                 try:
-                    print(f"📈 차트 데이터 조회 시작: {ticker_upper}")
                     chart_data_list = self.get_chart_data(ticker_upper, period="1y")
-                    print(f"✅ 차트 데이터 조회 완료: {ticker_upper} ({len(chart_data_list)}개 데이터 포인트)")
                 except Exception as e:
-                    print(f"⚠️ 차트 데이터 조회 중 오류: {e}")
+                    pass
 
             # StockData 생성
             stock_data = StockData(
@@ -176,7 +165,6 @@ class StockService:
 
             # 캐시 저장
             self._cache[ticker_upper] = (stock_data, datetime.now())
-            print(f"💾 캐시에 저장: {ticker_upper}")
 
             return stock_data
 
@@ -205,39 +193,22 @@ class StockService:
         """
         ticker_upper = ticker_symbol.upper()
         try:
-            print(f"📈 차트 데이터 API 호출: {ticker_upper} (기간: {period})")
-            
             ticker = Ticker(ticker_upper)
-            print(f"🔍 [DEBUG] Ticker 객체 생성 완료")
-            
             history_df = ticker.history(period=period)
-            print(f"🔍 [DEBUG] history() 호출 완료. DataFrame shape: {history_df.shape}")
-            print(f"🔍 [DEBUG] history_df.index type: {type(history_df.index)}")
-            print(f"🔍 [DEBUG] history_df.columns: {history_df.columns.tolist()}")
 
             if history_df.empty:
                 raise ValueError(f"'{ticker_upper}'에 대한 과거 데이터를 찾을 수 없습니다.")
 
             # 멀티인덱스 DataFrame인 경우 인덱스 리셋
             if isinstance(history_df.index, pd.MultiIndex):
-                print(f"🔍 [DEBUG] MultiIndex 감지. 인덱스 리셋 중...")
                 history_df = history_df.reset_index(level='symbol', drop=True)
-                print(f"🔍 [DEBUG] 인덱스 리셋 완료. 새 index type: {type(history_df.index)}")
-            
-            print(f"🔍 [DEBUG] calculate_chart_data 호출 전")
+
             chart_data = calculate_chart_data(history_df)
-            print(f"✅ 차트 데이터 계산 완료: {ticker_upper} ({len(chart_data)}개 데이터 포인트)")
 
             return chart_data
 
         except Exception as e:
-            import traceback
             error_msg = str(e)
-            print(f"❌ [ERROR] get_chart_data에서 예외 발생!")
-            print(f"❌ [ERROR] 예외 타입: {type(e).__name__}")
-            print(f"❌ [ERROR] 예외 메시지: {error_msg}")
-            print("❌ [ERROR] 상세 트레이스백:")
-            traceback.print_exc()
             
             if "429" in error_msg or "Too Many Requests" in error_msg:
                 raise ValueError(
@@ -259,17 +230,14 @@ class StockService:
         ticker_upper = ticker_symbol.upper()
 
         if settings.use_mock_data:
-            print(f"🎭 Mock 뉴스 데이터 사용: {ticker_upper}")
             # TODO: Add mock news data
             return []
 
         try:
-            print(f"🔄 뉴스 API 호출: {ticker_upper}")
             ticker = Ticker(ticker_upper)
             news_items_raw = ticker.news(count=10)
 
             if not news_items_raw or isinstance(news_items_raw, str):
-                print(f"⚠️  '{ticker_upper}'에 대한 뉴스를 찾을 수 없거나 API 오류가 발생했습니다.")
                 return []
 
             news_list = []
@@ -293,7 +261,6 @@ class StockService:
             return news_list
 
         except Exception as e:
-            print(f"⚠️ 뉴스 데이터 조회 중 오류 발생: {e}")
             return []
             
     @staticmethod
@@ -315,7 +282,6 @@ class StockService:
             translated = translator.translate(text)
             return translated
         except Exception as e:
-            print(f"번역 실패: {e}")
             return text  # 번역 실패 시 원본 반환
 
     def get_comprehensive_analysis(self, stock_data: StockData) -> AIAnalysis:
@@ -363,5 +329,4 @@ class StockService:
             return AIAnalysis(report=response.text)
 
         except Exception as e:
-            print(f"Gemini 분석 실패: {e}")
             raise ValueError(f"Gemini AI 분석 중 오류 발생: {e}")

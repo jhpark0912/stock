@@ -52,8 +52,6 @@ async def get_stock(
             raise HTTPException(status_code=429, detail=str(e))
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        # 상세 오류 로깅 (실제 운영 환경에서는 로거 사용)
-        print(f"Unhandled error in get_stock: {e}")
         raise HTTPException(status_code=500, detail=f"서버 내부 오류: {str(e)}")
 
 @router.get("/stock/{ticker}/news", response_model=NewsResponse)
@@ -82,7 +80,6 @@ async def get_stock_news(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        print(f"Unhandled error in get_stock_news: {e}")
         raise HTTPException(status_code=500, detail=f"서버 내부 오류: {str(e)}")
 
 
@@ -113,7 +110,6 @@ async def get_chart_data(
             raise HTTPException(status_code=429, detail=str(e))
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        print(f"Unhandled error in get_chart_data: {e}")
         raise HTTPException(status_code=500, detail=f"서버 내부 오류: {str(e)}")
 
 
@@ -162,5 +158,4 @@ async def get_stock_analysis(
             raise HTTPException(status_code=429, detail=str(e))
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        print(f"Unhandled error in get_stock_analysis: {e}")
         raise HTTPException(status_code=500, detail=f"서버 내부 오류: {str(e)}")

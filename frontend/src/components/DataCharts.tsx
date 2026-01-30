@@ -1,5 +1,5 @@
 // frontend/src/components/DataCharts.tsx
-import { AreaChart, Area, BarChart, Bar, LineChart, Line, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { AreaChart, Area, BarChart, Bar, LineChart, Line, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ChartDataPoint } from '@/types/stock';
 import { useMemo } from 'react';
@@ -13,16 +13,21 @@ interface DataChartsProps {
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
-    const data = payload[0].payload;
     return (
       <div className="p-2 text-xs bg-background/90 border rounded-lg shadow-lg">
         <p className="font-bold">{label}</p>
         <div className="mt-1 space-y-0.5">
-          {payload.map((p: any) => (
-            <p key={p.name} style={{ color: p.color }}>
-              {`${p.name}: ${p.value?.toFixed(2) ?? 'N/A'}`}
-            </p>
-          ))}
+          {payload.map((p: any) => {
+            // 숫자가 아닌 값은 건너뛰기
+            if (typeof p.value !== 'number' || p.value === null || p.value === undefined) {
+              return null;
+            }
+            return (
+              <p key={p.name} style={{ color: p.color }}>
+                {`${p.name}: ${p.value.toFixed(2)}`}
+              </p>
+            );
+          })}
         </div>
       </div>
     );
@@ -86,27 +91,28 @@ const RsiChart = ({ data }: { data: ChartDataPoint[] }) => (
             <Tooltip content={<CustomTooltip />} />
             <Legend iconSize={10} wrapperStyle={{fontSize: "12px"}}/>
             <Area type="monotone" dataKey="rsi" name="RSI" stroke="#8884d8" fill="#8884d8" fillOpacity={0.3} />
-            <Line type="monotone" dataKey={() => 70} stroke="#ff7300" strokeDasharray="5 5" dot={false} />
-            <Line type="monotone" dataKey={() => 30} stroke="#387908" strokeDasharray="5 5" dot={false} />
+            <ReferenceLine y={70} stroke="#ff7300" strokeDasharray="5 5" label={{ value: '과매수', position: 'right', fontSize: 10 }} />
+            <ReferenceLine y={30} stroke="#387908" strokeDasharray="5 5" label={{ value: '과매도', position: 'right', fontSize: 10 }} />
         </AreaChart>
     </ResponsiveContainer>
 );
 
 const MacdChart = ({ data }: { data: ChartDataPoint[] }) => (
-    <ResponsiveContainer width="100%" height={200}>
+    <ResponsiveContainer width="100%" height={300}>
         <ComposedChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--muted) / 0.5)" />
             <XAxis dataKey="date" tick={{ fontSize: 12 }} tickLine={false} axisLine={false} />
             <YAxis tick={{ fontSize: 12 }} />
             <Tooltip content={<CustomTooltip />} />
             <Legend iconSize={10} wrapperStyle={{fontSize: "12px"}}/>
-            <Bar dataKey="macd_hist" name="히스토그램" barSize={5}>
+            <Bar dataKey="macd_hist" name="히스토그램 (MACD-Signal)" barSize={8}>
                 {data.map((entry, index) => (
-                    <Bar key={`cell-${index}`} fill={entry.macd_hist && entry.macd_hist > 0 ? '#82ca9d' : '#ef5350'} />
+                    <Cell key={`cell-${index}`} fill={entry.macd_hist && entry.macd_hist > 0 ? '#82ca9d' : '#ef5350'} />
                 ))}
             </Bar>
-            <Line type="monotone" dataKey="macd" name="MACD" stroke="#8884d8" dot={false} />
-            <Line type="monotone" dataKey="macd_signal" name="시그널" stroke="#ff7300" dot={false} />
+            <Line type="monotone" dataKey="macd" name="MACD" stroke="#8884d8" dot={false} strokeWidth={2} />
+            <Line type="monotone" dataKey="macd_signal" name="시그널" stroke="#ff7300" dot={false} strokeWidth={2} />
+            <ReferenceLine y={0} stroke="hsl(var(--muted-foreground))" strokeDasharray="3 3" />
         </ComposedChart>
     </ResponsiveContainer>
 );
@@ -153,7 +159,9 @@ export default function DataCharts({ chartData, ticker }: DataChartsProps) {
             <Card>
                 <CardHeader className="pb-3">
                     <CardTitle className="text-base">MACD (이동평균 수렴확산)</CardTitle>
-                    <CardDescription className="text-xs">단기 및 장기 추세의 관계</CardDescription>
+                    <CardDescription className="text-xs">
+                        히스토그램: MACD와 Signal의 차이 (녹색: 매수 신호 / 빨강: 매도 신호)
+                    </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <MacdChart data={chartData} />
