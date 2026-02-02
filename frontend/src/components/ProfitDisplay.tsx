@@ -8,7 +8,6 @@ import type { ProfitInfo } from '@/types/user';
 import {
   formatCurrency,
   formatPercent,
-  formatProfitInfo,
   formatSimplePercent,
 } from '@/utils/profit';
 

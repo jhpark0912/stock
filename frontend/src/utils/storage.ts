@@ -3,7 +3,8 @@
  * 사용자 설정을 브라우저에 영구 저장
  */
 
-import { UserSettings, DEFAULT_USER_SETTINGS } from '../types/user';
+import type { UserSettings } from '../types/user';
+import { DEFAULT_USER_SETTINGS } from '../types/user';
 
 /** localStorage 키 */
 const STORAGE_KEY = 'stock_app_user_settings';

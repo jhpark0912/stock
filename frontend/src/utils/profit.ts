@@ -2,7 +2,7 @@
  * 수익률 계산 유틸리티
  */
 
-import { ProfitInfo } from '../types/user';
+import type { ProfitInfo } from '../types/user';
 
 /**
  * 구매가와 현재가를 기반으로 수익률 계산

@@ -19,7 +19,6 @@ interface PurchasePriceInputProps {
 }
 
 export default function PurchasePriceInput({
-  ticker,
   currentPrice,
   purchasePrice,
   onUpdate,

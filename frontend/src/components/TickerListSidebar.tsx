@@ -5,9 +5,9 @@
 
 import React, { useState } from 'react';
 import { Plus, X, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { UserTicker, ProfitInfo } from '../types/user';
+import type { UserTicker, ProfitInfo } from '../types/user';
 import { calculateProfit, formatSimplePercent } from '../utils/profit';
-import { StockData } from '../types/stock';
+import type { StockData } from '../types/stock';
 
 interface TickerListSidebarProps {
   /** 사용자 티커 목록 */

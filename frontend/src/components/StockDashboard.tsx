@@ -50,7 +50,6 @@ export default function StockDashboard({
   onRemoveTicker,
   onSelectTicker,
   onUpdatePurchasePrice,
-  onToggleSection,
   isLoading = false,
 }: StockDashboardProps) {
   const [searchQuery, setSearchQuery] = useState('');

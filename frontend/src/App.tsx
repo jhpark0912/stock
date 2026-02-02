@@ -12,7 +12,7 @@ function App() {
   const [stockData, setStockData] = useState<StockData | null>(null);
   const [newsData, setNewsData] = useState<NewsItem[] | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // 사용자 설정 상태 (localStorage에서 로드)

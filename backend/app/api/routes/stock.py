@@ -1,6 +1,7 @@
 """
 주식 데이터 API 엔드포인트
 """
+import logging
 from fastapi import APIRouter, HTTPException, Query
 from app.models.stock import (
     StockResponse, StockData, NewsResponse, NewsItem, 
@@ -8,8 +9,12 @@ from app.models.stock import (
 )
 from app.services.stock_service import StockService
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter()
 stock_service = StockService()
+
+logger.info("📌 Stock 라우터 초기화 완료")
 
 
 @router.get("/stock/{ticker}", response_model=StockResponse)
@@ -35,6 +40,7 @@ async def get_stock(
         - GET /api/stock/AAPL?include_technical=true&include_chart=true
         - GET /api/stock/TSLA
     """
+    logger.info(f"📈 주식 데이터 조회: GET /stock/{ticker}")
     try:
         stock_data = stock_service.get_stock_data(
             ticker,
@@ -70,6 +76,7 @@ async def get_stock_news(
     Examples:
         - GET /api/stock/AAPL/news
     """
+    logger.info(f"📰 뉴스 조회: GET /stock/{ticker}/news")
     try:
         news_data = stock_service.get_news(ticker)
         return NewsResponse(
@@ -136,26 +143,37 @@ async def get_stock_analysis(
         POST /api/stock/AAPL/analysis
         Body: { "ticker": "AAPL", "timestamp": "2024-01-01T00:00:00", ... }
     """
+    logger.info(f"💡 분석 요청 수신: POST /stock/{ticker}/analysis")
+    logger.info(f"   📊 데이터 티커: {stock_data.ticker}")
+    
     try:
         # 티커 일치 여부 확인
         if stock_data.ticker.upper() != ticker.upper():
+            logger.error(f"   ❌ 티커 불일치: URL={ticker}, Body={stock_data.ticker}")
             raise ValueError(
                 f"URL의 티커({ticker})와 요청 본문의 티커({stock_data.ticker})가 일치하지 않습니다."
             )
 
+        logger.info(f"   ✅ 티커 일치 확인 완료")
+        logger.info(f"   🤖 Gemini AI 분석 시작...")
+        
         # Gemini AI로 분석 (전달받은 데이터 사용, Yahoo API 재호출 없음)
         analysis_result = stock_service.get_comprehensive_analysis(stock_data)
 
+        logger.info(f"   ✅ Gemini AI 분석 완료")
+        
         return AnalysisResponse(
             success=True,
             data=analysis_result,
             error=None
         )
     except ValueError as e:
+        logger.error(f"   ❌ ValueError: {str(e)}")
         if "API 키가 설정되지 않았습니다" in str(e):
              raise HTTPException(status_code=500, detail=str(e))
         if "429" in str(e) or "요청 제한 초과" in str(e):
             raise HTTPException(status_code=429, detail=str(e))
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
+        logger.error(f"   ❌ Exception: {str(e)}")
         raise HTTPException(status_code=500, detail=f"서버 내부 오류: {str(e)}")

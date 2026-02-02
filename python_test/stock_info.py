@@ -61,7 +61,7 @@ except ImportError:
     print("⚠️  technical_indicators.py를 찾을 수 없습니다. 기술적 지표 기능이 비활성화됩니다.")
 
 try:
-    from gemini_analyzer import GeminiAnalyzer
+    from python_test.gemini_analyzer import GeminiAnalyzer
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False

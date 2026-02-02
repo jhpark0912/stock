@@ -1,5 +1,5 @@
 // frontend/src/components/DataCharts.tsx
-import { AreaChart, Area, BarChart, Bar, LineChart, Line, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Cell } from 'recharts';
+import { AreaChart, Area, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, ReferenceLine, Cell, Line, Bar } from 'recharts';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { ChartDataPoint } from '@/types/stock';
 import { useMemo } from 'react';

@@ -12,7 +12,7 @@ pandas==2.2.3
 deep-translator==1.11.4
 
 # AI Analysis
-google-genai==1.60.0
+google-generativeai==0.8.3
 
 # CORS & Middleware
 python-multipart==0.0.6
