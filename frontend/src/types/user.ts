@@ -1,19 +1,19 @@
 /**
  * 사용자 관련 타입 정의
- * localStorage에 저장될 사용자 설정 및 티커 정보
+ * localStorage에 저장될 사용자 설정 및 매물 정보
  */
 
 /**
- * 사용자가 추가한 티커 정보
+ * 사용자가 등록한 매물 정보
  */
 export interface UserTicker {
-  /** 티커 심볼 (예: AAPL, TSLA) */
+  /** 매물 심볼 (예: AAPL, TSLA) */
   symbol: string;
-  /** 구매가 (null이면 미입력) */
+  /** 매입가 (null이면 미입력) */
   purchasePrice: number | null;
-  /** 구매 날짜 (선택 사항) */
+  /** 매입 날짜 (선택 사항) */
   purchaseDate?: string;
-  /** 티커가 추가된 시간 */
+  /** 매물이 등록된 시간 */
   addedAt: string;
 }
 
@@ -39,25 +39,25 @@ export interface SectionVisibility {
  * 사용자 설정 (localStorage 저장용)
  */
 export interface UserSettings {
-  /** 사용자가 추가한 티커 목록 */
+  /** 사용자가 등록한 매물 목록 */
   tickers: UserTicker[];
   /** 각 섹션의 표시/숨김 상태 */
   sectionVisibility: SectionVisibility;
-  /** 현재 선택된 티커 (null이면 미선택) */
+  /** 현재 선택된 매물 (null이면 미선택) */
   selectedTicker: string | null;
 }
 
 /**
- * 수익률 계산 결과
+ * 수익 계산 결과
  */
 export interface ProfitInfo {
-  /** 구매가 */
+  /** 매입가 */
   purchasePrice: number;
-  /** 현재가 */
+  /** 현재 시세 */
   currentPrice: number;
-  /** 수익 금액 (현재가 - 구매가) */
+  /** 수익 금액 (현재 시세 - 매입가) */
   profitAmount: number;
-  /** 수익률 (%) */
+  /** 수익 (%) */
   profitPercent: number;
   /** 수익 여부 (true: 수익, false: 손실) */
   isProfit: boolean;

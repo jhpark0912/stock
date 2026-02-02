@@ -84,7 +84,7 @@ const StockNews = ({ news, compact = false }: StockNewsProps) => {
             관련 뉴스
           </CardTitle>
           <CardDescription>
-            이 종목과 관련된 최신 뉴스 목록입니다.
+            이 카테고리와 관련된 최신 뉴스 목록입니다.
           </CardDescription>
         </CardHeader>
         <CardContent>

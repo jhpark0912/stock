@@ -33,7 +33,9 @@
       "Bash(wsl docker inspect:*)",
       "Bash(wsl sed:*)",
       "Bash(unzip:*)",
-      "mcp__plugin_serena_serena__get_symbols_overview"
+      "mcp__plugin_serena_serena__get_symbols_overview",
+      "Bash(docker inspect:*)",
+      "Bash(wsl grep:*)"
     ]
   }
 }

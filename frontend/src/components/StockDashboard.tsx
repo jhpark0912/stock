@@ -1,6 +1,6 @@
 /**
- * 주식 대시보드 메인 컴포넌트
- * Sidebar (티커 목록) + Main Content (주식 정보) 레이아웃
+ * 시장 대시보드 메인 컴포넌트
+ * Sidebar (매물 목록) + Main Content (시장 정보) 레이아웃
  */
 
 import { useState } from 'react';
@@ -16,7 +16,7 @@ import type { StockData, NewsItem, AIAnalysis } from '@/types/stock';
 import type { UserSettings, SectionVisibility } from '@/types/user';
 
 interface StockDashboardProps {
-  /** 주식 데이터 */
+  /** 시장 데이터 */
   data: StockData | null;
   /** 뉴스 데이터 */
   newsData: NewsItem[] | null;
@@ -26,13 +26,13 @@ interface StockDashboardProps {
   userSettings: UserSettings;
   /** 검색 핸들러 */
   onSearch: (ticker: string) => void;
-  /** 티커 추가 핸들러 */
+  /** 매물 등록 핸들러 */
   onAddTicker: (symbol: string) => void;
-  /** 티커 삭제 핸들러 */
+  /** 매물 제거 핸들러 */
   onRemoveTicker: (symbol: string) => void;
-  /** 티커 선택 핸들러 */
+  /** 매물 선택 핸들러 */
   onSelectTicker: (symbol: string) => void;
-  /** 구매가 업데이트 핸들러 */
+  /** 매입가 업데이트 핸들러 */
   onUpdatePurchasePrice: (symbol: string, price: number | null) => void;
   /** 섹션 토글 핸들러 */
   onToggleSection: (sectionKey: keyof SectionVisibility) => void;
@@ -65,7 +65,7 @@ export default function StockDashboard({
   if (!data && !isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
-        {/* Sidebar - 티커 목록 */}
+        {/* Sidebar - 매물 목록 */}
         <TickerListSidebar
           tickers={userSettings.tickers}
           selectedTicker={userSettings.selectedTicker}
@@ -80,7 +80,7 @@ export default function StockDashboard({
           <header className="bg-white border-b px-4 py-3">
             <div className="flex items-center gap-2">
               <BarChart3 className="h-6 w-6 text-blue-600" />
-              <span className="text-lg font-semibold">주식 분석</span>
+              <span className="text-lg font-semibold">시장 분석</span>
             </div>
           </header>
 
@@ -89,8 +89,8 @@ export default function StockDashboard({
               <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <p className="text-gray-500 mb-6">
                 {userSettings.tickers.length > 0
-                  ? '왼쪽에서 종목을 선택하거나 새로운 티커를 검색하세요'
-                  : '티커 심볼을 입력하여 분석을 시작하세요'}
+                  ? '왼쪽에서 카테고리를 선택하거나 새로운 매물을 조회하세요'
+                  : '매물 심볼을 입력하여 분석을 시작하세요'}
               </p>
 
               <form onSubmit={handleSearch} className="flex gap-2">
@@ -107,7 +107,7 @@ export default function StockDashboard({
                   disabled={isLoading || !searchQuery.trim()}
                   className="px-6 py-3"
                 >
-                  {isLoading ? '로딩 중...' : '검색'}
+                  {isLoading ? '로딩 중...' : '조회'}
                 </Button>
               </form>
             </div>
@@ -120,7 +120,7 @@ export default function StockDashboard({
   // Main Layout - Sidebar + Content
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar - 티커 목록 */}
+      {/* Sidebar - 매물 목록 */}
       <TickerListSidebar
         tickers={userSettings.tickers}
         selectedTicker={userSettings.selectedTicker}
@@ -137,13 +137,13 @@ export default function StockDashboard({
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <BarChart3 className="h-6 w-6 text-blue-600" />
-              <span className="text-lg font-semibold">주식 분석</span>
+              <span className="text-lg font-semibold">시장 분석</span>
             </div>
 
             <form onSubmit={handleSearch} className="flex gap-2 flex-1 max-w-md">
               <input
                 type="text"
-                placeholder="종목 검색..."
+                placeholder="카테고리 조회..."
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -154,7 +154,7 @@ export default function StockDashboard({
                 size="sm"
                 disabled={isLoading || !searchQuery.trim()}
               >
-                {isLoading ? '로딩 중...' : '검색'}
+                {isLoading ? '로딩 중...' : '조회'}
               </Button>
             </form>
           </div>

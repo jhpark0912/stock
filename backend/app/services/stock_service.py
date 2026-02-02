@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from deep_translator import GoogleTranslator
 from typing import Dict, Tuple, List
 import pandas as pd
+import asyncio
 from app.models.stock import (
     StockData, PriceInfo, FinancialsInfo, CompanyInfo, TechnicalIndicators,
     SMAInfo, EMAInfo, RSIInfo, MACDInfo, BollingerBandsInfo,
@@ -25,6 +26,15 @@ class StockService:
         # 캐시 저장소: {ticker: (data, timestamp)}
         self._cache: Dict[str, Tuple[StockData, datetime]] = {}
         self._cache_ttl = timedelta(minutes=5)  # 5분 캐시
+        
+        # Gemini 초기화 (한 번만)
+        self._gemini_initialized = False
+        if settings.gemini_api_key:
+            try:
+                genai.configure(api_key=settings.gemini_api_key)
+                self._gemini_initialized = True
+            except Exception:
+                pass  # 초기화 실패 시 사용 시점에 에러 발생  # 5분 캐시
 
     def get_stock_data(self, ticker_symbol: str, include_technical: bool = False, include_chart: bool = False) -> StockData:
         """
@@ -284,19 +294,36 @@ class StockService:
         except Exception as e:
             return text  # 번역 실패 시 원본 반환
 
-    def get_comprehensive_analysis(self, stock_data: StockData) -> AIAnalysis:
+    async def get_comprehensive_analysis(self, stock_data: StockData) -> AIAnalysis:
         """
         Gemini AI를 사용하여 종합 주식 분석 보고서 생성
+        
+        타임아웃: 없음 (완료될 때까지 대기)
         """
+        import logging
+        import traceback
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"[Gemini] 분석 시작: {stock_data.ticker}")
+        
         if not settings.gemini_api_key:
+            logger.error("[Gemini] API 키 없음")
             raise ValueError("Gemini API 키가 설정되지 않았습니다.")
 
         try:
-            genai.configure(api_key=settings.gemini_api_key)
+            # Gemini 초기화 확인
+            if not self._gemini_initialized:
+                logger.info("[Gemini] 초기화 시도...")
+                genai.configure(api_key=settings.gemini_api_key)
+                self._gemini_initialized = True
+                logger.info("[Gemini] 초기화 완료")
             
+            logger.info("[Gemini] 모델 생성 중...")
             model = genai.GenerativeModel('models/gemini-flash-latest')
+            logger.info("[Gemini] 모델 생성 완료")
 
             # 프롬프트에 필요한 데이터 포맷팅
+            logger.info("[Gemini] 프롬프트 생성 중...")
             price_data_str = f"현재가: {stock_data.price.current}, 시가총액: {stock_data.market_cap}"
             financial_data_str = ", ".join([f"{k}: {v}" for k, v in stock_data.financials.dict().items() if v is not None])
             tech_data_str = "N/A"
@@ -325,8 +352,45 @@ class StockService:
 ### [Output Format]
 반드시 한국어로 작성하고, 가독성을 위해 마크다운(Markdown) 형식을 사용해줘. 전문 용어를 사용하되 초보자도 이해할 수 있게 쉬운 비유를 곁들여줘.
 """
-            response = model.generate_content(prompt)
-            return AIAnalysis(report=response.text)
+            logger.info(f"[Gemini] 프롬프트 길이: {len(prompt)} 문자")
+            
+            # 블로킹 호출을 비동기로 감싸기
+            def _generate():
+                logger.info("[Gemini] API 호출 시작")
+                try:
+                    result = model.generate_content(prompt)
+                    logger.info("[Gemini] API 호출 성공")
+                    return result
+                except Exception as e:
+                    logger.error(f"[Gemini] API 호출 실패: {type(e).__name__}: {str(e)}")
+                    logger.error(f"[Gemini] Traceback: {traceback.format_exc()}")
+                    raise
+            
+            # 타임아웃 없이 완료될 때까지 대기
+            logger.info("[Gemini] asyncio.to_thread 시작 (타임아웃: 없음)")
+            try:
+                response = await asyncio.to_thread(_generate)
+                logger.info(f"[Gemini] 응답 받음, 길이: {len(response.text) if response.text else 0}")
+                return AIAnalysis(report=response.text)
+            except Exception as e:
+                logger.error(f"[Gemini] asyncio 에러: {type(e).__name__}: {str(e)}")
+                logger.error(f"[Gemini] Traceback: {traceback.format_exc()}")
+                raise
 
+        except ValueError as e:
+            # ValueError는 그대로 전파
+            logger.error(f"[Gemini] ValueError: {str(e)}")
+            raise
         except Exception as e:
-            raise ValueError(f"Gemini AI 분석 중 오류 발생: {e}")
+            error_msg = str(e)
+            logger.error(f"[Gemini] 예상치 못한 에러: {type(e).__name__}: {error_msg}")
+            logger.error(f"[Gemini] Full traceback: {traceback.format_exc()}")
+            
+            if "429" in error_msg or "quota" in error_msg.lower():
+                raise ValueError(f"Gemini API 요청 제한 초과: {error_msg}")
+            if "403" in error_msg or "permission" in error_msg.lower():
+                raise ValueError(f"Gemini API 권한 오류: API 키를 확인해주세요. {error_msg}")
+            if "401" in error_msg or "unauthorized" in error_msg.lower():
+                raise ValueError(f"Gemini API 인증 오류: API 키가 유효하지 않습니다. {error_msg}")
+            
+            raise ValueError(f"Gemini AI 분석 중 오류 발생: {error_msg}")

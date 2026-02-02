@@ -1087,7 +1087,8 @@ Important Notes
 - When checking implementations, be specific about what you're looking for to get accurate results
 
 
-### 디자인 방향
+### 은어 사용
 
-- 주식 분석 정보를 전달해 주지만, 주식 정보를 조회하는 티를 내지 않도록 하는 방향. 즉 몰래 봐도 괜찮도록
-- 너무 화려하지는 않고, 정보 전달에 목적, 정리가 잘되어있어야함.
+- 주식 -> 시장
+- 티커 -> 매물
+- 종목 -> 카테고리

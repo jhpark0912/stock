@@ -1,6 +1,6 @@
 /**
- * 구매가 입력 컴포넌트
- * 사용자가 종목별 구매가를 입력하고 수정할 수 있는 인라인 입력 필드
+ * 매입가 입력 컴포넌트
+ * 사용자가 카테고리별 매입가를 입력하고 수정할 수 있는 인라인 입력 필드
  */
 
 import { useState, useEffect } from 'react';
@@ -8,13 +8,13 @@ import { DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface PurchasePriceInputProps {
-  /** 티커 심볼 */
+  /** 매물 심볼 */
   ticker: string;
-  /** 현재가 */
+  /** 현재 시세 */
   currentPrice: number;
-  /** 현재 구매가 (null이면 미입력) */
+  /** 현재 매입가 (null이면 미입력) */
   purchasePrice: number | null;
-  /** 구매가 업데이트 콜백 */
+  /** 매입가 업데이트 콜백 */
   onUpdate: (price: number | null) => void;
 }
 
@@ -43,7 +43,7 @@ export default function PurchasePriceInput({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
 
-    // 빈 값 허용 (구매가 삭제)
+    // 빈 값 허용 (매입가 삭제)
     if (value === '') {
       setInputValue('');
       return;
@@ -63,7 +63,7 @@ export default function PurchasePriceInput({
   const handleBlur = () => {
     setIsFocused(false);
 
-    // 빈 값이면 null로 저장 (구매가 삭제)
+    // 빈 값이면 null로 저장 (매입가 삭제)
     if (inputValue.trim() === '') {
       onUpdate(null);
       setInputValue('');
@@ -99,7 +99,7 @@ export default function PurchasePriceInput({
   };
 
   /**
-   * "현재가로 설정" 버튼 클릭 핸들러
+   * "현재 시세로 설정" 버튼 클릭 핸들러
    */
   const handleSetCurrentPrice = () => {
     const roundedPrice = Math.round(currentPrice * 100) / 100;
@@ -118,7 +118,7 @@ export default function PurchasePriceInput({
           <input
             type="text"
             inputMode="decimal"
-            placeholder="구매가 입력"
+            placeholder="매입가 입력"
             className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             value={inputValue}
             onChange={handleInputChange}
@@ -128,7 +128,7 @@ export default function PurchasePriceInput({
           />
         </div>
 
-        {/* 현재가로 설정 버튼 */}
+        {/* 현재 시세로 설정 버튼 */}
         <Button
           type="button"
           variant="outline"
@@ -136,14 +136,14 @@ export default function PurchasePriceInput({
           onClick={handleSetCurrentPrice}
           className="text-xs whitespace-nowrap"
         >
-          현재가로 설정
+          현재 시세로 설정
         </Button>
       </div>
 
       {/* 힌트 텍스트 */}
       {!purchasePrice && (
         <p className="text-xs text-gray-400">
-          구매가를 입력하면 수익률을 확인할 수 있습니다
+          매입가를 입력하면 수익을 확인할 수 있습니다
         </p>
       )}
     </div>

@@ -158,7 +158,7 @@ async def get_stock_analysis(
         logger.info(f"   🤖 Gemini AI 분석 시작...")
         
         # Gemini AI로 분석 (전달받은 데이터 사용, Yahoo API 재호출 없음)
-        analysis_result = stock_service.get_comprehensive_analysis(stock_data)
+        analysis_result = await stock_service.get_comprehensive_analysis(stock_data)
 
         logger.info(f"   ✅ Gemini AI 분석 완료")
         

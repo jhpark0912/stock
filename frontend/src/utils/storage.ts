@@ -47,7 +47,7 @@ export const saveSettings = (settings: UserSettings): void => {
   } catch (error) {
     if (error instanceof DOMException && error.name === 'QuotaExceededError') {
       console.error('[Storage] 저장 공간이 부족합니다. 일부 데이터를 삭제해주세요.');
-      alert('저장 공간이 부족합니다. 일부 티커를 삭제해주세요.');
+      alert('저장 공간이 부족합니다. 일부 매물을 제거해주세요.');
     } else {
       console.error('[Storage] Failed to save settings:', error);
     }

@@ -1,6 +1,6 @@
 /**
- * 티커 목록 사이드바 컴포넌트
- * 사용자가 추가한 티커 목록을 표시하고 관리
+ * 매물 목록 사이드바 컴포넌트
+ * 사용자가 등록한 매물 목록을 표시하고 관리
  */
 
 import React, { useState } from 'react';
@@ -10,17 +10,17 @@ import { calculateProfit, formatSimplePercent } from '../utils/profit';
 import type { StockData } from '../types/stock';
 
 interface TickerListSidebarProps {
-  /** 사용자 티커 목록 */
+  /** 사용자 매물 목록 */
   tickers: UserTicker[];
-  /** 현재 선택된 티커 */
+  /** 현재 선택된 매물 */
   selectedTicker: string | null;
-  /** 현재 조회 중인 주식 데이터 (수익률 계산용) */
+  /** 현재 조회 중인 시장 데이터 (수익 계산용) */
   stockData: StockData | null;
-  /** 티커 추가 핸들러 */
+  /** 매물 등록 핸들러 */
   onAddTicker: (symbol: string) => void;
-  /** 티커 삭제 핸들러 */
+  /** 매물 제거 핸들러 */
   onRemoveTicker: (symbol: string) => void;
-  /** 티커 선택 핸들러 (조회) */
+  /** 매물 선택 핸들러 (조회) */
   onSelectTicker: (symbol: string) => void;
 }
 
@@ -35,7 +35,7 @@ export const TickerListSidebar: React.FC<TickerListSidebarProps> = ({
   const [inputValue, setInputValue] = useState('');
 
   /**
-   * 티커 추가 핸들러
+   * 매물 등록 핸들러
    */
   const handleAdd = () => {
     const trimmed = inputValue.trim().toUpperCase();
@@ -46,7 +46,7 @@ export const TickerListSidebar: React.FC<TickerListSidebarProps> = ({
   };
 
   /**
-   * Enter 키 입력 시 티커 추가
+   * Enter 키 입력 시 매물 등록
    */
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -55,18 +55,18 @@ export const TickerListSidebar: React.FC<TickerListSidebarProps> = ({
   };
 
   /**
-   * 티커의 수익률 계산 (있는 경우)
+   * 매물의 수익 계산 (있는 경우)
    */
   const getTickerProfit = (ticker: UserTicker): ProfitInfo | null => {
     // 구매가가 없으면 null
     if (ticker.purchasePrice === null) return null;
 
-    // 현재 선택된 티커이고, stockData가 있으면 수익률 계산
+    // 현재 선택된 매물이고, stockData가 있으면 수익 계산
     if (ticker.symbol === selectedTicker && stockData) {
       return calculateProfit(ticker.purchasePrice, stockData.price.current);
     }
 
-    // 선택되지 않은 티커는 수익률 계산 불가
+    // 선택되지 않은 매물은 수익 계산 불가
     return null;
   };
 
@@ -74,10 +74,10 @@ export const TickerListSidebar: React.FC<TickerListSidebarProps> = ({
     <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
       {/* 헤더 */}
       <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800">내 종목</h2>
+        <h2 className="text-lg font-semibold text-gray-800">내 카테고리</h2>
       </div>
 
-      {/* 티커 추가 입력 */}
+      {/* 매물 등록 입력 */}
       <div className="p-4 border-b border-gray-200">
         <div className="flex gap-2">
           <input
@@ -85,7 +85,7 @@ export const TickerListSidebar: React.FC<TickerListSidebarProps> = ({
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value.toUpperCase())}
             onKeyPress={handleKeyPress}
-            placeholder="티커 입력 (예: AAPL)"
+            placeholder="매물 입력 (예: AAPL)"
             className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             maxLength={10}
           />
@@ -93,19 +93,19 @@ export const TickerListSidebar: React.FC<TickerListSidebarProps> = ({
             onClick={handleAdd}
             disabled={!inputValue.trim()}
             className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-            title="티커 추가"
+            title="매물 등록"
           >
             <Plus className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      {/* 티커 목록 */}
+      {/* 매물 목록 */}
       <div className="flex-1 overflow-y-auto">
         {tickers.length === 0 ? (
           <div className="p-4 text-center text-gray-500 text-sm">
-            <p>추가된 종목이 없습니다</p>
-            <p className="mt-1 text-xs">위에서 티커를 추가해주세요</p>
+            <p>등록된 카테고리가 없습니다</p>
+            <p className="mt-1 text-xs">위에서 매물을 등록해주세요</p>
           </div>
         ) : (
           <ul className="divide-y divide-gray-100">
@@ -123,7 +123,7 @@ export const TickerListSidebar: React.FC<TickerListSidebarProps> = ({
                   onClick={() => onSelectTicker(ticker.symbol)}
                 >
                   <div className="flex items-center justify-between">
-                    {/* 티커 심볼 */}
+                    {/* 매물 심볼 */}
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <span className={`font-semibold ${isSelected ? 'text-blue-700' : 'text-gray-800'}`}>
@@ -151,7 +151,7 @@ export const TickerListSidebar: React.FC<TickerListSidebarProps> = ({
                       ) : ticker.purchasePrice === null ? (
                         <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
                           <Minus className="w-3 h-3" />
-                          <span>구매가 미입력</span>
+                          <span>매입가 미입력</span>
                         </div>
                       ) : null}
                     </div>
@@ -176,10 +176,10 @@ export const TickerListSidebar: React.FC<TickerListSidebarProps> = ({
         )}
       </div>
 
-      {/* 푸터 (티커 개수 표시) */}
+      {/* 푸터 (매물 개수 표시) */}
       {tickers.length > 0 && (
         <div className="p-3 border-t border-gray-200 text-xs text-gray-500 text-center">
-          {tickers.length}개 종목 추적 중
+          {tickers.length}개 카테고리 추적 중
         </div>
       )}
     </div>

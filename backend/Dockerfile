@@ -26,4 +26,6 @@ ENV PYTHONUNBUFFERED=1 \
     PORT=8000
 
 # Uvicorn으로 FastAPI 실행
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# --timeout-keep-alive: 연결 유지 타임아웃 (초) - 길게 설정
+# --timeout-graceful-shutdown: 우아한 종료 타임아웃 (초) - 길게 설정
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--timeout-keep-alive", "300", "--timeout-graceful-shutdown", "60"]

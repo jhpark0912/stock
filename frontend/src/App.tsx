@@ -8,7 +8,7 @@ import type { UserSettings, SectionVisibility } from './types/user';
 import { loadSettings, saveSettings } from './utils/storage';
 
 function App() {
-  // 주식 데이터 상태
+  // 시장 데이터 상태
   const [stockData, setStockData] = useState<StockData | null>(null);
   const [newsData, setNewsData] = useState<NewsItem[] | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null);
@@ -31,7 +31,7 @@ function App() {
     setAiAnalysis(null);
 
     try {
-      // 1. 주식 데이터 조회 (차트 데이터 포함)
+      // 1. 시장 데이터 조회 (차트 데이터 포함)
       const stockResponse = await api.get<ApiResponse<StockData>>(
         `/api/stock/${tickerSymbol}?include_technical=true&include_chart=true`
       );
@@ -74,16 +74,16 @@ function App() {
   };
 
   /**
-   * 티커 추가
+   * 매물 등록
    */
   const handleAddTicker = (symbol: string) => {
     // 중복 체크
     if (userSettings.tickers.some(t => t.symbol === symbol)) {
-      alert(`${symbol}은 이미 추가된 종목입니다.`);
+      alert(`${symbol}은 이미 등록된 카테고리입니다.`);
       return;
     }
 
-    // 티커 추가
+    // 매물 등록
     setUserSettings(prev => ({
       ...prev,
       tickers: [
@@ -98,28 +98,28 @@ function App() {
   };
 
   /**
-   * 티커 삭제
+   * 매물 제거
    */
   const handleRemoveTicker = (symbol: string) => {
     setUserSettings(prev => ({
       ...prev,
       tickers: prev.tickers.filter(t => t.symbol !== symbol),
-      // 삭제한 티커가 선택된 티커라면 선택 해제
+      // 제거한 매물이 선택된 매물이라면 선택 해제
       selectedTicker: prev.selectedTicker === symbol ? null : prev.selectedTicker,
     }));
   };
 
   /**
-   * 티커 선택 (조회)
+   * 매물 선택 (조회)
    */
   const handleSelectTicker = (symbol: string) => {
-    // 선택된 티커 업데이트
+    // 선택된 매물 업데이트
     setUserSettings(prev => ({
       ...prev,
       selectedTicker: symbol,
     }));
 
-    // 주식 데이터 조회
+    // 시장 데이터 조회
     fetchStockData(symbol);
   };
 

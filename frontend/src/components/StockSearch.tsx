@@ -25,7 +25,7 @@ export default function StockSearch({ onSearch, isLoading = false }: StockSearch
             type="text"
             value={ticker}
             onChange={(e) => setTicker(e.target.value)}
-            placeholder="종목 코드 입력 (예: AAPL, TSLA)"
+            placeholder="카테고리 코드 입력 (예: AAPL, TSLA)"
             className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
             disabled={isLoading}
           />
@@ -35,7 +35,7 @@ export default function StockSearch({ onSearch, isLoading = false }: StockSearch
           disabled={isLoading || !ticker.trim()}
           className="px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-sm"
         >
-          {isLoading ? '검색 중...' : '검색'}
+          {isLoading ? '조회 중...' : '조회'}
         </button>
       </div>
     </form>
