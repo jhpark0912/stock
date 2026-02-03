@@ -3,11 +3,13 @@
  * 사용자가 등록한 매물 목록을 표시하고 관리
  */
 
-import React, { useState } from 'react';
-import { Plus, X, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, X, TrendingUp, TrendingDown, Minus, Menu, ChevronLeft } from 'lucide-react';
 import type { UserTicker, ProfitInfo } from '../types/user';
 import { calculateProfit, formatSimplePercent } from '../utils/profit';
 import type { StockData } from '../types/stock';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface TickerListSidebarProps {
   /** 사용자 매물 목록 */
@@ -33,6 +35,15 @@ export const TickerListSidebar: React.FC<TickerListSidebarProps> = ({
   onSelectTicker,
 }) => {
   const [inputValue, setInputValue] = useState('');
+  const [isOpen, setIsOpen] = useState(() => {
+    const saved = localStorage.getItem('sidebarOpen');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  // localStorage에 상태 저장
+  useEffect(() => {
+    localStorage.setItem('sidebarOpen', JSON.stringify(isOpen));
+  }, [isOpen]);
 
   /**
    * 매물 등록 핸들러
@@ -71,73 +82,119 @@ export const TickerListSidebar: React.FC<TickerListSidebarProps> = ({
   };
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+    <div className={`bg-card border-r border-border flex flex-col h-full transition-all duration-300 ${
+      isOpen ? 'w-64' : 'w-16'
+    }`}>
       {/* 헤더 */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-800">내 카테고리</h2>
+      <div className="p-4 border-b border-border flex items-center justify-between">
+        {isOpen ? (
+          <>
+            <h2 className="text-lg font-semibold">내 카테고리</h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsOpen(false)}
+              className="h-8 w-8"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+          </>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsOpen(true)}
+            className="h-8 w-8 mx-auto"
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
-      {/* 매물 등록 입력 */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value.toUpperCase())}
-            onKeyPress={handleKeyPress}
-            placeholder="매물 입력 (예: AAPL)"
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            maxLength={10}
-          />
-          <button
-            onClick={handleAdd}
-            disabled={!inputValue.trim()}
-            className="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-            title="매물 등록"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
+      {/* 매물 등록 입력 (펼쳐진 상태만) */}
+      {isOpen && (
+        <div className="p-4 border-b border-border">
+          <div className="flex gap-2">
+            <Input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value.toUpperCase())}
+              onKeyPress={handleKeyPress}
+              placeholder="매물 입력"
+              maxLength={10}
+            />
+            <Button
+              onClick={handleAdd}
+              disabled={!inputValue.trim()}
+              size="icon"
+              aria-label="매물 등록"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 매물 목록 */}
       <div className="flex-1 overflow-y-auto">
         {tickers.length === 0 ? (
-          <div className="p-4 text-center text-gray-500 text-sm">
-            <p>등록된 카테고리가 없습니다</p>
-            <p className="mt-1 text-xs">위에서 매물을 등록해주세요</p>
-          </div>
+          isOpen ? (
+            <div className="p-4 text-center text-muted-foreground text-sm">
+              <p>등록된 카테고리가 없습니다</p>
+              <p className="mt-1 text-xs">위에서 매물을 등록해주세요</p>
+            </div>
+          ) : null
         ) : (
-          <ul className="divide-y divide-gray-100">
+          <ul className={isOpen ? "divide-y divide-border" : ""}>
             {tickers.map((ticker) => {
               const isSelected = ticker.symbol === selectedTicker;
               const profit = getTickerProfit(ticker);
 
+              // 접힌 상태 UI
+              if (!isOpen) {
+                return (
+                  <li
+                    key={ticker.symbol}
+                    className={`
+                      p-2 cursor-pointer transition-all text-center
+                      ${isSelected ? 'bg-primary/10 border-l-2 border-primary' : 'hover:bg-muted'}
+                    `}
+                    onClick={() => onSelectTicker(ticker.symbol)}
+                    title={ticker.symbol}
+                  >
+                    <span className={`text-sm font-semibold ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                      {ticker.symbol[0]}
+                    </span>
+                  </li>
+                );
+              }
+
+              // 펼쳐진 상태 UI
               return (
                 <li
                   key={ticker.symbol}
                   className={`
-                    group relative p-3 cursor-pointer transition-colors
-                    ${isSelected ? 'bg-blue-50 border-l-4 border-blue-500' : 'hover:bg-gray-50'}
+                    group relative p-3 cursor-pointer transition-all
+                    ${isSelected ? 'bg-primary/5 border-l-2 border-primary' : 'hover:bg-muted'}
                   `}
                   onClick={() => onSelectTicker(ticker.symbol)}
                 >
                   <div className="flex items-center justify-between">
                     {/* 매물 심볼 */}
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className={`font-semibold ${isSelected ? 'text-blue-700' : 'text-gray-800'}`}>
+                        <span className={`font-semibold ${isSelected ? 'text-primary' : 'text-foreground'}`}>
                           {ticker.symbol}
                         </span>
                         {isSelected && (
-                          <span className="text-xs text-blue-600">●</span>
+                          <span className="text-xs text-primary">●</span>
                         )}
                       </div>
 
                       {/* 수익률 표시 */}
                       {profit ? (
                         <div className={`text-sm mt-1 flex items-center gap-1 ${
-                          profit.isProfit ? 'text-green-600' : 'text-red-600'
+                          profit.isProfit ? 'text-success' : 'text-destructive'
                         }`}>
                           {profit.isProfit ? (
                             <TrendingUp className="w-3 h-3" />
@@ -149,7 +206,7 @@ export const TickerListSidebar: React.FC<TickerListSidebarProps> = ({
                           </span>
                         </div>
                       ) : ticker.purchasePrice === null ? (
-                        <div className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                        <div className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                           <Minus className="w-3 h-3" />
                           <span>매입가 미입력</span>
                         </div>
@@ -162,11 +219,11 @@ export const TickerListSidebar: React.FC<TickerListSidebarProps> = ({
                         e.stopPropagation();
                         onRemoveTicker(ticker.symbol);
                       }}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 rounded-md"
+                      className="opacity-0 group-hover:opacity-100 transition-all p-1 hover:bg-destructive/10 rounded-md active:scale-95"
                       title={`${ticker.symbol} 삭제`}
                       aria-label={`${ticker.symbol} 삭제`}
                     >
-                      <X className="w-4 h-4 text-red-600" />
+                      <X className="w-4 h-4 text-destructive" />
                     </button>
                   </div>
                 </li>
@@ -177,8 +234,8 @@ export const TickerListSidebar: React.FC<TickerListSidebarProps> = ({
       </div>
 
       {/* 푸터 (매물 개수 표시) */}
-      {tickers.length > 0 && (
-        <div className="p-3 border-t border-gray-200 text-xs text-gray-500 text-center">
+      {tickers.length > 0 && isOpen && (
+        <div className="p-3 border-t border-border text-xs text-muted-foreground text-center">
           {tickers.length}개 카테고리 추적 중
         </div>
       )}

@@ -35,7 +35,16 @@
       "Bash(unzip:*)",
       "mcp__plugin_serena_serena__get_symbols_overview",
       "Bash(docker inspect:*)",
-      "Bash(wsl grep:*)"
+      "Bash(wsl grep:*)",
+      "WebFetch(domain:yahooquery.dpguthrie.com)",
+      "WebSearch",
+      "Bash(npx shadcn@latest add dashboard-01)",
+      "Bash(npm run build)",
+      "Bash(npx shadcn@latest add card)",
+      "Bash(npx shadcn@latest add:*)",
+      "WebFetch(domain:ui.shadcn.com)",
+      "Bash(npm uninstall:*)",
+      "Bash(grep:*)"
     ]
   }
 }

@@ -25,8 +25,8 @@ export default function ProfitDisplay({
   const { isProfit, profitAmount, profitPercent } = profitInfo;
 
   // 색상 클래스
-  const colorClass = isProfit ? 'text-green-600' : 'text-red-600';
-  const bgClass = isProfit ? 'bg-green-50' : 'bg-red-50';
+  const colorClass = isProfit ? 'text-success' : 'text-destructive';
+  const bgClass = isProfit ? 'bg-success/10' : 'bg-destructive/10';
 
   // 아이콘
   const Icon = isProfit ? TrendingUp : TrendingDown;
@@ -45,10 +45,10 @@ export default function ProfitDisplay({
 
   // 일반 모드: 전체 정보 표시
   return (
-    <div className={`${bgClass} rounded-lg p-3 border ${isProfit ? 'border-green-200' : 'border-red-200'}`}>
+    <div className={`${bgClass} rounded-lg p-3 border ${isProfit ? 'border-success/30' : 'border-destructive/30'}`}>
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1">
-          <p className="text-xs text-gray-600 mb-1">수익률</p>
+          <p className="text-xs text-neutral-600 mb-1">수익률</p>
           <div className={`flex items-center gap-1 ${colorClass}`}>
             <Icon className="h-4 w-4" />
             <span className="text-lg font-bold">
@@ -61,7 +61,7 @@ export default function ProfitDisplay({
         </div>
 
         {/* 구매가 vs 현재가 비교 */}
-        <div className="text-right text-xs text-gray-500">
+        <div className="text-right text-xs text-neutral-500">
           <p>구매가: ${profitInfo.purchasePrice.toFixed(2)}</p>
           <p>현재가: ${profitInfo.currentPrice.toFixed(2)}</p>
         </div>

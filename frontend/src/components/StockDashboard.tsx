@@ -4,13 +4,17 @@
  */
 
 import { useState } from 'react';
-import { Search, BarChart3, Sparkles } from 'lucide-react';
+import { Search, BarChart3, Sparkles, LineChart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardHeader, CardDescription, CardTitle, CardContent } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { TickerListSidebar } from '@/components/TickerListSidebar';
 import TechnicalChartCard from '@/components/TechnicalChartCard';
 import StockAnalysis from '@/components/StockAnalysis';
 import StockNews from '@/components/StockNews';
-import { CompanyInfoCard, PriceCard, FinancialMetricsCard } from '@/components/StockInfo';
+import { CompanyInfoCard, PriceCard } from '@/components/StockInfo';
+import { FinancialMetricsCards } from '@/components/FinancialMetricsCards';
 import DataCharts from '@/components/DataCharts';
 import type { StockData, NewsItem, AIAnalysis } from '@/types/stock';
 import type { UserSettings, SectionVisibility } from '@/types/user';
@@ -64,7 +68,7 @@ export default function StockDashboard({
   // Empty State (데이터 없고 로딩 중이 아닐 때)
   if (!data && !isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
+      <div className="min-h-screen bg-background flex">
         {/* Sidebar - 매물 목록 */}
         <TickerListSidebar
           tickers={userSettings.tickers}
@@ -77,39 +81,121 @@ export default function StockDashboard({
 
         {/* Main Content - Empty State */}
         <div className="flex-1 flex flex-col">
-          <header className="bg-white border-b px-4 py-3">
+          <header className="bg-card shadow-sm px-4 py-3">
             <div className="flex items-center gap-2">
-              <BarChart3 className="h-6 w-6 text-blue-600" />
+              <BarChart3 className="h-6 w-6 text-primary" />
               <span className="text-lg font-semibold">시장 분석</span>
             </div>
           </header>
 
-          <main className="flex-1 flex items-center justify-center px-4">
-            <div className="w-full max-w-xl text-center">
-              <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 mb-6">
-                {userSettings.tickers.length > 0
-                  ? '왼쪽에서 카테고리를 선택하거나 새로운 매물을 조회하세요'
-                  : '매물 심볼을 입력하여 분석을 시작하세요'}
-              </p>
+          <main className="flex-1 overflow-y-auto px-4 py-8">
+            <div className="w-full max-w-6xl mx-auto">
+              {/* 검색 폼 */}
+              <div className="max-w-xl mx-auto text-center mb-12">
+                <Search className="h-12 w-12 text-neutral-400 mx-auto mb-4" />
+                <p className="text-neutral-500 mb-6">
+                  {userSettings.tickers.length > 0
+                    ? '왼쪽에서 카테고리를 선택하거나 새로운 매물을 조회하세요'
+                    : '매물 심볼을 입력하여 분석을 시작하세요'}
+                </p>
 
-              <form onSubmit={handleSearch} className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="예: AAPL, TSLA, GOOGL"
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  disabled={isLoading}
-                />
-                <Button
-                  type="submit"
-                  disabled={isLoading || !searchQuery.trim()}
-                  className="px-6 py-3"
-                >
-                  {isLoading ? '로딩 중...' : '조회'}
-                </Button>
-              </form>
+                <form onSubmit={handleSearch} className="space-y-4">
+                  <Input
+                    type="text"
+                    placeholder="예: AAPL, TSLA, GOOGL"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    disabled={isLoading}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={isLoading || !searchQuery.trim()}
+                    size="lg"
+                    className="w-full"
+                  >
+                    <Search className="mr-2 h-4 w-4" />
+                    {isLoading ? '로딩 중...' : '조회'}
+                  </Button>
+                </form>
+              </div>
+
+              {/* Dashboard 스타일 Card 샘플 */}
+              <div className="max-w-4xl mx-auto">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
+                    📊 Dashboard 스타일 Card 샘플
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    shadcn dashboard 구조 - Label + BigNumber + StatusText + Detail
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* 샘플 Card 1 */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Total Revenue</CardDescription>
+                      <CardTitle className="text-3xl font-bold">$1,250.00</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex items-center gap-1 text-sm font-medium">
+                        <span>Trending up this month</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Visitors for the last 6 months
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* 샘플 Card 2 */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Active Accounts</CardDescription>
+                      <CardTitle className="text-3xl font-bold">45,678</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex items-center gap-1 text-sm font-medium">
+                        <span>Strong user retention</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Engagement exceed targets
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* 샘플 Card 3 */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Growth Rate</CardDescription>
+                      <CardTitle className="text-3xl font-bold">4.5%</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex items-center gap-1 text-sm font-medium">
+                        <span>Steady performance increase</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Meets growth projections
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  {/* 샘플 Card 4 */}
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardDescription>Conversion Rate</CardDescription>
+                      <CardTitle className="text-3xl font-bold">12.3%</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0">
+                      <div className="flex items-center gap-1 text-sm font-medium">
+                        <span>Above industry average</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Optimized user experience
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
             </div>
           </main>
         </div>
@@ -119,7 +205,7 @@ export default function StockDashboard({
 
   // Main Layout - Sidebar + Content
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-background flex">
       {/* Sidebar - 매물 목록 */}
       <TickerListSidebar
         tickers={userSettings.tickers}
@@ -133,18 +219,17 @@ export default function StockDashboard({
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
         {/* Sticky Header */}
-        <header className="bg-white border-b px-4 py-3 sticky top-0 z-10">
+        <header className="bg-card shadow-sm px-4 py-3 sticky top-0 z-10">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <BarChart3 className="h-6 w-6 text-blue-600" />
+              <BarChart3 className="h-6 w-6 text-primary" />
               <span className="text-lg font-semibold">시장 분석</span>
             </div>
 
             <form onSubmit={handleSearch} className="flex gap-2 flex-1 max-w-md">
-              <input
+              <Input
                 type="text"
                 placeholder="카테고리 조회..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 disabled={isLoading}
@@ -154,7 +239,7 @@ export default function StockDashboard({
                 size="sm"
                 disabled={isLoading || !searchQuery.trim()}
               >
-                {isLoading ? '로딩 중...' : '조회'}
+                <Search className="h-4 w-4" />
               </Button>
             </form>
           </div>
@@ -165,50 +250,79 @@ export default function StockDashboard({
           {isLoading && (
             <div className="py-16">
               <div className="flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <p className="ml-4 text-gray-600">데이터를 불러오는 중...</p>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                <p className="ml-4 text-neutral-600">데이터를 불러오는 중...</p>
               </div>
             </div>
           )}
 
           {!isLoading && data && (
-            <div className="space-y-4 max-w-6xl mx-auto">
-              {/* Row 1: 회사 정보 + 현재가 */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                <CompanyInfoCard data={data} className="lg:col-span-2" />
-                <PriceCard 
-                  data={data}
-                  ticker={data.ticker}
-                  purchasePrice={
-                    userSettings.tickers.find(t => t.symbol === data.ticker)?.purchasePrice ?? null
-                  }
-                  onUpdatePurchasePrice={(price) => onUpdatePurchasePrice(data.ticker, price)}
-                />
-              </div>
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="mx-auto max-w-6xl">
+                <TabsTrigger value="overview" className="gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  개요
+                </TabsTrigger>
+                <TabsTrigger value="ai" className="gap-2">
+                  <Sparkles className="h-4 w-4" />
+                  AI 분석
+                </TabsTrigger>
+                <TabsTrigger value="chart" className="gap-2">
+                  <LineChart className="h-4 w-4" />
+                  차트
+                </TabsTrigger>
+              </TabsList>
 
-              {/* Row 2: 주요 재무 지표 */}
-              <FinancialMetricsCard data={data} />
+              {/* Tab 1: 개요 */}
+              <TabsContent value="overview" className="mt-6">
+                <div className="space-y-6 max-w-6xl mx-auto">
+                  {/* Row 1: 회사 정보 + 현재가 */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    <CompanyInfoCard data={data} className="lg:col-span-2" />
+                    <PriceCard
+                      data={data}
+                      ticker={data.ticker}
+                      purchasePrice={
+                        userSettings.tickers.find(t => t.symbol === data.ticker)?.purchasePrice ?? null
+                      }
+                      onUpdatePurchasePrice={(price) => onUpdatePurchasePrice(data.ticker, price)}
+                    />
+                  </div>
 
-              {/* Row 3: AI 분석 */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border-2 border-blue-200 p-6 shadow-md">
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="h-5 w-5 text-blue-600" />
-                  <h3 className="text-lg font-semibold text-gray-800">AI 투자 분석</h3>
+                  {/* Row 2: 주요 재무 지표 */}
+                  <FinancialMetricsCards data={data} />
+
+                  {/* Row 3: 뉴스 */}
+                  <StockNews news={newsData || []} />
                 </div>
-                <StockAnalysis analysis={aiAnalysis} error={null} />
-              </div>
+              </TabsContent>
 
-              {/* Row 4: 기술적 지표 + 뉴스 */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <TechnicalChartCard data={data.technical_indicators} compact />
-                <StockNews news={newsData?.slice(0, 5) || []} compact />
-              </div>
+              {/* Tab 2: AI 분석 */}
+              <TabsContent value="ai" className="mt-6">
+                <div className="max-w-6xl mx-auto">
+                  <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg p-8">
+                    <div className="flex items-center gap-3 mb-6">
+                      <Sparkles className="h-6 w-6 text-primary" />
+                      <h2 className="text-2xl font-bold">AI 투자 분석</h2>
+                    </div>
+                    <StockAnalysis analysis={aiAnalysis} error={null} />
+                  </div>
+                </div>
+              </TabsContent>
 
-              {/* Row 5: 데이터 차트 */}
-              {data.chart_data && data.chart_data.length > 0 && (
-                <DataCharts chartData={data.chart_data} ticker={data.ticker} />
-              )}
-            </div>
+              {/* Tab 3: 차트 */}
+              <TabsContent value="chart" className="mt-6">
+                <div className="space-y-6 max-w-6xl mx-auto">
+                  {/* 기술적 지표 */}
+                  <TechnicalChartCard data={data.technical_indicators} />
+
+                  {/* 데이터 차트 */}
+                  {data.chart_data && data.chart_data.length > 0 && (
+                    <DataCharts chartData={data.chart_data} ticker={data.ticker} />
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
           )}
         </main>
       </div>

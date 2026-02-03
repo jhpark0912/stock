@@ -4,52 +4,107 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
-  }
+    /* Background & Foreground */
+    --background: 0 0% 98%;
+    --foreground: 222 13% 16%;
 
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    /* Card */
+    --card: 0 0% 100%;
+    --card-foreground: 222 13% 16%;
+
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 13% 16%;
+
+    /* Primary - Teal (modern, trustworthy) */
+    --primary: 173 58% 39%;        /* #14B8A6 - Teal-500 */
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary - Sky Blue */
+    --secondary: 199 89% 48%;      /* #0EA5E9 - AI emphasis color */
+    --secondary-foreground: 0 0% 100%;
+
+    /* Muted */
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    /* Accent */
+    --accent: 240 5% 96%;
+    --accent-foreground: 222 13% 16%;
+
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Success */
+    --success: 142 71% 45%;        /* #22C55E - Green-500 (긍정 지표) */
+    --success-foreground: 0 0% 100%;
+
+    /* Warning */
+    --warning: 38 92% 50%;         /* #F59E0B - Amber-500 (주의) */
+    --warning-foreground: 0 0% 100%;
+
+    /* Info */
+    --info: 221 83% 53%;           /* #3B82F6 - Blue-500 (정보) */
+    --info-foreground: 0 0% 100%;
+
+    /* Border & Input */
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 173 58% 39%;           /* Primary Teal */
+
+    /* Radius */
+    --radius: 0.5rem;
   }
 
   body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+  }
+}
+
+@layer utilities {
+  /* Hover Effects */
+  .card-hover {
+    transition: all 0.2s;
+  }
+  .card-hover:hover {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    transform: translateY(-0.25rem);
+  }
+
+  .btn-hover {
+    transition: all 0.15s;
+  }
+  .btn-hover:hover {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+  .btn-hover:active {
+    transform: scale(0.95);
+  }
+
+  .list-item-hover {
+    transition: background-color 0.15s;
+  }
+  .list-item-hover:hover {
+    background-color: hsl(var(--muted));
+  }
+
+  /* Focus Ring */
+  .focus-ring {
+    outline: none;
+  }
+  .focus-ring:focus {
+    box-shadow: 0 0 0 2px hsl(var(--primary)), 0 0 0 4px hsl(var(--background));
+  }
+
+  /* Sparkline Bar (재무지표 시각화용) */
+  .sparkline-bar {
+    height: 100%;
+    background-color: hsl(var(--primary) / 0.2);
+    transition: background-color 0.2s;
+  }
+  .sparkline-bar:hover {
+    background-color: hsl(var(--primary) / 0.4);
   }
 }

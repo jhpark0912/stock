@@ -4,8 +4,9 @@
  */
 
 import { useState, useEffect } from 'react';
-import { DollarSign } from 'lucide-react';
+
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface PurchasePriceInputProps {
   /** 매물 심볼 */
@@ -111,22 +112,16 @@ export default function PurchasePriceInput({
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         {/* 입력 필드 */}
-        <div className="relative flex-1">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-            <DollarSign className="h-4 w-4" />
-          </div>
-          <input
-            type="text"
-            inputMode="decimal"
-            placeholder="매입가 입력"
-            className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            value={inputValue}
-            onChange={handleInputChange}
-            onFocus={() => setIsFocused(true)}
-            onBlur={handleBlur}
-            onKeyDown={handleKeyDown}
-          />
-        </div>
+        <Input
+          type="text"
+          inputMode="decimal"
+          placeholder="$0.00"
+          value={inputValue}
+          onChange={handleInputChange}
+          onFocus={() => setIsFocused(true)}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+        />
 
         {/* 현재 시세로 설정 버튼 */}
         <Button
@@ -134,16 +129,14 @@ export default function PurchasePriceInput({
           variant="outline"
           size="sm"
           onClick={handleSetCurrentPrice}
-          className="text-xs whitespace-nowrap"
         >
-          현재 시세로 설정
+          현재가
         </Button>
       </div>
 
-      {/* 힌트 텍스트 */}
       {!purchasePrice && (
-        <p className="text-xs text-gray-400">
-          매입가를 입력하면 수익을 확인할 수 있습니다
+        <p className="text-xs text-muted-foreground">
+          매입가를 입력하면 수익률이 표시됩니다
         </p>
       )}
     </div>

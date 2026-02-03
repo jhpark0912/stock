@@ -2,6 +2,24 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 디자인 시스템 (Design System)
+
+**필수 규칙**:
+- 모든 UI 작업 시 `docs/DESIGN_SYSTEM.md`를 참조할 것
+- 색상, 스페이싱, 타이포그래피는 디자인 시스템 정의를 따를 것
+- 임의로 색상이나 스타일을 변경하지 말 것
+
+**주요 원칙**:
+- Primary Color: Teal (#14B8A6) - Linear 앱 스타일의 현대적이고 깔끔한 디자인
+- 아이콘: Lucide React만 사용, 크기 제한 (h-4, h-5, h-6)
+- 애니메이션: GPU 가속 속성만 (transform, opacity), duration 200-300ms
+- 일관성: 같은 역할은 같은 스타일 유지
+- 스페이싱: 4의 배수 (4, 8, 12, 16, 24, 32...)
+
+**상세 문서**: `docs/DESIGN_SYSTEM.md` 참조
+
+---
+
 ## 프로젝트 개요
 
 주식 정보 조회 도구를 세 가지 버전으로 제공합니다:

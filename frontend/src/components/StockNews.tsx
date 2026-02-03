@@ -1,6 +1,6 @@
 import type { NewsItem } from '../types/stock';
 import { Newspaper, ExternalLink } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+
 
 // 날짜 포맷팅 함수
 const formatDate = (dateString: string | null) => {
@@ -27,9 +27,9 @@ const StockNews = ({ news, compact = false }: StockNewsProps) => {
   // Main content renderer
   const renderContent = () => {
     if (!news || news.length === 0) {
-      return <p className="text-sm text-gray-500">관련 뉴스가 없습니다.</p>;
+      return <p className="text-sm text-muted-foreground">관련 뉴스가 없습니다.</p>;
     }
-    
+
     return (
       <div className={compact ? "space-y-2" : "space-y-3"}>
         {news.map((item, index) => (
@@ -38,15 +38,15 @@ const StockNews = ({ news, compact = false }: StockNewsProps) => {
             href={item.link}
             target="_blank"
             rel="noopener noreferrer"
-            className={`block p-3 border rounded-lg hover:border-blue-300 hover:shadow-sm transition-all group ${compact ? 'bg-background/50' : ''}`}
+            className={`block p-3 border border-border rounded-lg hover:border-primary hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group ${compact ? 'bg-background/50' : ''}`}
           >
             <div className="flex items-start justify-between gap-2">
-              <h4 className={`text-sm font-medium text-gray-800 group-hover:text-blue-600 flex-1 ${compact ? 'line-clamp-2' : ''}`}>
+              <h4 className={`text-sm font-medium text-foreground group-hover:text-primary flex-1 ${compact ? 'line-clamp-2' : ''}`}>
                 {item.title}
               </h4>
-              <ExternalLink className="w-3 h-3 text-gray-400 flex-shrink-0 mt-0.5" />
+              <ExternalLink className="w-3 h-3 text-muted-foreground flex-shrink-0 mt-0.5" />
             </div>
-            <div className="text-xs text-gray-500 flex items-center gap-2 mt-1">
+            <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
               <span className="font-medium">{item.source || '출처 없음'}</span>
               <span>·</span>
               <span>{formatDate(item.published_at)}</span>
@@ -60,37 +60,27 @@ const StockNews = ({ news, compact = false }: StockNewsProps) => {
   // Compact version for the main dashboard
   if (compact) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Newspaper className="h-5 w-5 text-muted-foreground" />
-            관련 뉴스
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {renderContent()}
-        </CardContent>
-      </Card>
+      <div className="bg-card/50 rounded-2xl p-8">
+        <div className="flex items-center gap-3 mb-6">
+          <Newspaper className="h-6 w-6 text-primary" />
+          <h3 className="text-2xl font-bold">관련 뉴스</h3>
+        </div>
+        {renderContent()}
+      </div>
     );
   }
 
   // Full-size version (e.g., for a dedicated news page)
   return (
-    <div className="w-full max-w-6xl">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Newspaper className="h-5 w-5" />
-            관련 뉴스
-          </CardTitle>
-          <CardDescription>
-            이 카테고리와 관련된 최신 뉴스 목록입니다.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {renderContent()}
-        </CardContent>
-      </Card>
+    <div className="w-full max-w-6xl bg-card/50 rounded-2xl p-8">
+      <div className="flex items-center gap-3 mb-4">
+        <Newspaper className="h-6 w-6 text-primary" />
+        <div>
+          <h3 className="text-2xl font-bold">관련 뉴스</h3>
+          <p className="text-sm text-muted-foreground">이 카테고리와 관련된 최신 뉴스 목록입니다.</p>
+        </div>
+      </div>
+      {renderContent()}
     </div>
   );
 };
