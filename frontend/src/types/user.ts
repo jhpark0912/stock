@@ -11,10 +11,18 @@ export interface UserTicker {
   symbol: string;
   /** 매입가 (null이면 미입력) */
   purchasePrice: number | null;
+  /** 보유 수량 */
+  quantity: number | null;
   /** 매입 날짜 (선택 사항) */
   purchaseDate?: string;
   /** 매물이 등록된 시간 */
   addedAt: string;
+  /** 마지막으로 조회한 현재가 (null이면 미조회) */
+  lastPrice?: number | null;
+  /** 수익률 (%) */
+  profitPercent?: number | null;
+  /** 마지막 업데이트 시각 */
+  lastUpdated?: string | null;
 }
 
 /**
@@ -51,14 +59,22 @@ export interface UserSettings {
  * 수익 계산 결과
  */
 export interface ProfitInfo {
-  /** 매입가 */
+  /** 매입가 (주당) */
   purchasePrice: number;
-  /** 현재 시세 */
+  /** 현재 시세 (주당) */
   currentPrice: number;
-  /** 수익 금액 (현재 시세 - 매입가) */
-  profitAmount: number;
+  /** 보유 수량 */
+  quantity: number;
+  /** 수익 금액 (현재 시세 - 매입가) - 주당 */
+  profitAmountPerShare: number;
   /** 수익 (%) */
   profitPercent: number;
+  /** 총 매입금액 (매입가 × 수량) */
+  totalPurchaseAmount: number;
+  /** 총 평가금액 (현재가 × 수량) */
+  totalCurrentAmount: number;
+  /** 총 평가손익 (평가금액 - 매입금액) */
+  totalProfitAmount: number;
   /** 수익 여부 (true: 수익, false: 손실) */
   isProfit: boolean;
 }

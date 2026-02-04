@@ -17,3 +17,6 @@ google-generativeai==0.8.3
 
 # Environment Variables
 python-dotenv==1.0.0
+
+# Database
+sqlalchemy>=2.0.35

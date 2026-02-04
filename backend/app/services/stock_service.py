@@ -88,12 +88,33 @@ class StockService:
             profile = info.get('assetProfile', {})
             summary = info.get('summaryDetail', {})
 
-            # 가격 정보
+            # 가격 정보 - current와 close 조회
+            current_price = fin_data.get('currentPrice') or summary.get('regularMarketPrice')
+            close_price = summary.get('regularMarketPreviousClose') or summary.get('previousClose')
+            
+            # current가 없으면 history에서 가장 최근 종가 조회
+            if current_price is None:
+                try:
+                    history_df = ticker.history(period='5d')  # 최근 5일
+                    if history_df is not None and not history_df.empty:
+                        # 멀티인덱스 처리
+                        if isinstance(history_df.index, pd.MultiIndex):
+                            history_df = history_df.reset_index(level='symbol', drop=True)
+                        # 가장 최근 종가
+                        latest_close = history_df['close'].iloc[-1]
+                        if pd.notna(latest_close):
+                            current_price = float(latest_close)
+                            if close_price is None:
+                                close_price = current_price
+                except Exception:
+                    pass  # history 조회 실패 시 None 유지
+
             price = PriceInfo(
-                current=fin_data.get('currentPrice'),
+                current=current_price,
                 open=summary.get('regularMarketOpen') or summary.get('open'),
                 high=summary.get('regularMarketDayHigh') or summary.get('dayHigh'),
                 low=summary.get('regularMarketDayLow') or summary.get('dayLow'),
+                close=close_price,
                 volume=summary.get('regularMarketVolume') or summary.get('volume'),
             )
 

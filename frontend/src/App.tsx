@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { AppLayout } from './components/AppLayout';
 import { Sidebar } from './components/Sidebar';
 import { HeroSection } from './components/HeroSection';
@@ -12,7 +14,7 @@ import { api } from './lib/api';
 import type { ApiResponse } from './lib/api';
 import type { StockData, NewsItem, AIAnalysis } from './types/stock';
 import type { UserSettings } from './types/user';
-import { loadSettings, saveSettings } from './utils/storage';
+import { getPortfolios, createPortfolio, deletePortfolio, updatePortfolio, updateProfitInfo } from './lib/portfolioApi';
 
 function App() {
   // 시장 데이터 상태
@@ -28,13 +30,45 @@ function App() {
     ai: false,       // AI 분석
   });
 
-  // 사용자 설정 상태 (localStorage에서 로드)
-  const [userSettings, setUserSettings] = useState<UserSettings>(() => loadSettings());
+  // 사용자 설정 상태 (DB에서 로드)
+  const [userSettings, setUserSettings] = useState<UserSettings>({
+    tickers: [],
+    selectedTicker: null,
+    sectionVisibility: {
+      companyInfo: true,
+      financialMetrics: true,
+      aiAnalysis: true,
+      technicalIndicators: true,
+      news: true,
+      charts: true,
+    },
+  });
 
-  // userSettings 변경 시 localStorage에 자동 저장
+  // 초기 로딩 시 DB에서 포트폴리오 데이터 가져오기
   useEffect(() => {
-    saveSettings(userSettings);
-  }, [userSettings]);
+    const loadPortfoliosFromDB = async () => {
+      try {
+        const portfolios = await getPortfolios();
+        setUserSettings(prev => ({
+          ...prev,
+          tickers: portfolios.map(p => ({
+            symbol: p.ticker,
+            purchasePrice: p.purchase_price,
+            quantity: p.quantity,
+            purchaseDate: p.purchase_date || undefined,
+            addedAt: p.created_at,
+            lastPrice: p.last_price || undefined,
+            profitPercent: p.profit_percent || undefined,
+            lastUpdated: p.last_updated || undefined,
+          })),
+        }));
+      } catch (error) {
+        console.error('Failed to load portfolios from DB:', error);
+      }
+    };
+
+    loadPortfoliosFromDB();
+  }, []);
 
   // 초기 자동 로딩 제거 - 사용자가 직접 티커를 선택할 때까지 대기
   // useEffect(() => {
@@ -67,6 +101,29 @@ function App() {
         const stock = stockResponse.data.data;
         setStockData(stock);
         setLoadingStates(prev => ({ ...prev, stock: false }));
+
+        // 🆕 수익률 정보 자동 저장 (백그라운드)
+        const ticker = userSettings.tickers.find(t => t.symbol === tickerSymbol);
+        if (ticker) {
+          updateProfitInfo(tickerSymbol, stock.price.current, ticker.purchasePrice)
+            .then(updatedPortfolio => {
+              // 로컬 상태 업데이트
+              setUserSettings(prev => ({
+                ...prev,
+                tickers: prev.tickers.map(t =>
+                  t.symbol === tickerSymbol
+                    ? {
+                        ...t,
+                        lastPrice: updatedPortfolio.last_price,
+                        profitPercent: updatedPortfolio.profit_percent,
+                        lastUpdated: updatedPortfolio.last_updated,
+                      }
+                    : t
+                ),
+              }));
+            })
+            .catch(err => console.error('수익률 업데이트 실패:', err));
+        }
 
         // 2. 뉴스 로드 (독립적 - News 탭용)
         api.get<ApiResponse<NewsItem[]>>(`/api/stock/${tickerSymbol}/news`)
@@ -108,37 +165,59 @@ function App() {
   /**
    * 매물 등록
    */
-  const handleAddTicker = (symbol: string) => {
+  const handleAddTicker = async (symbol: string) => {
     // 중복 체크
     if (userSettings.tickers.some(t => t.symbol === symbol)) {
       alert(`${symbol}은 이미 등록된 카테고리입니다.`);
       return;
     }
 
-    // 매물 등록
-    setUserSettings(prev => ({
-      ...prev,
-      tickers: [
-        ...prev.tickers,
-        {
-          symbol,
-          purchasePrice: null,
-          addedAt: new Date().toISOString(),
-        },
-      ],
-    }));
+    try {
+      // DB에 저장
+      await createPortfolio({ ticker: symbol });
+
+      // 로컬 상태 업데이트
+      setUserSettings(prev => ({
+        ...prev,
+        tickers: [
+          ...prev.tickers,
+          {
+            symbol,
+            purchasePrice: null,
+            quantity: null,
+            purchaseDate: undefined,
+            addedAt: new Date().toISOString(),
+            lastPrice: undefined,
+            profitPercent: undefined,
+            lastUpdated: undefined,
+          },
+        ],
+      }));
+    } catch (error) {
+      console.error('Failed to add ticker:', error);
+      alert('매물 등록에 실패했습니다.');
+    }
   };
 
   /**
    * 매물 제거
    */
-  const handleRemoveTicker = (symbol: string) => {
-    setUserSettings(prev => ({
-      ...prev,
-      tickers: prev.tickers.filter(t => t.symbol !== symbol),
-      // 제거한 매물이 선택된 매물이라면 선택 해제
-      selectedTicker: prev.selectedTicker === symbol ? null : prev.selectedTicker,
-    }));
+  const handleRemoveTicker = async (symbol: string) => {
+    try {
+      // DB에서 삭제
+      await deletePortfolio(symbol);
+
+      // 로컬 상태 업데이트
+      setUserSettings(prev => ({
+        ...prev,
+        tickers: prev.tickers.filter(t => t.symbol !== symbol),
+        // 제거한 매물이 선택된 매물이라면 선택 해제
+        selectedTicker: prev.selectedTicker === symbol ? null : prev.selectedTicker,
+      }));
+    } catch (error) {
+      console.error('Failed to remove ticker:', error);
+      alert('매물 제거에 실패했습니다.');
+    }
   };
 
   /**
@@ -156,19 +235,30 @@ function App() {
   };
 
   /**
-   * 구매가 업데이트
-   * TODO: 향후 기능 구현 시 활성화
+   * 구매가 및 수량 업데이트
    */
-  // const handleUpdatePurchasePrice = (symbol: string, price: number | null) => {
-  //   setUserSettings(prev => ({
-  //     ...prev,
-  //     tickers: prev.tickers.map(t =>
-  //       t.symbol === symbol
-  //         ? { ...t, purchasePrice: price }
-  //         : t
-  //     ),
-  //   }));
-  // };
+  const handleUpdatePurchasePrice = async (symbol: string, price: number | null, quantity: number | null) => {
+    try {
+      // DB 업데이트
+      await updatePortfolio(symbol, { 
+        purchase_price: price,
+        quantity: quantity,
+      });
+
+      // 로컬 상태 업데이트
+      setUserSettings(prev => ({
+        ...prev,
+        tickers: prev.tickers.map(t =>
+          t.symbol === symbol
+            ? { ...t, purchasePrice: price, quantity: quantity }
+            : t
+        ),
+      }));
+    } catch (error) {
+      console.error('Failed to update purchase price and quantity:', error);
+      alert('평단가 및 수량 업데이트에 실패했습니다.');
+    }
+  };
 
   /**
    * 섹션 토글
@@ -213,6 +303,8 @@ function App() {
           ? `$${(stockData.market_cap / 1e9).toFixed(2)}B`
           : 'N/A',
         sector: stockData.company.sector || 'N/A',
+        purchasePrice: userSettings.tickers.find(t => t.symbol === stockData.ticker)?.purchasePrice || null,
+        quantity: userSettings.tickers.find(t => t.symbol === stockData.ticker)?.quantity || null,
         hasData: true,
       }
     : {
@@ -223,16 +315,42 @@ function App() {
         priceChangePercent: 0,
         marketCap: 'N/A',
         sector: 'N/A',
+        purchasePrice: null,
+        quantity: null,
         hasData: false,
       };
 
   // Sidebar용 티커 리스트 변환 (빈 배열 허용)
-  const sidebarTickers = userSettings.tickers.map(t => ({
-    symbol: t.symbol,
-    profitPercent: t.purchasePrice && stockData?.price.current
-      ? ((stockData.price.current - t.purchasePrice) / t.purchasePrice) * 100
-      : 0,
-  }));
+  const sidebarTickers = userSettings.tickers.map(t => {
+    // 🆕 저장된 수익률 정보 우선 사용
+    // 평단가가 있고 마지막 조회 가격이 있으면 저장된 수익률 표시
+    const hasPurchasePrice = t.purchasePrice !== null && t.purchasePrice !== undefined;
+    const hasStoredProfit = t.profitPercent !== null && t.profitPercent !== undefined;
+
+    let profitPercent: number | null | undefined;
+
+    if (!hasPurchasePrice) {
+      // 평단가 없음: null (표시: "Set Price")
+      profitPercent = null;
+    } else if (hasStoredProfit) {
+      // 저장된 수익률 있음: 표시
+      profitPercent = t.profitPercent!;
+    } else {
+      // 평단가는 있지만 조회 기록 없음: undefined (표시: "-")
+      profitPercent = undefined;
+    }
+
+    return {
+      symbol: t.symbol,
+      purchasePrice: t.purchasePrice,
+      quantity: t.quantity,
+      purchaseDate: t.purchaseDate,
+      addedAt: t.addedAt,
+      lastPrice: t.lastPrice,
+      profitPercent,
+      lastUpdated: t.lastUpdated,
+    };
+  });
 
   return (
     <AppLayout
@@ -241,6 +359,7 @@ function App() {
           onTickerSelect={handleSidebarTickerSelect}
           onAddTicker={handleAddTicker}
           onRemoveTicker={handleRemoveTicker}
+          onUpdatePurchasePrice={handleUpdatePurchasePrice}
           initialTickers={sidebarTickers}
           selectedTicker={userSettings.selectedTicker || sidebarTickers[0]?.symbol}
         />
@@ -255,6 +374,8 @@ function App() {
         priceChangePercent={displayData.priceChangePercent}
         marketCap={displayData.marketCap}
         sector={displayData.sector}
+        purchasePrice={displayData.purchasePrice}
+        quantity={displayData.quantity}
         hasData={displayData.hasData}
       />
 
@@ -296,8 +417,10 @@ function App() {
                       AI 분석 (Gemini)
                     </h2>
                     {aiAnalysis ? (
-                      <div className="prose prose-sm max-w-none text-muted-foreground">
-                        <div className="whitespace-pre-wrap">{aiAnalysis.report}</div>
+                      <div className="markdown-content">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {aiAnalysis.report}
+                        </ReactMarkdown>
                       </div>
                     ) : (
                       <div className="text-center py-6">

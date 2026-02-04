@@ -4,6 +4,7 @@
  * 실제 ChartDataPoint[] 사용 + SMA, 볼린저밴드, 거래량 표시
  */
 
+import { useState } from 'react';
 import {
   ComposedChart,
   Line,
@@ -40,6 +41,74 @@ const formatChartData = (data: ChartDataPoint[]) => {
 };
 
 export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }: StockChartProps) {
+  // 각 차트별 데이터 표시 상태 관리
+  const [visibleLines1, setVisibleLines1] = useState({
+    price: true,
+    volume: true,
+  });
+
+  const [visibleLines2, setVisibleLines2] = useState({
+    price: true,
+    sma20: true,
+    sma50: true,
+    sma200: true,
+  });
+
+  const [visibleLines3, setVisibleLines3] = useState({
+    price: true,
+    bb_upper: true,
+    bb_middle: true,
+    bb_lower: true,
+    area: true, // 밴드 영역
+  });
+
+  const [visibleLines4, setVisibleLines4] = useState({
+    price: true,
+    volume: true,
+    sma20: true,
+    sma50: true,
+    sma200: true,
+    bb_upper: true,
+    bb_middle: true,
+    bb_lower: true,
+    area: true, // BB 영역
+  });
+
+  // 범례 클릭 핸들러
+  const handleLegendClick1 = (e: any) => {
+    const dataKey = e.dataKey;
+    setVisibleLines1((prev) => ({ ...prev, [dataKey]: !prev[dataKey as keyof typeof prev] }));
+  };
+
+  const handleLegendClick2 = (e: any) => {
+    const dataKey = e.dataKey;
+    setVisibleLines2((prev) => ({ ...prev, [dataKey]: !prev[dataKey as keyof typeof prev] }));
+  };
+
+  const handleLegendClick3 = (e: any) => {
+    const dataKey = e.dataKey;
+    const value = e.value; // 범례에 표시된 이름 (name 속성 값)
+    
+    // '밴드 영역'을 클릭했을 때만 area 토글
+    if (value === '밴드 영역') {
+      setVisibleLines3((prev) => ({ ...prev, area: !prev.area }));
+    } else {
+      setVisibleLines3((prev) => ({ ...prev, [dataKey]: !prev[dataKey as keyof typeof prev] }));
+    }
+  };
+
+  const handleLegendClick4 = (e: any) => {
+    const dataKey = e.dataKey;
+    const value = e.value; // 범례에 표시된 이름 (name 속성 값)
+    
+    // 'BB 영역'을 클릭했을 때만 area 토글
+    if (value === 'BB 영역') {
+      setVisibleLines4((prev) => ({ ...prev, area: !prev.area }));
+    } else {
+      setVisibleLines4((prev) => ({ ...prev, [dataKey]: !prev[dataKey as keyof typeof prev] }));
+    }
+  };
+
   // 실제 데이터가 없으면 빈 메시지 표시
   if (!chartData || chartData.length === 0) {
     return (
@@ -224,13 +293,18 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
               />
               <Tooltip content={<PriceTooltip />} />
-              <Legend wrapperStyle={{ fontSize: '11px' }} iconSize={12} />
+              <Legend 
+                wrapperStyle={{ fontSize: '11px', cursor: 'pointer' }} 
+                iconSize={12} 
+                onClick={handleLegendClick1}
+              />
               <Bar
                 yAxisId="volume"
                 dataKey="volume"
                 fill="#14B8A6"
                 opacity={0.5}
                 name="거래량"
+                hide={!visibleLines1.volume}
               />
               <Line
                 yAxisId="price"
@@ -240,6 +314,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 strokeWidth={2.5}
                 dot={false}
                 name="종가"
+                hide={!visibleLines1.price}
               />
             </ComposedChart>
           </ResponsiveContainer>
@@ -267,7 +342,11 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 tick={{ fill: 'hsl(var(--muted-foreground))' }}
               />
               <Tooltip content={<SMATooltip />} />
-              <Legend wrapperStyle={{ fontSize: '11px' }} iconSize={12} />
+              <Legend 
+                wrapperStyle={{ fontSize: '11px', cursor: 'pointer' }} 
+                iconSize={12} 
+                onClick={handleLegendClick2}
+              />
               <Line
                 type="monotone"
                 dataKey="price"
@@ -275,6 +354,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 strokeWidth={2}
                 dot={false}
                 name="종가"
+                hide={!visibleLines2.price}
               />
               <Line
                 type="monotone"
@@ -283,6 +363,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 strokeWidth={1.5}
                 dot={false}
                 name="SMA20"
+                hide={!visibleLines2.sma20}
               />
               <Line
                 type="monotone"
@@ -291,6 +372,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 strokeWidth={1.5}
                 dot={false}
                 name="SMA50"
+                hide={!visibleLines2.sma50}
               />
               <Line
                 type="monotone"
@@ -299,6 +381,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 strokeWidth={1.5}
                 dot={false}
                 name="SMA200"
+                hide={!visibleLines2.sma200}
               />
             </ComposedChart>
           </ResponsiveContainer>
@@ -332,19 +415,26 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 tick={{ fill: 'hsl(var(--muted-foreground))' }}
               />
               <Tooltip content={<BBTooltip />} />
-              <Legend wrapperStyle={{ fontSize: '11px' }} iconSize={12} />
+              <Legend 
+                wrapperStyle={{ fontSize: '11px', cursor: 'pointer' }} 
+                iconSize={12} 
+                onClick={handleLegendClick3}
+              />
               <Area
                 type="monotone"
                 dataKey="bb_upper"
                 stroke="none"
                 fill="url(#bbArea)"
                 name="밴드 영역"
+                hide={!visibleLines3.area}
               />
               <Area
                 type="monotone"
                 dataKey="bb_lower"
                 stroke="none"
                 fill="url(#bbArea)"
+                hide={!visibleLines3.area}
+                legendType="none"
               />
               <Line
                 type="monotone"
@@ -353,6 +443,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 strokeWidth={1.5}
                 dot={false}
                 name="상단"
+                hide={!visibleLines3.bb_upper}
               />
               <Line
                 type="monotone"
@@ -362,6 +453,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 strokeDasharray="3 3"
                 dot={false}
                 name="중간"
+                hide={!visibleLines3.bb_middle}
               />
               <Line
                 type="monotone"
@@ -370,6 +462,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 strokeWidth={1.5}
                 dot={false}
                 name="하단"
+                hide={!visibleLines3.bb_lower}
               />
               <Line
                 type="monotone"
@@ -378,6 +471,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 strokeWidth={2.5}
                 dot={false}
                 name="종가"
+                hide={!visibleLines3.price}
               />
             </ComposedChart>
           </ResponsiveContainer>
@@ -420,7 +514,11 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
               />
               <Tooltip content={<ComprehensiveTooltip />} />
-              <Legend wrapperStyle={{ fontSize: '10px' }} iconSize={10} />
+              <Legend 
+                wrapperStyle={{ fontSize: '10px', cursor: 'pointer' }} 
+                iconSize={10} 
+                onClick={handleLegendClick4}
+              />
 
               {/* 거래량 */}
               <Bar
@@ -429,6 +527,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 fill="#14B8A6"
                 opacity={0.2}
                 name="거래량"
+                hide={!visibleLines4.volume}
               />
 
               {/* 볼린저밴드 영역 */}
@@ -439,6 +538,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 stroke="none"
                 fill="url(#bbAreaComprehensive)"
                 name="BB 영역"
+                hide={!visibleLines4.area}
               />
               <Area
                 yAxisId="price"
@@ -446,6 +546,8 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 dataKey="bb_lower"
                 stroke="none"
                 fill="url(#bbAreaComprehensive)"
+                hide={!visibleLines4.area}
+                legendType="none"
               />
 
               {/* 볼린저밴드 선 */}
@@ -457,6 +559,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 strokeWidth={1}
                 dot={false}
                 name="BB 상단"
+                hide={!visibleLines4.bb_upper}
               />
               <Line
                 yAxisId="price"
@@ -467,6 +570,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 strokeDasharray="2 2"
                 dot={false}
                 name="BB 중간"
+                hide={!visibleLines4.bb_middle}
               />
               <Line
                 yAxisId="price"
@@ -476,6 +580,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 strokeWidth={1}
                 dot={false}
                 name="BB 하단"
+                hide={!visibleLines4.bb_lower}
               />
 
               {/* 이동평균선 */}
@@ -487,6 +592,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 strokeWidth={1}
                 dot={false}
                 name="SMA20"
+                hide={!visibleLines4.sma20}
               />
               <Line
                 yAxisId="price"
@@ -496,6 +602,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 strokeWidth={1}
                 dot={false}
                 name="SMA50"
+                hide={!visibleLines4.sma50}
               />
               <Line
                 yAxisId="price"
@@ -505,6 +612,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 strokeWidth={1}
                 dot={false}
                 name="SMA200"
+                hide={!visibleLines4.sma200}
               />
 
               {/* 종가 (메인) */}
@@ -516,6 +624,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 strokeWidth={2}
                 dot={false}
                 name="종가"
+                hide={!visibleLines4.price}
               />
             </ComposedChart>
           </ResponsiveContainer>

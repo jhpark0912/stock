@@ -13,6 +13,7 @@ class PriceInfo(BaseModel):
     open: Optional[float] = None
     high: Optional[float] = None
     low: Optional[float] = None
+    close: Optional[float] = None  # 종가 추가
     volume: Optional[int] = None
 
 

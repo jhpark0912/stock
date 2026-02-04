@@ -6,7 +6,8 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.config import settings
-from app.api.routes import health, stock
+from app.api.routes import health, stock, portfolio
+from app.database.connection import init_db
 import time
 
 # 로거 설정
@@ -57,6 +58,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# 앱 시작 시 DB 초기화
+@app.on_event("startup")
+async def startup_event():
+    init_db()
+    logger.info("🗄️ Database initialized")
+
 # 404 에러 핸들러
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc):
@@ -83,6 +90,8 @@ app.include_router(health.router, prefix="/api", tags=["Health"])
 logger.info("   ✅ Health 라우터 등록 완료")
 app.include_router(stock.router, prefix="/api", tags=["Stock"])
 logger.info("   ✅ Stock 라우터 등록 완료")
+app.include_router(portfolio.router, prefix="/api", tags=["Portfolio"])
+logger.info("   ✅ Portfolio 라우터 등록 완료")
 
 # 등록된 라우트 출력
 logger.info("📋 등록된 전체 라우트:")
