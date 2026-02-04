@@ -44,7 +44,12 @@
       "Bash(npx shadcn@latest add:*)",
       "WebFetch(domain:ui.shadcn.com)",
       "Bash(npm uninstall:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(test:*)",
+      "Bash(npm run dev:*)",
+      "Bash(if not exist \"docs\" mkdir \"docs\")",
+      "Bash(move \"frontend\\\\IMPLEMENTATION_COMPLETE.md\" \"docs\\\\FRONTEND_IMPLEMENTATION_COMPLETE.md\")",
+      "Bash(move \"frontend\\\\RESET_GUIDE.md\" \"docs\\\\FRONTEND_RESET_GUIDE.md\")"
     ]
   }
 }
