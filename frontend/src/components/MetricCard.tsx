@@ -40,7 +40,7 @@ export function MetricCard({
   value,
   gaugePercent,
   description,
-  category,
+  category: _category, // 향후 기능 구현을 위해 유지
   colorType,
   tooltip,
 }: MetricCardProps) {

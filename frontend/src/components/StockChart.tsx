@@ -39,7 +39,7 @@ const formatChartData = (data: ChartDataPoint[]) => {
   }));
 };
 
-export function StockChart({ ticker, chartData, chartType = 'area' }: StockChartProps) {
+export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }: StockChartProps) {
   // 실제 데이터가 없으면 빈 메시지 표시
   if (!chartData || chartData.length === 0) {
     return (

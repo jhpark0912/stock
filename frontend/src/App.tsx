@@ -11,7 +11,7 @@ import { LoadingSpinner } from './components/LoadingSpinner';
 import { api } from './lib/api';
 import type { ApiResponse } from './lib/api';
 import type { StockData, NewsItem, AIAnalysis } from './types/stock';
-import type { UserSettings, SectionVisibility } from './types/user';
+import type { UserSettings } from './types/user';
 import { loadSettings, saveSettings } from './utils/storage';
 
 function App() {
@@ -157,30 +157,32 @@ function App() {
 
   /**
    * 구매가 업데이트
+   * TODO: 향후 기능 구현 시 활성화
    */
-  const handleUpdatePurchasePrice = (symbol: string, price: number | null) => {
-    setUserSettings(prev => ({
-      ...prev,
-      tickers: prev.tickers.map(t =>
-        t.symbol === symbol
-          ? { ...t, purchasePrice: price }
-          : t
-      ),
-    }));
-  };
+  // const handleUpdatePurchasePrice = (symbol: string, price: number | null) => {
+  //   setUserSettings(prev => ({
+  //     ...prev,
+  //     tickers: prev.tickers.map(t =>
+  //       t.symbol === symbol
+  //         ? { ...t, purchasePrice: price }
+  //         : t
+  //     ),
+  //   }));
+  // };
 
   /**
    * 섹션 토글
+   * TODO: 향후 기능 구현 시 활성화
    */
-  const handleToggleSection = (sectionKey: keyof SectionVisibility) => {
-    setUserSettings(prev => ({
-      ...prev,
-      sectionVisibility: {
-        ...prev.sectionVisibility,
-        [sectionKey]: !prev.sectionVisibility[sectionKey],
-      },
-    }));
-  };
+  // const handleToggleSection = (sectionKey: keyof SectionVisibility) => {
+  //   setUserSettings(prev => ({
+  //     ...prev,
+  //     sectionVisibility: {
+  //       ...prev.sectionVisibility,
+  //       [sectionKey]: !prev.sectionVisibility[sectionKey],
+  //     },
+  //   }));
+  // };
 
   // Sidebar용 티커 선택 핸들러 (Sidebar 컴포넌트와 연동)
   const handleSidebarTickerSelect = (symbol: string) => {
@@ -188,15 +190,16 @@ function App() {
   };
 
   // 로딩 중이거나 데이터가 없을 때 기본값
-  const getEmptyMessage = () => {
-    if (userSettings.tickers.length === 0) {
-      return 'Click "Add Ticker" to get started';
-    }
-    if (!userSettings.selectedTicker) {
-      return 'Select a ticker from sidebar';
-    }
-    return 'Click a ticker to load data';
-  };
+  // TODO: 향후 빈 상태 메시지 표시 기능 구현 시 활성화
+  // const getEmptyMessage = () => {
+  //   if (userSettings.tickers.length === 0) {
+  //     return 'Click "Add Ticker" to get started';
+  //   }
+  //   if (!userSettings.selectedTicker) {
+  //     return 'Select a ticker from sidebar';
+  //   }
+  //   return 'Click a ticker to load data';
+  // };
 
   // HeroSection용 데이터 변환
   const displayData = stockData
@@ -226,8 +229,8 @@ function App() {
   // Sidebar용 티커 리스트 변환 (빈 배열 허용)
   const sidebarTickers = userSettings.tickers.map(t => ({
     symbol: t.symbol,
-    profitPercent: t.purchasePrice && stockData?.currentPrice
-      ? ((stockData.currentPrice - t.purchasePrice) / t.purchasePrice) * 100
+    profitPercent: t.purchasePrice && stockData?.price.current
+      ? ((stockData.price.current - t.purchasePrice) / t.purchasePrice) * 100
       : 0,
   }));
 
