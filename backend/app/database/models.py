@@ -18,6 +18,7 @@ class UserDB(Base):
     role = Column(String(20), nullable=False, default="user")  # user, admin
     is_active = Column(Boolean, default=True)
     is_approved = Column(Boolean, default=False)  # Admin 승인 여부
+    gemini_api_key = Column(String(255), nullable=True)  # 유저별 Gemini API 키
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 

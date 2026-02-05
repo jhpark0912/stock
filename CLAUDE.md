@@ -22,6 +22,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## 계획
+
+- 계획 혹은 개발 페이즈를 생성할때는 `.claude/plans` 하위에 생성
+- 기존 계획을 문의하면 해당 폴더를 확인한 후 대답
+
 ## 프로젝트 개요
 
 주식 정보 조회 도구를 세 가지 버전으로 제공합니다:

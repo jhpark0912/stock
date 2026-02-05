@@ -83,3 +83,27 @@ class UserRepository:
     def exists(self, username: str) -> bool:
         """username 중복 체크"""
         return self.db.query(UserDB).filter(UserDB.username == username).first() is not None
+
+
+    def update_gemini_key(self, user_id: int, api_key: str) -> Optional[UserDB]:
+        """사용자의 Gemini API 키 업데이트"""
+        user = self.get_by_id(user_id)
+        if user:
+            user.gemini_api_key = api_key
+            self.db.commit()
+            self.db.refresh(user)
+        return user
+
+    def delete_gemini_key(self, user_id: int) -> Optional[UserDB]:
+        """사용자의 Gemini API 키 삭제"""
+        user = self.get_by_id(user_id)
+        if user:
+            user.gemini_api_key = None
+            self.db.commit()
+            self.db.refresh(user)
+        return user
+
+    def get_gemini_key(self, user_id: int) -> Optional[str]:
+        """사용자의 Gemini API 키 조회"""
+        user = self.get_by_id(user_id)
+        return user.gemini_api_key if user else None

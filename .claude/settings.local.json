@@ -55,7 +55,8 @@
       "Bash(python3 -m pip:*)",
       "Bash(source:*)",
       "Bash(sqlite3:*)",
-      "mcp__plugin_serena_serena__list_memories"
+      "mcp__plugin_serena_serena__list_memories",
+      "mcp__plugin_serena_serena__insert_after_symbol"
     ]
   }
 }

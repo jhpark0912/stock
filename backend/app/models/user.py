@@ -25,11 +25,23 @@ class UserResponse(BaseModel):
     role: str
     is_active: bool
     is_approved: bool
+    has_gemini_key: bool = False  # Gemini API 키 보유 여부
     created_at: datetime
     updated_at: datetime
 
     class Config:
         from_attributes = True
+
+
+class GeminiKeyUpdate(BaseModel):
+    """Gemini API 키 업데이트 요청 스키마"""
+    api_key: str = Field(..., min_length=10, description="Gemini API 키")
+
+
+class GeminiKeyStatus(BaseModel):
+    """Gemini API 키 상태 응답 스키마"""
+    has_key: bool
+    key_preview: Optional[str] = None  # 마스킹된 키 미리보기 (예: AIza...xyz)
 
 
 class Token(BaseModel):
