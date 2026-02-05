@@ -1,11 +1,25 @@
 """
 SQLAlchemy ORM 모델
 """
-from sqlalchemy import Column, Integer, String, Numeric, Date, Text, DateTime
+from sqlalchemy import Column, Integer, String, Numeric, Date, Text, DateTime, Boolean
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
+
+
+class UserDB(Base):
+    """사용자 DB 모델"""
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String(50), nullable=False, unique=True, index=True)
+    password_hash = Column(String(255), nullable=False)
+    role = Column(String(20), nullable=False, default="user")  # user, admin
+    is_active = Column(Boolean, default=True)
+    is_approved = Column(Boolean, default=False)  # Admin 승인 여부
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
 class PortfolioDB(Base):

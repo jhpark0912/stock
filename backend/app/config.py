@@ -32,6 +32,15 @@ class Settings:
         # Mock Data (429 에러 회피용)
         self.use_mock_data = os.getenv("USE_MOCK_DATA", "false").lower() == "true"
 
+        # JWT 설정
+        self.jwt_secret_key = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-in-production")
+        self.jwt_algorithm = os.getenv("JWT_ALGORITHM", "HS256")
+        self.jwt_access_token_expire_minutes = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
+
+        # Admin 기본 계정
+        self.admin_username = os.getenv("ADMIN_USERNAME", "admin")
+        self.admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
+
     @property
     def is_development(self) -> bool:
         """개발 환경 여부"""

@@ -104,7 +104,7 @@ function App() {
 
         // 🆕 수익률 정보 자동 저장 (백그라운드)
         const ticker = userSettings.tickers.find(t => t.symbol === tickerSymbol);
-        if (ticker) {
+        if (ticker && ticker.purchasePrice !== null && ticker.purchasePrice !== undefined) {
           updateProfitInfo(tickerSymbol, stock.price.current, ticker.purchasePrice)
             .then(updatedPortfolio => {
               // 로컬 상태 업데이트
