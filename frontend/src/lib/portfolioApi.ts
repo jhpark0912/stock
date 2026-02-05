@@ -74,23 +74,25 @@ export async function deletePortfolio(ticker: string): Promise<void> {
 
 /**
  * 수익률 정보 업데이트
+ * - purchasePrice가 있으면 수익률도 함께 계산
+ * - purchasePrice가 없으면 현재가만 업데이트
  */
 export async function updateProfitInfo(
   ticker: string,
   currentPrice: number,
   purchasePrice: number | null
 ): Promise<PortfolioItem> {
-  // purchasePrice가 없으면 업데이트하지 않음
-  if (!purchasePrice) {
-    throw new Error('Purchase price is required to calculate profit');
+  // 업데이트할 데이터 구성
+  const updateData: { last_price: number; profit_percent?: number } = {
+    last_price: currentPrice,
+  };
+
+  // purchasePrice가 있을 때만 수익률 계산
+  if (purchasePrice && purchasePrice > 0) {
+    updateData.profit_percent = ((currentPrice - purchasePrice) / purchasePrice) * 100;
   }
 
-  const profitPercent = ((currentPrice - purchasePrice) / purchasePrice) * 100;
-
-  const response = await api.put<ApiResponse<PortfolioItem>>(`/api/portfolio/${ticker}`, {
-    last_price: currentPrice,
-    profit_percent: profitPercent,
-  });
+  const response = await api.put<ApiResponse<PortfolioItem>>(`/api/portfolio/${ticker}`, updateData);
 
   return response.data.data;
 }

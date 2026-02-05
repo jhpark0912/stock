@@ -21,7 +21,7 @@ import type { StockData, NewsItem, AIAnalysis } from '@/types/stock';
 import type { UserSettings } from '@/types/user';
 import { getPortfolios, createPortfolio, deletePortfolio, updatePortfolio, updateProfitInfo } from '@/lib/portfolioApi';
 import { useAuth } from '@/contexts/AuthContext';
-import { Key } from 'lucide-react';
+import { Key, Play, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface DashboardProps {
@@ -39,6 +39,7 @@ export function Dashboard({ headerActions, onNavigateToSettings }: DashboardProp
   const [stockData, setStockData] = useState<StockData | null>(null);
   const [newsData, setNewsData] = useState<NewsItem[] | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null);
+  const [aiError, setAiError] = useState<{ type: 'no_key' | 'api_error'; message: string } | null>(null);
   const [, setError] = useState<string | null>(null);
 
   // 탭별 독립적인 로딩 상태
@@ -89,11 +90,12 @@ export function Dashboard({ headerActions, onNavigateToSettings }: DashboardProp
   }, []);
 
   const fetchStockData = async (tickerSymbol: string) => {
-    setLoadingStates({ stock: true, news: true, ai: true });
+    setLoadingStates({ stock: true, news: true, ai: false });
     setError(null);
     setStockData(null);
     setNewsData(null);
     setAiAnalysis(null);
+    setAiError(null);
 
     try {
       const stockResponse = await api.get<ApiResponse<StockData>>(
@@ -135,17 +137,6 @@ export function Dashboard({ headerActions, onNavigateToSettings }: DashboardProp
           .catch(err => console.error('뉴스 조회 실패:', err))
           .finally(() => {
             setLoadingStates(prev => ({ ...prev, news: false }));
-          });
-
-        api.post<ApiResponse<AIAnalysis>>(`/api/stock/${tickerSymbol}/analysis`, stock)
-          .then(analysisResponse => {
-            if (analysisResponse.data.success) {
-              setAiAnalysis(analysisResponse.data.data);
-            }
-          })
-          .catch(err => console.error('AI 분석 실패:', err))
-          .finally(() => {
-            setLoadingStates(prev => ({ ...prev, ai: false }));
           });
       } else {
         setError(stockResponse.data.error || '알 수 없는 오류가 발생했습니다.');
@@ -239,6 +230,62 @@ export function Dashboard({ headerActions, onNavigateToSettings }: DashboardProp
 
   const handleSidebarTickerSelect = (symbol: string) => {
     handleSelectTicker(symbol);
+  };
+
+  // AI 분석 수동 실행
+  const handleAnalyzeAI = async () => {
+    if (!stockData) return;
+    
+    // Gemini 키 없는 경우 체크
+    if (!user?.has_gemini_key && user?.role !== 'admin') {
+      setAiError({ type: 'no_key', message: 'Gemini API 키가 설정되지 않았습니다.' });
+      return;
+    }
+
+    setLoadingStates(prev => ({ ...prev, ai: true }));
+    setAiError(null);
+    setAiAnalysis(null);
+
+    try {
+      const analysisResponse = await api.post<ApiResponse<AIAnalysis>>(
+        `/api/stock/${stockData.ticker}/analysis`,
+        stockData
+      );
+
+      if (analysisResponse.data.success) {
+        setAiAnalysis(analysisResponse.data.data);
+      } else {
+        // API 응답은 성공했지만 데이터가 없는 경우
+        const errorMsg = analysisResponse.data.error || 'AI 분석 결과를 가져올 수 없습니다.';
+        // Gemini 키 관련 에러인지 확인
+        if (errorMsg.toLowerCase().includes('api key') || errorMsg.toLowerCase().includes('gemini')) {
+          setAiError({ type: 'no_key', message: errorMsg });
+        } else {
+          setAiError({ type: 'api_error', message: errorMsg });
+        }
+      }
+    } catch (err) {
+      console.error('AI 분석 실패:', err);
+      let errorMessage = 'AI 분석 중 오류가 발생했습니다.';
+      
+      if (axios.isAxiosError(err)) {
+        const responseError = err.response?.data?.error || err.message;
+        errorMessage = responseError;
+        
+        // Gemini 키 관련 에러인지 확인
+        if (responseError.toLowerCase().includes('api key') || 
+            responseError.toLowerCase().includes('gemini') ||
+            err.response?.status === 401) {
+          setAiError({ type: 'no_key', message: responseError });
+        } else {
+          setAiError({ type: 'api_error', message: errorMessage });
+        }
+      } else {
+        setAiError({ type: 'api_error', message: errorMessage });
+      }
+    } finally {
+      setLoadingStates(prev => ({ ...prev, ai: false }));
+    }
   };
 
   const displayData = stockData
@@ -355,10 +402,25 @@ export function Dashboard({ headerActions, onNavigateToSettings }: DashboardProp
               return (
                 <div className="p-6 space-y-4">
                   <div className="bg-card border border-border rounded-lg p-6">
-                    <h2 className="text-xl font-semibold text-foreground mb-4">
-                      AI 분석 (Gemini)
-                    </h2>
-                    {/* Gemini API 키 없음 안내 (일반 유저만) */}
+                    <div className="flex items-center justify-between mb-4">
+                      <h2 className="text-xl font-semibold text-foreground">
+                        AI 분석 (Gemini)
+                      </h2>
+                      {/* 분석 완료 상태에서 재분석 버튼 */}
+                      {aiAnalysis && stockData && (user?.has_gemini_key || user?.role === 'admin') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleAnalyzeAI}
+                          className="gap-2"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                          재분석
+                        </Button>
+                      )}
+                    </div>
+                    
+                    {/* 1. Gemini API 키 없음 안내 (일반 유저만) */}
                     {!user?.has_gemini_key && user?.role !== 'admin' ? (
                       <div className="text-center py-12 space-y-4">
                         <div className="flex justify-center">
@@ -383,27 +445,91 @@ export function Dashboard({ headerActions, onNavigateToSettings }: DashboardProp
                           설정에서 API 키 등록하기
                         </Button>
                       </div>
+                    ) : aiError ? (
+                      /* 2. 에러 발생 시 */
+                      <div className="text-center py-12 space-y-4">
+                        <div className="flex justify-center">
+                          <div className={`h-16 w-16 rounded-full flex items-center justify-center ${
+                            aiError.type === 'no_key' ? 'bg-warning/10' : 'bg-destructive/10'
+                          }`}>
+                            {aiError.type === 'no_key' ? (
+                              <Key className="h-8 w-8 text-warning" />
+                            ) : (
+                              <AlertCircle className="h-8 w-8 text-destructive" />
+                            )}
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-semibold text-foreground">
+                            {aiError.type === 'no_key' ? 'API 키 오류' : 'AI 분석 실패'}
+                          </h3>
+                          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                            {aiError.message}
+                          </p>
+                        </div>
+                        {aiError.type === 'no_key' ? (
+                          <Button
+                            onClick={onNavigateToSettings}
+                            className="gap-2"
+                          >
+                            <Key className="h-4 w-4" />
+                            설정에서 API 키 확인하기
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={handleAnalyzeAI}
+                            variant="outline"
+                            className="gap-2"
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                            다시 시도
+                          </Button>
+                        )}
+                      </div>
                     ) : aiAnalysis ? (
+                      /* 3. 분석 결과 표시 */
                       <div className="markdown-content">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                           {aiAnalysis.report}
                         </ReactMarkdown>
                       </div>
+                    ) : stockData ? (
+                      /* 4. 주식 데이터는 있지만 분석 시작 전 */
+                      <div className="text-center py-12 space-y-4">
+                        <div className="flex justify-center">
+                          <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Play className="h-8 w-8 text-primary" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-semibold text-foreground">
+                            AI 분석 준비 완료
+                          </h3>
+                          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                            <span className="font-medium text-foreground">{stockData.ticker}</span>에 대한 
+                            AI 기반 투자 분석을 시작하려면 아래 버튼을 클릭하세요.
+                          </p>
+                        </div>
+                        <Button
+                          onClick={handleAnalyzeAI}
+                          className="gap-2"
+                        >
+                          <Play className="h-4 w-4" />
+                          AI 분석 시작
+                        </Button>
+                      </div>
                     ) : (
+                      /* 5. 주식 데이터 없음 */
                       <div className="text-center py-6">
                         <p className="text-sm text-muted-foreground mb-1">
                           {userSettings.tickers.length === 0
                             ? 'No tickers added yet.'
-                            : stockData
-                            ? 'AI analysis data not available.'
                             : 'No data loaded.'}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {userSettings.tickers.length === 0
                             ? 'Add a ticker from the sidebar to get started.'
-                            : !stockData
-                            ? 'Click a ticker from the sidebar to load data.'
-                            : 'AI analysis will appear here when available.'}
+                            : 'Click a ticker from the sidebar to load data.'}
                         </p>
                       </div>
                     )}
