@@ -3,7 +3,8 @@
  * JWT 토큰 관리 및 전역 인증 상태 제공
  */
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
+import type { ReactNode } from 'react'
 import type { UserResponse, UserLogin, UserCreate } from '@/types/auth'
 import * as authApi from '@/lib/authApi'
 

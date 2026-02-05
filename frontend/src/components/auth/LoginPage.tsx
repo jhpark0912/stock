@@ -38,7 +38,7 @@ export function LoginPage() {
    * 탭 전환 핸들러
    * 탭 전환 시 에러/성공 메시지 및 입력 필드 초기화
    */
-  const handleTabChange = (value: string) => {
+  const handleTabChange = (_value: string) => {
     setError(null)
     setSuccess(null)
 

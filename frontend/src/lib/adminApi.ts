@@ -5,7 +5,7 @@
 
 import { api } from './api'
 import type { UserResponse } from '@/types/auth'
-import type { ApproveUserResponse, RejectUserResponse, DeleteUserResponse } from '@/types/admin'
+import type { RejectUserResponse, DeleteUserResponse } from '@/types/admin'
 
 const ADMIN_BASE = '/api/admin'
 
