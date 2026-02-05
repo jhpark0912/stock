@@ -3,8 +3,9 @@
  */
 import axios, { type AxiosInstance } from 'axios';
 
-// API 기본 URL (환경변수에서 가져오거나 기본값 사용)
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080';
+// API 기본 URL (nginx/Vite 프록시를 통해 백엔드로 전달)
+// 각 API 호출에서 /api 접두사를 사용하므로 baseURL은 빈 문자열
+const API_BASE_URL = '';
 
 /**
  * API 응답 공통 타입

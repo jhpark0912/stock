@@ -115,7 +115,8 @@ PORT=8080
 
 **Frontend (`frontend/.env`):**
 ```env
-VITE_API_URL=http://localhost:8080
+# API URL은 상대 경로(/api)를 사용하므로 별도 설정 불필요
+# Vite 프록시가 /api 요청을 백엔드로 전달합니다
 ```
 
 > 🔑 **Gemini API 키 발급**: https://aistudio.google.com/apikey
@@ -172,6 +173,96 @@ docker-compose down
 
 - **웹 앱**: [http://localhost:5348](http://localhost:5348)
 - **Backend API**: [http://localhost:8000](http://localhost:8000)
+
+---
+
+## ☁️ 클라우드 배포
+
+Docker를 클라우드 서버에 배포할 때 특정 IP로 접근해도 정상 동작하도록 설계되어 있습니다.
+
+### 아키텍처
+
+```
+[브라우저] → [nginx :5348] → /api/* → [backend :8000]
+                           → /*     → [정적 파일]
+```
+
+프론트엔드는 **상대 경로(`/api`)** 를 사용하여 API를 호출합니다. nginx가 `/api/*` 요청을 백엔드로 프록시하므로, 어떤 IP/도메인으로 접속하든 정상 동작합니다.
+
+### 환경별 동작
+
+| 환경 | 접속 URL | API 요청 경로 | 프록시 |
+|-----|---------|-------------|-------|
+| 로컬 개발 (npm run dev) | `localhost:8080` | `/api/*` | Vite → localhost:8000 |
+| Docker 로컬 | `localhost:5348` | `/api/*` | nginx → backend:8000 |
+| 클라우드 (특정 IP) | `서버IP:5348` | `/api/*` | nginx → backend:8000 |
+
+### 클라우드 배포 설정
+
+#### 1. 환경 변수 설정
+
+프로젝트 루트에 `.env` 파일 생성:
+
+```env
+# 필수
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# 선택 (CORS 보안 강화)
+SERVER_IP=123.45.67.89  # 클라우드 서버의 공인 IP
+```
+
+> ⚠️ **보안 참고**: `SERVER_IP`를 설정하지 않으면 모든 origin에서 API 접근이 허용됩니다.
+
+#### 2. 빌드 및 실행
+
+```bash
+# 이미지 빌드 (최초 또는 코드 변경 시)
+docker-compose build
+
+# 백그라운드 실행
+docker-compose up -d
+
+# 상태 확인
+docker-compose ps
+
+# 로그 확인
+docker-compose logs -f
+```
+
+#### 3. 접속 확인
+
+```bash
+# 헬스체크
+curl http://서버IP:8000/api/health
+
+# 웹 접속
+http://서버IP:5348
+```
+
+### 포트 변경 (선택사항)
+
+기본 포트를 변경하려면 `docker-compose.yml` 수정:
+
+```yaml
+services:
+  backend:
+    ports:
+      - "8000:8000"  # 호스트:컨테이너
+  frontend:
+    ports:
+      - "80:80"  # 프로덕션에서 80 포트 사용
+```
+
+### 방화벽 설정
+
+클라우드 서버에서 필요한 포트를 열어주세요:
+
+| 포트 | 용도 |
+|-----|-----|
+| 5348 | 웹 프론트엔드 (또는 변경한 포트) |
+| 8000 | 백엔드 API (선택, 직접 접근 필요 시) |
+
+---
 
 ## 📦 배포 패키지 생성
 

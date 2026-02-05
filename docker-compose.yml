@@ -42,8 +42,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=http://localhost:8000
+      # VITE_API_URL 제거: 프론트엔드가 상대 경로(/api)를 사용하여
+      # nginx 프록시를 통해 백엔드에 접근하므로 환경별 설정 불필요
     container_name: stock-frontend
     ports:
       - "5348:80"
