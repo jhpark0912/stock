@@ -13,10 +13,13 @@ services:
       - ENVIRONMENT=production
       - HOST=0.0.0.0
       - PORT=8000
-      - ALLOWED_ORIGINS=http://localhost,http://localhost:80,http://frontend,http://localhost:5348
+      - ALLOWED_ORIGINS=http://localhost,http://localhost:80,http://frontend,http://localhost:5348,http://${SERVER_IP:-*},http://${SERVER_IP:-*}:5348
       - GEMINI_API_KEY=${GEMINI_API_KEY}
     env_file:
       - .env
+    volumes:
+      # 데이터베이스 영구 저장 (호스트 ./data 폴더)
+      - ./data:/app/data
     restart: on-failure
     stop_grace_period: 300s
     deploy:
@@ -29,10 +32,10 @@ services:
       - stock-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
-      interval: 60s
-      timeout: 30s
+      interval: 10s
+      timeout: 5s
       retries: 5
-      start_period: 40s
+      start_period: 30s
 
   # Frontend Web
   frontend:
@@ -45,7 +48,8 @@ services:
     ports:
       - "5348:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - stock-network
