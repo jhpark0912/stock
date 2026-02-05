@@ -22,6 +22,11 @@ class UserDB(Base):
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
+    @property
+    def has_gemini_key(self) -> bool:
+        """Gemini API 키 보유 여부"""
+        return bool(self.gemini_api_key)
+
 
 class PortfolioDB(Base):
     """포트폴리오 DB 모델"""

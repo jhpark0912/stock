@@ -11,6 +11,8 @@ import type {
   RegisterResponse,
   ApiError,
   ValidationErrorItem,
+  GeminiKeyUpdate,
+  GeminiKeyStatus,
 } from '@/types/auth'
 
 /**
@@ -119,4 +121,63 @@ export async function getCurrentUser(token: string): Promise<UserResponse> {
   })
 
   return handleResponse<UserResponse>(response)
+}
+
+/**
+ * Gemini API 키 설정
+ * @param token JWT 액세스 토큰
+ * @param apiKey Gemini API 키
+ * @returns API 키 상태 (has_key, key_preview)
+ * @throws 인증 실패 등의 오류
+ */
+export async function updateGeminiKey(
+  token: string,
+  apiKey: string
+): Promise<GeminiKeyStatus> {
+  const response = await fetch(`${API_BASE}/gemini-key`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ api_key: apiKey } as GeminiKeyUpdate),
+  })
+
+  return handleResponse<GeminiKeyStatus>(response)
+}
+
+/**
+ * Gemini API 키 삭제
+ * @param token JWT 액세스 토큰
+ * @returns 성공 메시지
+ * @throws 인증 실패 등의 오류
+ */
+export async function deleteGeminiKey(token: string): Promise<{ message: string }> {
+  const response = await fetch(`${API_BASE}/gemini-key`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  return handleResponse<{ message: string }>(response)
+}
+
+/**
+ * Gemini API 키 상태 조회
+ * @param token JWT 액세스 토큰
+ * @returns API 키 상태 (has_key, key_preview)
+ * @throws 인증 실패 등의 오류
+ */
+export async function getGeminiKeyStatus(token: string): Promise<GeminiKeyStatus> {
+  const response = await fetch(`${API_BASE}/gemini-key/status`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  return handleResponse<GeminiKeyStatus>(response)
 }

@@ -8,14 +8,15 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { LoginPage } from './components/auth/LoginPage'
 import { Dashboard } from './components/Dashboard'
 import { AdminPage } from './components/admin/AdminPage'
+import { SettingsPage } from './components/settings/SettingsPage'
 import { LoadingSpinner } from './components/LoadingSpinner'
 import { Button } from './components/ui/button'
-import { LogOut, Shield, LayoutDashboard } from 'lucide-react'
+import { LogOut, Shield, LayoutDashboard, Settings } from 'lucide-react'
 
 /**
  * 페이지 타입
  */
-type PageType = 'dashboard' | 'admin'
+type PageType = 'dashboard' | 'admin' | 'settings'
 
 /**
  * 인증된 앱 컨테이너
@@ -55,25 +56,40 @@ function AuthenticatedApp() {
   // 헤더 액션 버튼들
   const headerActions = (
     <>
-      {/* 관리자 페이지 전환 버튼 (관리자만 표시) */}
-      {user.role === 'admin' && (
+      {/* 대시보드 버튼 (설정/관리자 페이지에서만 표시) */}
+      {currentPage !== 'dashboard' && (
         <Button
-          onClick={() => setCurrentPage(currentPage === 'dashboard' ? 'admin' : 'dashboard')}
+          onClick={() => setCurrentPage('dashboard')}
           variant="outline"
           size="sm"
           className="gap-2"
         >
-          {currentPage === 'dashboard' ? (
-            <>
-              <Shield className="h-4 w-4" />
-              관리자
-            </>
-          ) : (
-            <>
-              <LayoutDashboard className="h-4 w-4" />
-              대시보드
-            </>
-          )}
+          <LayoutDashboard className="h-4 w-4" />
+          대시보드
+        </Button>
+      )}
+
+      {/* 설정 버튼 */}
+      <Button
+        onClick={() => setCurrentPage('settings')}
+        variant="outline"
+        size="sm"
+        className="gap-2"
+      >
+        <Settings className="h-4 w-4" />
+        설정
+      </Button>
+
+      {/* 관리자 버튼 (관리자만 표시) */}
+      {user.role === 'admin' && (
+        <Button
+          onClick={() => setCurrentPage('admin')}
+          variant="outline"
+          size="sm"
+          className="gap-2"
+        >
+          <Shield className="h-4 w-4" />
+          관리자
         </Button>
       )}
 
@@ -90,12 +106,22 @@ function AuthenticatedApp() {
     </>
   )
 
-  // 인증됨 - 대시보드/관리자 페이지
-  return currentPage === 'dashboard' ? (
-    <Dashboard headerActions={headerActions} />
-  ) : (
-    <AdminPage headerActions={headerActions} />
-  )
+  // 인증됨 - 대시보드/관리자/설정 페이지
+  switch (currentPage) {
+    case 'dashboard':
+      return (
+        <Dashboard
+          headerActions={headerActions}
+          onNavigateToSettings={() => setCurrentPage('settings')}
+        />
+      )
+    case 'admin':
+      return <AdminPage headerActions={headerActions} />
+    case 'settings':
+      return <SettingsPage headerActions={headerActions} />
+    default:
+      return <Dashboard headerActions={headerActions} />
+  }
 }
 
 /**

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.database.connection import get_db
 from app.database.user_repository import UserRepository
 from app.services.auth_service import AuthService, get_current_user
-from app.models.user import UserCreate, UserLogin, Token, UserResponse
+from app.models.user import UserCreate, UserLogin, Token, UserResponse, GeminiKeyUpdate, GeminiKeyStatus
 from app.database.models import UserDB
 
 router = APIRouter(prefix="/auth", tags=["인증"])
@@ -96,3 +96,42 @@ def login(login_data: UserLogin, db: Session = Depends(get_db)):
 def get_me(current_user: UserDB = Depends(get_current_user)):
     """현재 로그인한 사용자 정보 조회"""
     return current_user
+
+
+@router.put("/gemini-key", response_model=GeminiKeyStatus)
+def update_gemini_key(
+    key_data: GeminiKeyUpdate,
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Gemini API 키 설정"""
+    repo = UserRepository(db)
+    repo.update_gemini_key(current_user.id, key_data.api_key)
+    return GeminiKeyStatus(
+        has_key=True,
+        key_preview=f"{key_data.api_key[:4]}...{key_data.api_key[-4:]}"
+    )
+
+
+@router.delete("/gemini-key")
+def delete_gemini_key(
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Gemini API 키 삭제"""
+    repo = UserRepository(db)
+    repo.delete_gemini_key(current_user.id)
+    return {"message": "Gemini API 키가 삭제되었습니다."}
+
+
+@router.get("/gemini-key/status", response_model=GeminiKeyStatus)
+def get_gemini_key_status(
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Gemini API 키 상태 조회"""
+    repo = UserRepository(db)
+    key = repo.get_gemini_key(current_user.id)
+    if key:
+        return GeminiKeyStatus(has_key=True, key_preview=f"{key[:4]}...{key[-4:]}")
+    return GeminiKeyStatus(has_key=False)

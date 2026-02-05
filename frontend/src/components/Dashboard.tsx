@@ -20,13 +20,21 @@ import type { ApiResponse } from '@/lib/api';
 import type { StockData, NewsItem, AIAnalysis } from '@/types/stock';
 import type { UserSettings } from '@/types/user';
 import { getPortfolios, createPortfolio, deletePortfolio, updatePortfolio, updateProfitInfo } from '@/lib/portfolioApi';
+import { useAuth } from '@/contexts/AuthContext';
+import { Key } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface DashboardProps {
   /** 헤더 우측에 표시할 추가 액션 버튼들 */
   headerActions?: React.ReactNode;
+  /** 설정 페이지로 이동하는 콜백 */
+  onNavigateToSettings?: () => void;
 }
 
-export function Dashboard({ headerActions }: DashboardProps) {
+export function Dashboard({ headerActions, onNavigateToSettings }: DashboardProps) {
+  // 인증 상태
+  const { user } = useAuth();
+
   // 시장 데이터 상태
   const [stockData, setStockData] = useState<StockData | null>(null);
   const [newsData, setNewsData] = useState<NewsItem[] | null>(null);
@@ -350,7 +358,32 @@ export function Dashboard({ headerActions }: DashboardProps) {
                     <h2 className="text-xl font-semibold text-foreground mb-4">
                       AI 분석 (Gemini)
                     </h2>
-                    {aiAnalysis ? (
+                    {/* Gemini API 키 없음 안내 (일반 유저만) */}
+                    {!user?.has_gemini_key && user?.role !== 'admin' ? (
+                      <div className="text-center py-12 space-y-4">
+                        <div className="flex justify-center">
+                          <div className="h-16 w-16 rounded-full bg-warning/10 flex items-center justify-center">
+                            <Key className="h-8 w-8 text-warning" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <h3 className="text-lg font-semibold text-foreground">
+                            Gemini API 키가 필요합니다
+                          </h3>
+                          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                            AI 주식 분석 기능을 사용하려면 Google Gemini API 키를 설정해주세요.
+                            설정 페이지에서 API 키를 등록할 수 있습니다.
+                          </p>
+                        </div>
+                        <Button
+                          onClick={onNavigateToSettings}
+                          className="gap-2"
+                        >
+                          <Key className="h-4 w-4" />
+                          설정에서 API 키 등록하기
+                        </Button>
+                      </div>
+                    ) : aiAnalysis ? (
                       <div className="markdown-content">
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
                           {aiAnalysis.report}

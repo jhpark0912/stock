@@ -36,8 +36,24 @@ export interface UserResponse {
   role: string
   is_active: boolean
   is_approved: boolean
+  has_gemini_key: boolean  // Gemini API 키 보유 여부
   created_at: string
   updated_at: string
+}
+
+/**
+ * Gemini API 키 업데이트 요청
+ */
+export interface GeminiKeyUpdate {
+  api_key: string
+}
+
+/**
+ * Gemini API 키 상태 응답
+ */
+export interface GeminiKeyStatus {
+  has_key: boolean
+  key_preview?: string  // 마스킹된 키 미리보기 (예: AIza...xyz)
 }
 
 /**
