@@ -1,10 +1,14 @@
 # 환경 변수 파일 (API 키 포함)
 .env
-.env*
 
-.claude/
+
 .gemini/
 .serena/
+
+# Database files (프로젝트 루트의 data/ 폴더)
+/data/
+*.db
+*.db-journal
 
 # Python 캐시
 __pycache__/

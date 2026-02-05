@@ -3,6 +3,7 @@ export interface StockPrice {
   open: number;
   high: number;
   low: number;
+  close: number | null;  // 종가 추가
   volume: number;
 }
 
