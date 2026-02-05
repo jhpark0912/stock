@@ -32,7 +32,7 @@ export const api: AxiosInstance = axios.create({
 api.interceptors.request.use(
   (config) => {
     // localStorage에서 토큰 가져오기
-    const token = localStorage.getItem('access_token');
+    const token = localStorage.getItem('stock_access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -53,10 +53,11 @@ api.interceptors.response.use(
   (error) => {
     // 401 Unauthorized - 토큰 만료 또는 인증 실패
     if (error.response?.status === 401) {
-      // 토큰 삭제 및 로그인 페이지로 리다이렉트
-      localStorage.removeItem('access_token');
-      // TODO: 로그인 페이지로 리다이렉트 (Router 설정 후)
-      console.error('인증 오류: 로그인이 필요합니다.');
+      // 토큰 삭제
+      localStorage.removeItem('stock_access_token');
+
+      // 페이지 리로드하여 AuthContext가 로그아웃 상태 감지
+      window.location.reload();
     }
 
     // 403 Forbidden - 권한 부족

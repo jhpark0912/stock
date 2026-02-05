@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+> **AI 협업 지침**: `.claude/AI_COLLABORATION_GUIDE.md` 참조
+
 ## 디자인 시스템 (Design System)
 
 **필수 규칙**:
@@ -10,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 임의로 색상이나 스타일을 변경하지 말 것
 
 **주요 원칙**:
-- Primary Color: Teal (#14B8A6) - Linear 앱 스타일의 현대적이고 깔끔한 디자인
+- Primary Color: Indigo (#6366F1) - Linear 앱 스타일의 현대적이고 세련된 디자인
 - 아이콘: Lucide React만 사용, 크기 제한 (h-4, h-5, h-6)
 - 애니메이션: GPU 가속 속성만 (transform, opacity), duration 200-300ms
 - 일관성: 같은 역할은 같은 스타일 유지
