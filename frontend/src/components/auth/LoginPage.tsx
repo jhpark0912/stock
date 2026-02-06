@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LogIn, UserPlus } from 'lucide-react'
+import { LogIn, UserPlus, Coffee } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 /**
@@ -131,7 +131,7 @@ export function LoginPage() {
       })
 
       // 성공 메시지 표시
-      setSuccess('회원가입 신청이 완료되었습니다. 관리자 승인 후 로그인이 가능합니다.')
+      setSuccess('회원가입 신청이 완료되었습니다.\n커피를 보내야 빨리 승인됩니다.')
 
       // 폼 초기화
       setRegisterForm({
@@ -333,8 +333,9 @@ export function LoginPage() {
                 </Button>
 
                 {/* 안내 메시지 */}
-                <p className="text-xs text-muted-foreground text-center pt-2">
-                  회원가입 후 관리자 승인이 필요합니다
+                <p className="text-xs text-muted-foreground text-center pt-2 flex items-center justify-center gap-1">
+                  <Coffee className="h-3 w-3" />
+                  회원 가입은 커피를 보내셔야 승인이 됩니다.
                 </p>
               </form>
             </TabsContent>
