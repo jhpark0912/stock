@@ -147,8 +147,8 @@ def get_yahoo_indicator(symbol: str, include_history: bool = False) -> Optional[
         history_list = None
         if include_history:
             try:
-                # 30일 히스토리 조회
-                hist = ticker.history(period="1mo", interval="1d")
+                # 6개월 히스토리 조회
+                hist = ticker.history(period="6mo", interval="1d")
                 if hist is not None and not hist.empty:
                     history_list = []
                     # MultiIndex 처리

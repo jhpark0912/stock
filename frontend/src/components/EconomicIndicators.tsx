@@ -22,16 +22,30 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<EconomicViewMode>('simple');
   const [refreshing, setRefreshing] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
 
   const fetchData = useCallback(async (includeHistory: boolean = false) => {
     try {
       setError(null);
+      console.log('[EconomicIndicators] API 호출:', { includeHistory });
       const response = await api.get<EconomicResponse>(
         `/api/economic${includeHistory ? '?include_history=true' : ''}`
       );
 
+      console.log('[EconomicIndicators] API 응답:', response.data);
+
       if (response.data.success && response.data.data) {
         setData(response.data.data);
+
+        // 히스토리 데이터 확인
+        if (includeHistory) {
+          console.log('[EconomicIndicators] 히스토리 로드 확인:', {
+            treasury_10y: response.data.data.rates.treasury_10y?.history?.length,
+            cpi: response.data.data.macro.cpi?.history?.length,
+            m2: response.data.data.macro.m2?.history?.length,
+          });
+          setHistoryLoaded(true);
+        }
       } else {
         setError(response.data.error || '경제 지표를 불러올 수 없습니다.');
       }
@@ -53,7 +67,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
 
   // 뷰 모드 변경 시 히스토리 데이터 로드
   useEffect(() => {
-    if (viewMode === 'chart' && data && !data.rates.treasury_10y?.history) {
+    if (viewMode === 'chart' && !historyLoaded) {
       const loadHistoryData = async () => {
         setRefreshing(true);
         await fetchData(true);
@@ -61,7 +75,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
       };
       loadHistoryData();
     }
-  }, [viewMode, data, fetchData]);
+  }, [viewMode, historyLoaded, fetchData]);
 
   const handleRefresh = async () => {
     setRefreshing(true);

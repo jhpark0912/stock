@@ -50,6 +50,18 @@ const THRESHOLDS: Record<string, {
     danger: {},
     unit: '$',
   },
+  'CPIAUCSL': {
+    good: { min: 1.5, max: 2.5 },
+    caution: { min: 2.5, max: 4.0 },
+    danger: { min: 4.0 },
+    unit: '%',
+  },
+  'M2SL': {
+    good: { min: 4, max: 8 },
+    caution: { min: 1, max: 4 },
+    danger: { max: 0 },
+    unit: '%',
+  },
 };
 
 // 상태별 스타일
@@ -73,7 +85,11 @@ const statusStyles = {
 
 export function StatusGauge({ indicator }: StatusGaugeProps) {
   const threshold = THRESHOLDS[indicator.symbol];
-  const value = indicator.value;
+
+  // CPI와 M2는 YoY 변화율을 사용, 나머지는 절대값 사용
+  const isFredIndicator = indicator.symbol === 'CPIAUCSL' || indicator.symbol === 'M2SL';
+  const value = isFredIndicator ? indicator.yoy_change : indicator.value;
+
   const status = indicator.status as 'good' | 'caution' | 'danger' | undefined;
 
   // 임계값이 없거나 상태가 없으면 기본 표시
@@ -91,33 +107,6 @@ export function StatusGauge({ indicator }: StatusGaugeProps) {
     );
   }
 
-  // 게이지 위치 계산 (0-100%)
-  const calculateGaugePosition = (): number => {
-    if (value === null) return 50;
-
-    // 전체 범위 결정
-    const allValues = [
-      threshold.good.min,
-      threshold.good.max,
-      threshold.caution.min,
-      threshold.caution.max,
-      threshold.danger.min,
-      threshold.danger.max,
-    ].filter((v): v is number => v !== undefined);
-
-    if (allValues.length < 2) return 50;
-
-    const min = Math.min(...allValues) * 0.8;
-    const max = Math.max(...allValues) * 1.2;
-    const range = max - min;
-
-    let position = ((value - min) / range) * 100;
-    position = Math.max(0, Math.min(100, position));
-
-    return position;
-  };
-
-  const gaugePosition = calculateGaugePosition();
   const style = statusStyles[status] || statusStyles.caution;
 
   // 포맷팅
@@ -136,10 +125,10 @@ export function StatusGauge({ indicator }: StatusGaugeProps) {
       </h4>
 
       {/* 기준값 리스트 */}
-      <div className="space-y-2 mb-4">
+      <div className="space-y-2.5">
         <div className="flex items-center gap-2 text-sm">
           <span className="w-3 h-3 rounded-full bg-green-500"></span>
-          <span className="text-muted-foreground">좋음:</span>
+          <span className="text-muted-foreground min-w-[40px]">좋음:</span>
           <span className="text-foreground">
             {threshold.good.max !== undefined && `< ${formatThreshold(threshold.good.max)}`}
             {threshold.good.min !== undefined && threshold.good.max !== undefined && ' ~ '}
@@ -151,7 +140,7 @@ export function StatusGauge({ indicator }: StatusGaugeProps) {
 
         <div className="flex items-center gap-2 text-sm">
           <span className="w-3 h-3 rounded-full bg-yellow-500"></span>
-          <span className="text-muted-foreground">주의:</span>
+          <span className="text-muted-foreground min-w-[40px]">주의:</span>
           <span className="text-foreground">
             {threshold.caution.min !== undefined && formatThreshold(threshold.caution.min)}
             {threshold.caution.min !== undefined && threshold.caution.max !== undefined && ' ~ '}
@@ -161,7 +150,7 @@ export function StatusGauge({ indicator }: StatusGaugeProps) {
 
         <div className="flex items-center gap-2 text-sm">
           <span className="w-3 h-3 rounded-full bg-red-500"></span>
-          <span className="text-muted-foreground">위험:</span>
+          <span className="text-muted-foreground min-w-[40px]">위험:</span>
           <span className="text-foreground">
             {threshold.danger.min !== undefined && `> ${formatThreshold(threshold.danger.min)}`}
             {threshold.danger.max !== undefined && `< ${formatThreshold(threshold.danger.max)}`}
@@ -169,31 +158,23 @@ export function StatusGauge({ indicator }: StatusGaugeProps) {
         </div>
       </div>
 
-      {/* 게이지 바 */}
-      <div className="relative">
-        <div className="h-3 rounded-full overflow-hidden flex">
-          <div className="flex-1 bg-green-500/30"></div>
-          <div className="flex-1 bg-yellow-500/30"></div>
-          <div className="flex-1 bg-red-500/30"></div>
-        </div>
-
-        {/* 현재 위치 마커 */}
-        <div
-          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 transition-all duration-300"
-          style={{ left: `${gaugePosition}%` }}
-        >
-          <div className={cn(
-            'w-5 h-5 rounded-full border-2 border-background shadow-md',
-            style.bg
-          )}></div>
-        </div>
-      </div>
-
       {/* 현재 값 표시 */}
       <div className="mt-4 flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">현재값</span>
+        <span className="text-sm text-muted-foreground">
+          {isFredIndicator ? 'YoY 변화율' : '현재값'}
+        </span>
         <span className={cn('text-lg font-bold', style.text)}>
-          {threshold.unit === '$' ? `${threshold.unit}${value?.toFixed(2)}` : `${value?.toFixed(2)}${threshold.unit}`}
+          {value !== null && value !== undefined ? (
+            isFredIndicator ? (
+              // FRED 지표: YoY 변화율 표시
+              `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+            ) : (
+              // 기타 지표: 절대값 표시
+              threshold.unit === '$'
+                ? `${threshold.unit}${value.toFixed(2)}`
+                : `${value.toFixed(2)}${threshold.unit}`
+            )
+          ) : 'N/A'}
           <span className="ml-2 text-sm font-medium">({style.label})</span>
         </span>
       </div>

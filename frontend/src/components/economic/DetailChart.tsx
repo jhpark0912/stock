@@ -21,7 +21,7 @@ interface DetailChartProps {
   compareIndicators?: EconomicIndicator[];
 }
 
-type Period = '1W' | '1M' | '3M';
+type Period = '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL';
 
 // 차트 색상 팔레트
 const CHART_COLORS = [
@@ -34,12 +34,52 @@ const CHART_COLORS = [
 ];
 
 export function DetailChart({ indicator, compareIndicators = [] }: DetailChartProps) {
-  const [period, setPeriod] = useState<Period>('1M');
+  // FRED 지표(월간 데이터)와 Yahoo 지표(일간 데이터) 구분
+  const isFredIndicator = indicator.symbol === 'CPIAUCSL' || indicator.symbol === 'M2SL';
+
+  // FRED: 장기 기간, Yahoo: 단기 기간
+  const [period, setPeriod] = useState<Period>(isFredIndicator ? '1Y' : '1M');
+
+  // 디버깅: 히스토리 데이터 확인
+  console.log('[DetailChart] Indicator:', {
+    symbol: indicator.symbol,
+    name: indicator.name,
+    hasHistory: !!indicator.history,
+    historyLength: indicator.history?.length,
+    history: indicator.history,
+    isFredIndicator
+  });
 
   // 기간에 따라 데이터 필터링
-  const filterByPeriod = (data: { date: string; value: number }[], period: Period) => {
+  const filterByPeriod = (data: { date: string; value: number }[], period: Period, isFred: boolean) => {
     if (!data || data.length === 0) return [];
 
+    // 전체 데이터 표시
+    if (period === 'ALL') {
+      return data;
+    }
+
+    // FRED 데이터(월간): 데이터 포인트 개수 기준
+    if (isFred) {
+      let pointsToShow = 12; // 기본 1년 = 12개월
+
+      switch (period) {
+        case '3M':
+          pointsToShow = 3;
+          break;
+        case '6M':
+          pointsToShow = 6;
+          break;
+        case '1Y':
+          pointsToShow = 12;
+          break;
+      }
+
+      // 최근 N개 데이터 포인트 반환
+      return data.slice(-pointsToShow);
+    }
+
+    // Yahoo 데이터(일간): 날짜 기준
     const now = new Date();
     let daysBack = 30;
 
@@ -53,20 +93,34 @@ export function DetailChart({ indicator, compareIndicators = [] }: DetailChartPr
       case '3M':
         daysBack = 90;
         break;
+      case '6M':
+        daysBack = 180;
+        break;
+      case '1Y':
+        daysBack = 365;
+        break;
     }
 
     const cutoff = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
 
-    return data.filter(point => {
+    const filtered = data.filter(point => {
       const pointDate = new Date(point.date);
       return pointDate >= cutoff;
     });
+
+    // 필터링 결과가 비어있으면 전체 데이터 반환
+    if (filtered.length === 0) {
+      console.warn('[DetailChart] 필터링 결과가 비어있어 전체 데이터를 표시합니다');
+      return data;
+    }
+
+    return filtered;
   };
 
   // 메인 지표 + 비교 지표 데이터 병합
   const chartData = useMemo(() => {
     const mainHistory = indicator.history || [];
-    const filteredMain = filterByPeriod(mainHistory, period);
+    const filteredMain = filterByPeriod(mainHistory, period, isFredIndicator);
 
     if (filteredMain.length === 0) return [];
 
@@ -84,7 +138,8 @@ export function DetailChart({ indicator, compareIndicators = [] }: DetailChartPr
     // 비교 지표 추가
     compareIndicators.forEach(comp => {
       const compHistory = comp.history || [];
-      const filteredComp = filterByPeriod(compHistory, period);
+      const compIsFred = comp.symbol === 'CPIAUCSL' || comp.symbol === 'M2SL';
+      const filteredComp = filterByPeriod(compHistory, period, compIsFred);
 
       filteredComp.forEach(point => {
         const existing = dateMap.get(point.date);
@@ -96,7 +151,7 @@ export function DetailChart({ indicator, compareIndicators = [] }: DetailChartPr
 
     // 날짜순 정렬
     return Array.from(dateMap.values()).sort((a, b) => a.date - b.date);
-  }, [indicator, compareIndicators, period]);
+  }, [indicator, compareIndicators, period, isFredIndicator]);
 
   // Y축 도메인 계산
   const yDomain = useMemo(() => {
@@ -152,13 +207,17 @@ export function DetailChart({ indicator, compareIndicators = [] }: DetailChartPr
     <div className="bg-card border border-border rounded-lg p-4">
       {/* 기간 선택 */}
       <div className="flex justify-end mb-4">
-        <div className="flex items-center bg-muted rounded-lg p-1">
-          {(['1W', '1M', '3M'] as Period[]).map((p) => (
+        <div className="flex items-center bg-muted rounded-lg p-1 gap-0.5">
+          {/* FRED: 월간 데이터 (장기), Yahoo: 일간 데이터 (단기+중기) */}
+          {(isFredIndicator
+            ? (['3M', '6M', '1Y', 'ALL'] as Period[])
+            : (['1W', '1M', '3M', '6M'] as Period[])
+          ).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
               className={cn(
-                'px-3 py-1 text-sm font-medium rounded-md transition-colors',
+                'px-2.5 py-1 text-xs font-medium rounded-md transition-colors',
                 period === p
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'

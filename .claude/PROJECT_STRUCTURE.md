@@ -1,6 +1,6 @@
 # 프로젝트 구조
 
-> 최종 업데이트: 2026-02-06 (경제 지표 대시보드 추가)
+> 최종 업데이트: 2026-02-06 (경제 지표 차트 필터링 및 판단 기준 개선)
 
 ## 전체 아키텍처
 
@@ -38,7 +38,7 @@ stock/
   - python-jose (JWT)
   - passlib + bcrypt (비밀번호 해싱)
 - **주식 데이터**: yahooquery 2.4.1
-- **경제 지표**: fredapi 0.5.1+ (FRED API)
+- **경제 지표**: fredapi 0.5.2 (FRED API)
 - **AI 분석**: Google Generative AI 0.8.3 (Gemini)
 - **번역**: deep-translator 1.11.4
 - **기타**:
@@ -55,6 +55,12 @@ frontend/
 │   ├── components/           # React 컴포넌트
 │   │   ├── admin/           # 관리자 페이지 컴포넌트
 │   │   ├── auth/            # 인증 관련 컴포넌트
+│   │   ├── economic/        # 경제 지표 관련 컴포넌트
+│   │   │   ├── EconomicChartView.tsx    # Chart 뷰 메인 레이아웃
+│   │   │   ├── IndicatorListPanel.tsx   # 좌측 지표 목록
+│   │   │   ├── DetailChart.tsx          # 메인 차트 (기간 선택)
+│   │   │   ├── StatusGauge.tsx          # 판단 기준 게이지
+│   │   │   └── CompareSelector.tsx      # 비교 지표 선택
 │   │   ├── settings/        # 설정 페이지 컴포넌트
 │   │   ├── ui/              # 재사용 가능한 UI 컴포넌트 (shadcn/ui)
 │   │   ├── AppLayout.tsx    # 앱 레이아웃
@@ -78,9 +84,15 @@ frontend/
 
 **주요 컴포넌트**:
 - `Dashboard.tsx` - 메인 대시보드 (포트폴리오 개요 + 경제 지표)
-- `EconomicIndicators.tsx` - 경제 지표 대시보드
-- `IndicatorCard.tsx` - 경제 지표 카드 컴포넌트
-- `MiniSparkline.tsx` - 미니 스파크라인 차트
+- `EconomicIndicators.tsx` - 경제 지표 대시보드 (Simple/Chart 뷰 전환)
+- `IndicatorCard.tsx` - 경제 지표 카드 컴포넌트 (Simple 뷰)
+- `MiniSparkline.tsx` - 미니 스파크라인 차트 (Simple 뷰)
+- **경제 지표 Chart 뷰** (Phase 3):
+  - `EconomicChartView.tsx` - Chart 뷰 메인 레이아웃
+  - `IndicatorListPanel.tsx` - 좌측 지표 목록 (카테고리별 그룹핑)
+  - `DetailChart.tsx` - 메인 차트 (기간 선택: FRED=3M/6M/1Y/ALL, Yahoo=1W/1M/3M/6M)
+  - `StatusGauge.tsx` - 판단 기준 (기준값 리스트, YoY 변화율 표시)
+  - `CompareSelector.tsx` - 비교 지표 선택 (멀티 차트)
 - `StockChart.tsx` - 주식 차트 (Recharts 사용)
 - `CategoryMetrics.tsx` - 카테고리별 메트릭
 - `MetricCard.tsx` - 메트릭 카드
@@ -111,8 +123,9 @@ backend/
 │   │   ├── stock_service.py # 주식 데이터 서비스
 │   │   ├── technical_indicators.py  # 기술적 지표 계산
 │   │   ├── mock_data.py     # 목 데이터 생성
-│   │   ├── economic_service.py  # 경제 지표 서비스 (yahooquery)
-│   │   └── fred_service.py  # FRED API 서비스 (CPI, M2)
+│   │   ├── economic_service.py  # 경제 지표 서비스 (yahooquery, 6개월 히스토리)
+│   │   ├── fred_service.py  # FRED API 서비스 (CPI, M2, YoY 계산)
+│   │   └── indicator_status.py  # 지표 상태 판단 로직 (YoY 변화율 기반)
 │   ├── config.py            # 앱 설정
 │   ├── main.py              # FastAPI 앱 엔트리
 │   └── __init__.py
@@ -212,6 +225,14 @@ Frontend (토큰 저장)
    - 변동성: VIX (^VIX)
    - 거시경제: CPI (CPIAUCSL), M2 통화량 (M2SL) - FRED API
    - 원자재: WTI 원유 (CL=F), 금 (GC=F)
+   - **히스토리**: Yahoo(6개월), FRED(최근 30개 데이터 포인트)
+   - **상태 판단**:
+     - FRED: YoY 변화율 기반 (CPI: 1.5-2.5% 좋음, M2: 4-8% 좋음)
+     - Yahoo: 절대값 기반 (금리, VIX, 원자재)
+   - **Chart 뷰**:
+     - 기간 필터링: FRED(데이터 포인트 개수), Yahoo(날짜 기준)
+     - 판단 기준: 기준값 리스트 + 현재값 표시
+     - 지표 비교: 멀티 라인 차트
 
 ## 환경 변수
 
@@ -269,20 +290,22 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - `DELETE /api/admin/users/{id}` - 사용자 삭제
 
 ### 경제 지표
-- `GET /api/economic` - 경제 지표 조회 (금리, VIX, 원자재)
-- `GET /api/economic?include_history=true` - 30일 히스토리 포함
+- `GET /api/economic` - 경제 지표 조회 (현재값만)
+- `GET /api/economic?include_history=true` - 히스토리 포함 (Yahoo: 6개월, FRED: 30개월)
 - `GET /api/economic/status` - API 상태 확인 (FRED, Yahoo)
 
 ## 데이터베이스 스키마
 
 ### User (사용자)
-- id (PK)
-- username (UNIQUE)
-- email (UNIQUE)
-- hashed_password
-- is_admin
-- date_created
-- date_updated
+- id (PK, AUTOINCREMENT)
+- username (VARCHAR(50), NOT NULL, UNIQUE)
+- password_hash (VARCHAR(255), NOT NULL)
+- role (VARCHAR(20), NOT NULL, DEFAULT 'user') - 'user' | 'admin'
+- is_active (BOOLEAN, DEFAULT TRUE)
+- is_approved (BOOLEAN, DEFAULT FALSE) - Admin 승인 여부
+- gemini_api_key (VARCHAR(255), NULL) - 유저별 Gemini API 키
+- created_at (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+- updated_at (DATETIME, DEFAULT CURRENT_TIMESTAMP)
 
 ### Stock (주식)
 - id (PK)
@@ -294,13 +317,18 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ### Portfolio (포트폴리오)
 - id (PK)
-- user_id (FK → User)
-- ticker (FK → Stock)
-- quantity
-- purchase_price
-- purchase_date
-- date_created
-- date_updated
+- user_id (FK → User, NOT NULL) - 2026-02-06 추가
+- ticker (VARCHAR(10), NOT NULL)
+- quantity (INTEGER)
+- purchase_price (NUMERIC(10, 2))
+- purchase_date (DATE)
+- notes (TEXT)
+- last_price (NUMERIC(10, 2)) - 마지막 조회 현재가
+- profit_percent (NUMERIC(10, 2)) - 수익률
+- last_updated (DATETIME) - 마지막 업데이트 시각
+- created_at (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+- updated_at (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+- UNIQUE (user_id, ticker) - 사용자당 티커 중복 방지
 
 ## 디자인 시스템
 
@@ -315,3 +343,25 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - **AI 협업 지침**: `.claude/AI_COLLABORATION_GUIDE.md`
 - **디자인 시스템**: `docs/DESIGN_SYSTEM.md`
 - **프로젝트 가이드**: `CLAUDE.md`
+
+## 최근 변경 이력
+
+### 2026-02-06: 경제 지표 차트 개선
+1. **히스토리 데이터 로드 문제 해결**
+   - `EconomicIndicators.tsx`: 히스토리 로드 상태 추적 (`historyLoaded`)
+   - useEffect 의존성 수정으로 Chart 뷰 전환 시 히스토리 자동 로드
+
+2. **차트 기간 필터링 개선**
+   - `DetailChart.tsx`: FRED/Yahoo 데이터 타입별 필터링 로직 분리
+     - FRED (월간 데이터): 데이터 포인트 개수 기준 (3M=3개월, 6M=6개월, 1Y=12개월)
+     - Yahoo (일간 데이터): 날짜 기준 (1W, 1M, 3M, 6M)
+   - 지표별 기간 옵션 차별화
+
+3. **백엔드 히스토리 기간 확대**
+   - `economic_service.py`: Yahoo Finance 히스토리 1개월 → 6개월로 확대
+   - 금리/변동성 지표도 6개월 추세 확인 가능
+
+4. **CPI/M2 판단 기준 수정**
+   - `StatusGauge.tsx`: 절대값 대신 YoY 변화율 기준으로 표시
+   - FRED 지표: "YoY 변화율: +2.54%" 형식으로 표시
+   - 게이지 바 제거, 기준값 리스트와 현재값만 표시
