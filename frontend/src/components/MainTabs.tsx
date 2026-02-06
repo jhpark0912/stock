@@ -4,13 +4,13 @@
  */
 
 import { useState } from 'react';
-import { BarChart3, Sparkles, LineChart, TrendingUp, Newspaper } from 'lucide-react';
+import { BarChart3, Sparkles, LineChart, TrendingUp, Newspaper, Globe } from 'lucide-react';
 
 interface MainTabsProps {
   children: (activeTab: string) => React.ReactNode;
 }
 
-type TabId = 'overview' | 'ai' | 'chart' | 'technical' | 'news';
+type TabId = 'overview' | 'ai' | 'chart' | 'technical' | 'news' | 'economic';
 
 interface Tab {
   id: TabId;
@@ -24,6 +24,7 @@ const tabs: Tab[] = [
   { id: 'chart', label: 'Chart', icon: <LineChart className="h-4 w-4" /> },
   { id: 'technical', label: 'Technical', icon: <TrendingUp className="h-4 w-4" /> },
   { id: 'news', label: 'News', icon: <Newspaper className="h-4 w-4" /> },
+  { id: 'economic', label: 'Economic', icon: <Globe className="h-4 w-4" /> },
 ];
 
 export function MainTabs({ children }: MainTabsProps) {

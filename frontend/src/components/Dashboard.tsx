@@ -15,6 +15,7 @@ import { CategoryMetrics } from './CategoryMetrics';
 import { StockChart } from './StockChart';
 import { GaugeBar } from './GaugeBar';
 import { LoadingSpinner } from './LoadingSpinner';
+import { EconomicIndicators } from './EconomicIndicators';
 import { api } from '@/lib/api';
 import type { ApiResponse } from '@/lib/api';
 import type { StockData, NewsItem, AIAnalysis } from '@/types/stock';
@@ -356,19 +357,29 @@ export function Dashboard({ headerActions, onNavigateToSettings }: DashboardProp
       }
       headerActions={headerActions}
     >
-      <HeroSection
-        ticker={displayData.ticker}
-        companyName={displayData.companyName}
-        currentPrice={displayData.currentPrice}
-        priceChange={displayData.priceChange}
-        priceChangePercent={displayData.priceChangePercent}
-        marketCap={displayData.marketCap}
-        sector={displayData.sector}
-        purchasePrice={displayData.purchasePrice}
-        quantity={displayData.quantity}
-        hasData={displayData.hasData}
-      />
+      {/* 주식 선택 시에만 HeroSection 표시 */}
+      {stockData && (
+        <HeroSection
+          ticker={displayData.ticker}
+          companyName={displayData.companyName}
+          currentPrice={displayData.currentPrice}
+          priceChange={displayData.priceChange}
+          priceChangePercent={displayData.priceChangePercent}
+          marketCap={displayData.marketCap}
+          sector={displayData.sector}
+          purchasePrice={displayData.purchasePrice}
+          quantity={displayData.quantity}
+          hasData={displayData.hasData}
+        />
+      )}
 
+      {/* 주식 미선택 시: 경제 지표 대시보드 표시 */}
+      {!stockData && !loadingStates.stock && (
+        <EconomicIndicators />
+      )}
+
+      {/* 주식 선택 시: MainTabs 표시 */}
+      {(stockData || loadingStates.stock) && (
       <MainTabs>
         {(activeTab) => {
           switch (activeTab) {
@@ -719,11 +730,15 @@ export function Dashboard({ headerActions, onNavigateToSettings }: DashboardProp
                 </div>
               );
 
+            case 'economic':
+              return <EconomicIndicators />;
+
             default:
               return null;
           }
         }}
       </MainTabs>
+      )}
     </AppLayout>
   );
 }

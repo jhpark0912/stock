@@ -15,6 +15,9 @@ class Settings:
     def __init__(self):
         # Gemini API
         self.gemini_api_key = os.getenv("GEMINI_API_KEY", "")
+        
+        # FRED API (경제 지표용)
+        self.fred_api_key = os.getenv("FRED_API_KEY", "")
 
         # Environment
         self.environment = os.getenv("ENVIRONMENT", "development")
