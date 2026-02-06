@@ -1,9 +1,10 @@
 """
 SQLAlchemy ORM 모델
 """
-from sqlalchemy import Column, Integer, String, Numeric, Date, Text, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, Numeric, Date, Text, DateTime, Boolean, ForeignKey, UniqueConstraint
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
@@ -33,7 +34,8 @@ class PortfolioDB(Base):
     __tablename__ = "portfolio"
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    ticker = Column(String(10), nullable=False, unique=True, index=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    ticker = Column(String(10), nullable=False, index=True)
     purchase_price = Column(Numeric(10, 2), nullable=True)
     quantity = Column(Integer, nullable=True)
     purchase_date = Column(Date, nullable=True)
@@ -43,3 +45,11 @@ class PortfolioDB(Base):
     last_updated = Column(DateTime, nullable=True)  # 마지막 업데이트 시각
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    # 복합 유니크 제약: 한 사용자가 동일 티커를 중복 등록할 수 없음
+    __table_args__ = (
+        UniqueConstraint('user_id', 'ticker', name='uq_user_ticker'),
+    )
+
+    # Relationship
+    user = relationship("UserDB", backref="portfolios")

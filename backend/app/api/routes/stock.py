@@ -199,9 +199,8 @@ async def get_stock_analysis(
 
         logger.info(f"   ✅ 티커 일치 확인 완료")
         
-        # 포트폴리오에서 평단가 정보 조회
-        portfolio_repo = PortfolioRepository()
-        portfolio_item = portfolio_repo.get_by_ticker(db, ticker)
+        # 포트폴리오에서 평단가 정보 조회 (유저별)
+        portfolio_item = PortfolioRepository.get_by_ticker(db, current_user.id, ticker)
         
         user_avg_price = None
         user_profit_loss_ratio = None

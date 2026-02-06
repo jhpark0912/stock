@@ -11,9 +11,10 @@ from app.models.portfolio import PortfolioCreate, PortfolioUpdate
 class PortfolioRepository:
 
     @staticmethod
-    def create(db: Session, portfolio: PortfolioCreate) -> PortfolioDB:
+    def create(db: Session, user_id: int, portfolio: PortfolioCreate) -> PortfolioDB:
         """생성"""
         db_portfolio = PortfolioDB(
+            user_id=user_id,
             ticker=portfolio.ticker.upper(),
             purchase_price=portfolio.purchase_price,
             quantity=portfolio.quantity,
@@ -27,22 +28,27 @@ class PortfolioRepository:
             return db_portfolio
         except IntegrityError:
             db.rollback()
-            raise ValueError(f"Ticker {portfolio.ticker} already exists")
+            raise ValueError(f"Ticker {portfolio.ticker} already exists in your portfolio")
 
     @staticmethod
-    def get_all(db: Session) -> List[PortfolioDB]:
-        """전체 조회"""
-        return db.query(PortfolioDB).order_by(PortfolioDB.created_at.desc()).all()
+    def get_all(db: Session, user_id: int) -> List[PortfolioDB]:
+        """전체 조회 (유저별)"""
+        return db.query(PortfolioDB).filter(
+            PortfolioDB.user_id == user_id
+        ).order_by(PortfolioDB.created_at.desc()).all()
 
     @staticmethod
-    def get_by_ticker(db: Session, ticker: str) -> Optional[PortfolioDB]:
-        """티커로 조회"""
-        return db.query(PortfolioDB).filter(PortfolioDB.ticker == ticker.upper()).first()
+    def get_by_ticker(db: Session, user_id: int, ticker: str) -> Optional[PortfolioDB]:
+        """티커로 조회 (유저별)"""
+        return db.query(PortfolioDB).filter(
+            PortfolioDB.user_id == user_id,
+            PortfolioDB.ticker == ticker.upper()
+        ).first()
 
     @staticmethod
-    def update(db: Session, ticker: str, portfolio: PortfolioUpdate) -> Optional[PortfolioDB]:
-        """수정"""
-        db_portfolio = PortfolioRepository.get_by_ticker(db, ticker)
+    def update(db: Session, user_id: int, ticker: str, portfolio: PortfolioUpdate) -> Optional[PortfolioDB]:
+        """수정 (유저별)"""
+        db_portfolio = PortfolioRepository.get_by_ticker(db, user_id, ticker)
         if not db_portfolio:
             return None
 
@@ -55,9 +61,9 @@ class PortfolioRepository:
         return db_portfolio
 
     @staticmethod
-    def delete(db: Session, ticker: str) -> bool:
-        """삭제"""
-        db_portfolio = PortfolioRepository.get_by_ticker(db, ticker)
+    def delete(db: Session, user_id: int, ticker: str) -> bool:
+        """삭제 (유저별)"""
+        db_portfolio = PortfolioRepository.get_by_ticker(db, user_id, ticker)
         if not db_portfolio:
             return False
 
