@@ -13,16 +13,12 @@ import { Check, X, UserX, Trash2, RefreshCw, Shield, Settings, Activity, Users }
 import * as adminApi from '@/lib/adminApi'
 import type { UserResponse } from '@/types/auth'
 import type { LogLevel, LogLevelResponse } from '@/types/admin'
-
-interface AdminPageProps {
-  /** 헤더 우측에 표시할 추가 액션 버튼들 */
-  headerActions?: React.ReactNode;
-}
+import { PageHeader, PageContainer } from '@/components/layout'
 
 /**
  * 관리자 페이지
  */
-export function AdminPage({ headerActions }: AdminPageProps) {
+export function AdminPage() {
   const { user } = useAuth()
   const [allUsers, setAllUsers] = useState<UserResponse[]>([])
   const [pendingUsers, setPendingUsers] = useState<UserResponse[]>([])
@@ -151,12 +147,15 @@ export function AdminPage({ headerActions }: AdminPageProps) {
   // 관리자 권한 체크
   if (user?.role !== 'admin') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="w-full max-w-md p-8 text-center">
-          <Shield className="h-12 w-12 text-destructive mx-auto mb-4" />
-          <h2 className="text-2xl font-semibold text-foreground mb-2">접근 권한 없음</h2>
-          <p className="text-sm text-muted-foreground">관리자만 접근 가능한 페이지입니다.</p>
-        </Card>
+      <div className="h-full min-h-0 flex flex-col">
+        <PageHeader title="관리자" description="접근 권한이 필요합니다" />
+        <PageContainer className="flex items-center justify-center">
+          <Card className="w-full max-w-md p-8 text-center">
+            <Shield className="h-12 w-12 text-destructive mx-auto mb-4" />
+            <h2 className="text-2xl font-semibold text-foreground mb-2">접근 권한 없음</h2>
+            <p className="text-sm text-muted-foreground">관리자만 접근 가능한 페이지입니다.</p>
+          </Card>
+        </PageContainer>
       </div>
     )
   }
@@ -164,8 +163,11 @@ export function AdminPage({ headerActions }: AdminPageProps) {
   // 로딩 중
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <LoadingSpinner message="데이터를 불러오는 중..." />
+      <div className="h-full min-h-0 flex flex-col">
+        <PageHeader title="관리자" description="데이터를 불러오는 중..." />
+        <PageContainer className="flex items-center justify-center">
+          <LoadingSpinner message="데이터를 불러오는 중..." />
+        </PageContainer>
       </div>
     )
   }
@@ -173,46 +175,36 @@ export function AdminPage({ headerActions }: AdminPageProps) {
   // 에러
   if (error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="w-full max-w-md p-8 text-center">
-          <h2 className="text-2xl font-semibold text-destructive mb-2">오류 발생</h2>
-          <p className="text-sm text-muted-foreground mb-4">{error}</p>
-          <Button onClick={loadData} variant="outline">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            다시 시도
-          </Button>
-        </Card>
+      <div className="h-full min-h-0 flex flex-col">
+        <PageHeader title="관리자" description="오류가 발생했습니다" />
+        <PageContainer className="flex items-center justify-center">
+          <Card className="w-full max-w-md p-8 text-center">
+            <h2 className="text-2xl font-semibold text-destructive mb-2">오류 발생</h2>
+            <p className="text-sm text-muted-foreground mb-4">{error}</p>
+            <Button onClick={loadData} variant="outline">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              다시 시도
+            </Button>
+          </Card>
+        </PageContainer>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* 헤더 */}
-      <header className="w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="flex h-14 items-center justify-between px-6">
-          <h1 className="text-lg font-semibold text-foreground">관리자 페이지</h1>
-          <div className="flex items-center gap-2">
-            <Button onClick={loadData} variant="outline" size="sm">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              새로고침
-            </Button>
-            {headerActions}
-          </div>
-        </div>
-      </header>
-
-      {/* 메인 콘텐츠 - 스크롤 가능 */}
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
-          <div className="max-w-6xl mx-auto">
-            {/* 헤더 */}
-            <div className="mb-6">
-              <h1 className="text-4xl font-bold text-foreground mb-2">관리자 대시보드</h1>
-              <p className="text-sm text-muted-foreground">
-                시스템 설정 및 사용자 관리 · 전체 {allUsers.length}명 · 승인 대기 {pendingUsers.length}명
-              </p>
-            </div>
+    <div className="h-full min-h-0 flex flex-col">
+      <PageHeader
+        title="관리자"
+        description={`시스템 설정 및 사용자 관리 · 전체 ${allUsers.length}명 · 승인 대기 ${pendingUsers.length}명`}
+        actions={
+          <Button onClick={loadData} variant="outline" size="sm" className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            새로고침
+          </Button>
+        }
+      />
+      <PageContainer>
+        <div className="max-w-6xl mx-auto">
 
             {/* 탭 */}
             <Tabs defaultValue="users" className="w-full">
@@ -420,8 +412,7 @@ export function AdminPage({ headerActions }: AdminPageProps) {
               </TabsContent>
             </Tabs>
           </div>
-        </div>
-      </div>
+      </PageContainer>
     </div>
   )
 }

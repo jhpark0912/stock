@@ -5,17 +5,12 @@ import { Input } from '@/components/ui/input'
 import { Key, Save, Trash2, Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { updateGeminiKey, deleteGeminiKey, getGeminiKeyStatus } from '@/lib/authApi'
-import { ThemeToggle } from '@/components/ThemeToggle'
-
-interface SettingsPageProps {
-  /** 헤더 우측에 표시할 추가 액션 버튼들 */
-  headerActions?: React.ReactNode
-}
+import { PageHeader, PageContainer } from '@/components/layout'
 
 /**
  * 설정 페이지 - Gemini API 키 관리
  */
-export function SettingsPage({ headerActions }: SettingsPageProps) {
+export function SettingsPage() {
   const { token, user } = useAuth()
 
   // API 키 입력 상태
@@ -142,29 +137,12 @@ export function SettingsPage({ headerActions }: SettingsPageProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      {/* Header - 상단 고정 */}
-      <header className="flex-none z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex h-14 items-center justify-between px-6">
-          {/* 좌측: 타이틀 */}
-          <h1 className="text-lg font-semibold text-foreground">Stock Dashboard</h1>
-
-          {/* 우측: 추가 액션 + 다크모드 토글 */}
-          <div className="flex items-center gap-2">
-            {headerActions}
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
-
-      {/* 메인 콘텐츠 */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-2xl mx-auto space-y-6">
-        {/* 페이지 헤더 */}
-        <div className="space-y-2">
-          <h1 className="text-4xl font-bold text-foreground">설정</h1>
-          <p className="text-muted-foreground">AI 분석 기능을 사용하기 위한 API 키를 관리합니다</p>
-        </div>
+    <div className="h-full min-h-0 flex flex-col">
+      <PageHeader
+        title="설정"
+        description="AI 분석 기능을 사용하기 위한 API 키를 관리합니다"
+      />
+      <PageContainer centered padded>
 
         {/* API 키 관리 카드 */}
         <Card className="border-border shadow-lg">
@@ -321,8 +299,7 @@ export function SettingsPage({ headerActions }: SettingsPageProps) {
             )}
           </CardContent>
         </Card>
-        </div>
-      </div>
+      </PageContainer>
     </div>
   )
 }

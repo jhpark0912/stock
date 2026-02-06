@@ -1,6 +1,6 @@
 # 프로젝트 구조
 
-> 최종 업데이트: 2026-02-06 (경제 지표 차트 로딩 상태 표시 추가)
+> 최종 업데이트: 2026-02-06 (페이지 레이아웃 구조 개선, usePortfolio 훅 분리)
 
 ## 전체 아키텍처
 
@@ -61,19 +61,32 @@ frontend/
 │   │   │   ├── DetailChart.tsx          # 메인 차트 (기간 선택)
 │   │   │   ├── StatusGauge.tsx          # 판단 기준 게이지
 │   │   │   └── CompareSelector.tsx      # 비교 지표 선택
+│   │   ├── layout/          # 레이아웃 컴포넌트
+│   │   │   ├── TopNav.tsx       # 상단 네비게이션 (ThemeToggle 포함)
+│   │   │   ├── PageHeader.tsx   # 공통 페이지 헤더
+│   │   │   ├── PageContainer.tsx # 공통 콘텐츠 컨테이너
+│   │   │   └── index.ts
+│   │   ├── pages/           # 페이지 컴포넌트 (신규)
+│   │   │   ├── HomePage.tsx       # Economic 페이지 (기본)
+│   │   │   ├── PortfolioPage.tsx  # 포트폴리오 페이지
+│   │   │   └── index.ts
 │   │   ├── settings/        # 설정 페이지 컴포넌트
 │   │   ├── ui/              # 재사용 가능한 UI 컴포넌트 (shadcn/ui)
 │   │   ├── AppLayout.tsx    # 앱 레이아웃
-│   │   ├── Dashboard.tsx    # 대시보드
+│   │   ├── Dashboard.tsx    # 대시보드 (레거시, PortfolioPage로 이동됨)
+│   │   ├── MainTabs.tsx     # 주식별 탭 (5개: Overview, AI, Chart, Technical, News)
 │   │   ├── StockChart.tsx   # 주식 차트
-│   │   ├── Sidebar.tsx      # 사이드바
+│   │   ├── Sidebar.tsx      # 티커 목록 사이드바
 │   │   └── ...
+│   ├── hooks/               # 커스텀 훅
+│   │   ├── usePortfolio.ts  # 포트폴리오 데이터 관리 훅
+│   │   └── index.ts
 │   ├── contexts/            # React Context (테마, 인증 등)
 │   ├── lib/                 # 라이브러리 설정
 │   ├── types/               # TypeScript 타입 정의
 │   ├── utils/               # 유틸리티 함수
 │   ├── assets/              # 정적 리소스
-│   ├── App.tsx              # 앱 루트
+│   ├── App.tsx              # 앱 루트 (TopNav + 페이지 라우팅)
 │   └── main.tsx             # 엔트리 포인트
 ├── public/                  # 정적 파일 (favicon 등)
 ├── index.html               # HTML 템플릿
@@ -82,22 +95,43 @@ frontend/
 └── package.json             # npm 의존성
 ```
 
+**페이지 구조** (TopNav 기반):
+```
+App.tsx
+├── TopNav (상단 네비게이션)
+│   ├── Economic (기본 페이지)
+│   ├── Portfolio
+│   ├── Settings
+│   └── Admin (관리자만)
+└── Pages
+    ├── HomePage (EconomicIndicators)
+    ├── PortfolioPage (Sidebar + MainTabs)
+    ├── SettingsPage
+    └── AdminPage
+```
+
 **주요 컴포넌트**:
-- `Dashboard.tsx` - 메인 대시보드 (포트폴리오 개요 + 경제 지표)
-- `EconomicIndicators.tsx` - 경제 지표 대시보드 (Simple/Chart 뷰 전환)
-- `IndicatorCard.tsx` - 경제 지표 카드 컴포넌트 (Simple 뷰)
-- `MiniSparkline.tsx` - 미니 스파크라인 차트 (Simple 뷰)
-- **경제 지표 Chart 뷰** (Phase 3):
-  - `EconomicChartView.tsx` - Chart 뷰 메인 레이아웃
-  - `IndicatorListPanel.tsx` - 좌측 지표 목록 (카테고리별 그룹핑)
-  - `DetailChart.tsx` - 메인 차트 (기간 선택: FRED=3M/6M/1Y/ALL, Yahoo=1W/1M/3M/6M)
-  - `StatusGauge.tsx` - 판단 기준 (기준값 리스트, YoY 변화율 표시)
-  - `CompareSelector.tsx` - 비교 지표 선택 (멀티 차트)
-- `StockChart.tsx` - 주식 차트 (Recharts 사용)
-- `CategoryMetrics.tsx` - 카테고리별 메트릭
-- `MetricCard.tsx` - 메트릭 카드
-- `Sidebar.tsx` - 사이드바 네비게이션
-- `AppLayout.tsx` - 전체 레이아웃 컨테이너
+- **페이지 컴포넌트**:
+  - `pages/HomePage.tsx` - Economic 페이지 (기본 페이지, EconomicIndicators 래핑)
+  - `pages/PortfolioPage.tsx` - 포트폴리오 페이지 (Sidebar + MainTabs)
+- **레이아웃 컴포넌트**:
+  - `layout/TopNav.tsx` - 상단 네비게이션 (페이지 전환 + ThemeToggle + 로그아웃)
+  - `layout/PageHeader.tsx` - 공통 페이지 헤더 (타이틀, 설명, 액션 버튼)
+  - `layout/PageContainer.tsx` - 공통 콘텐츠 컨테이너 (스크롤, 패딩, 중앙 정렬)
+- **커스텀 훅**:
+  - `hooks/usePortfolio.ts` - 포트폴리오 데이터 관리 (상태 + 액션 분리)
+- **경제 지표 컴포넌트**:
+  - `EconomicIndicators.tsx` - 경제 지표 대시보드 (Simple/Chart 뷰 전환)
+  - `economic/EconomicChartView.tsx` - Chart 뷰 메인 레이아웃
+  - `economic/IndicatorListPanel.tsx` - 좌측 지표 목록 (카테고리별 그룹핑)
+  - `economic/DetailChart.tsx` - 메인 차트 (기간 선택)
+  - `economic/StatusGauge.tsx` - 판단 기준 (기준값 리스트, YoY 변화율 표시)
+  - `economic/CompareSelector.tsx` - 비교 지표 선택 (멀티 차트)
+- **주식 컴포넌트**:
+  - `MainTabs.tsx` - 주식별 탭 (5개: Overview, AI, Chart, Technical, News)
+  - `StockChart.tsx` - 주식 차트 (Recharts 사용)
+  - `CategoryMetrics.tsx` - 카테고리별 메트릭
+  - `Sidebar.tsx` - 티커 목록 사이드바 (Portfolio 페이지에서 사용)
 
 ### Backend
 
@@ -345,6 +379,47 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - **프로젝트 가이드**: `CLAUDE.md`
 
 ## 최근 변경 이력
+
+### 2026-02-06: 페이지 레이아웃 구조 개선
+1. **공통 레이아웃 컴포넌트 추가**
+   - `PageHeader.tsx` - 통일된 페이지 헤더 (타이틀, 설명, 액션 버튼)
+   - `PageContainer.tsx` - 통일된 콘텐츠 컨테이너 (스크롤, 패딩, 중앙 정렬)
+
+2. **TopNav 개선**
+   - ThemeToggle을 TopNav 우측에 통합 (구분선과 함께)
+   - SettingsPage, AdminPage의 자체 헤더 제거 (이중 헤더 해결)
+
+3. **PortfolioPage 리팩토링**
+   - 데이터 로직을 `usePortfolio` 훅으로 분리 (745줄 → 448줄)
+   - 상태 관리, API 호출, 파생 데이터 계산을 훅으로 추출
+   - UI 코드만 PortfolioPage에 유지
+
+4. **SettingsPage/AdminPage 정리**
+   - `headerActions` prop 제거
+   - 자체 헤더 제거, PageHeader 적용
+   - 통일된 레이아웃 구조 적용
+
+### 2026-02-06: TopNav 기반 페이지 아키텍처 적용
+1. **페이지 구조 변경**
+   - Economic 페이지를 별도 홈 페이지로 분리
+   - TopNav 상단 네비게이션 도입 (Economic, Portfolio, Settings, Admin)
+   - MainTabs에서 economic 탭 제거 (5개 탭으로 축소)
+
+2. **신규 컴포넌트**
+   - `components/layout/TopNav.tsx` - 상단 네비게이션
+   - `components/pages/HomePage.tsx` - Economic 페이지 (기본)
+   - `components/pages/PortfolioPage.tsx` - 포트폴리오 페이지
+
+3. **수정된 파일**
+   - `App.tsx` - TopNav + 페이지 라우팅 구조로 변경
+   - `MainTabs.tsx` - economic 탭 제거
+
+4. **기존 기능 보존**
+   - 모든 데이터 로직, API 호출, 상태 관리 100% 유지
+   - EconomicIndicators, Sidebar, 각 탭 콘텐츠 그대로 유지
+
+5. **브랜딩**
+   - 앱 타이틀: "Rice Digger" (로고: RD)
 
 ### 2026-02-06 (17:30): 경제 지표 차트 로딩 상태 표시
 1. **UX 개선 - 로딩 인디케이터 추가**
