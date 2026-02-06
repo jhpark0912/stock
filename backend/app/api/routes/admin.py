@@ -183,6 +183,10 @@ def update_log_level(
     for handler in logging.getLogger().handlers:
         handler.setLevel(level)
 
+    # SQLAlchemy 엔진의 echo 설정 동적 변경 (DEBUG일 때만 쿼리 출력)
+    from app.database.connection import engine
+    engine.echo = (level_str == "DEBUG")
+
     logging.info(f"🔧 로그 레벨이 {level_str}로 변경되었습니다 (관리자: {current_admin.username})")
 
     return LogLevelResponse(

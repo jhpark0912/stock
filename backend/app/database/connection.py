@@ -17,8 +17,12 @@ DB_FILE = DB_DIR / "portfolio.db"
 # SQLite 연결 문자열
 DATABASE_URL = f"sqlite:///{DB_FILE}"
 
+# 로그 레벨이 DEBUG일 때만 SQL 쿼리 출력
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+SQL_ECHO = LOG_LEVEL == "DEBUG"
+
 # Engine 및 Session
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL, echo=SQL_ECHO)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
