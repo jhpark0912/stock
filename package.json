@@ -1,0 +1,12 @@
+{
+  "name": "stock-project",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Stock analysis project with Git commit automation",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.0.0"
+  }
+}

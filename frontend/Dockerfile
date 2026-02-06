@@ -7,6 +7,9 @@ WORKDIR /app
 # package.json과 package-lock.json 복사
 COPY package*.json ./
 
+# Husky 스킵 (Docker 빌드 시)
+ENV HUSKY=0
+
 # 의존성 설치
 RUN npm ci
 

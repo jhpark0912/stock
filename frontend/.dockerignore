@@ -28,6 +28,9 @@ coverage/
 .git
 .gitignore
 
+# Husky (Git hooks - Docker에서 불필요)
+.husky/
+
 # Documentation
 *.md
 docs/

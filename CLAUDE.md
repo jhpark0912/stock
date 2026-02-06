@@ -22,6 +22,84 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## 프로젝트 구조
+
+**구조 분석 시 필수 참조**: `.claude/PROJECT_STRUCTURE.md`
+
+이 문서는 프로젝트의 전체 아키텍처, 디렉토리 구조, 기술 스택, 데이터 흐름을 정리한 문서입니다.
+- 새로운 기능 개발 전 구조 파악
+- API 엔드포인트 확인
+- 컴포넌트 위치 찾기
+- 데이터베이스 스키마 확인
+
+**주요 내용**:
+- Frontend: React + TypeScript + Vite + Radix UI + Tailwind
+- Backend: FastAPI + SQLAlchemy + yahooquery + Gemini AI
+- 디렉토리 구조 및 주요 파일 위치
+- API 엔드포인트 목록
+- 데이터 흐름 다이어그램
+
+**📋 자동 업데이트 원칙**:
+
+Claude는 다음 작업 후 **반드시** `.claude/PROJECT_STRUCTURE.md`를 업데이트해야 합니다:
+- ✅ 새 디렉토리/파일 생성 (특히 `components/`, `api/routes/`, `models/`, `services/`)
+- ✅ API 엔드포인트 추가/수정/삭제
+- ✅ 데이터베이스 스키마 변경 (모델 추가/수정)
+- ✅ 새로운 의존성 추가 (package.json, requirements.txt)
+- ✅ 주요 기능 추가/변경
+- ✅ 환경 변수 추가
+
+**업데이트 절차**:
+1. 구조 변경 작업 완료 후
+2. `.claude/PROJECT_STRUCTURE.md` 읽기
+3. 변경 사항 반영 (날짜, 내용 갱신)
+4. 사용자에게 "구조 문서 업데이트 완료" 알림
+
+---
+
+## Git Commit 워크플로우
+
+**필수 참조**: `.claude/COMMIT_CONVENTION.md`
+
+### 커밋 메시지 형식
+
+```
+:[emoji]: [type] 메시지
+```
+
+**예시**:
+```
+:sparkles: [feat] 새로운 로그인 기능 추가
+:bug: [fix] 인증 토큰 만료 오류 수정
+:memo: [docs] README 업데이트
+```
+
+### Type 목록
+
+| Type | Emoji | 용도 |
+|------|-------|------|
+| `feat` | `:sparkles:` | 새 기능 |
+| `fix` | `:bug:` | 버그 수정 |
+| `docs` | `:memo:` | 문서 |
+| `style` | `:art:` | 코드 스타일 |
+| `refactor` | `:recycle:` | 리팩토링 |
+| `test` | `:white_check_mark:` | 테스트 |
+| `chore` | `:wrench:` | 기타 작업 |
+
+### Claude의 커밋 워크플로우
+
+1. 커밋 전 `git status`, `git diff` 확인
+2. Convention에 맞는 메시지 작성
+3. 커밋 후 push 여부 사용자에게 질문
+4. 구조 변경 시 `PROJECT_STRUCTURE.md` 업데이트 포함
+
+### Husky Hooks
+
+- `pre-commit`: main/master 직접 커밋 경고
+- `commit-msg`: 메시지 형식 검증
+
+---
+
 ## 계획
 
 - 계획 혹은 개발 페이즈를 생성할때는 `.claude/plans` 하위에 생성
