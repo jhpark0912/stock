@@ -17,8 +17,12 @@ DB_FILE = DB_DIR / "portfolio.db"
 # SQLite 연결 문자열
 DATABASE_URL = f"sqlite:///{DB_FILE}"
 
+# 로그 레벨이 DEBUG일 때만 SQL 쿼리 출력
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+SQL_ECHO = LOG_LEVEL == "DEBUG"
+
 # Engine 및 Session
-engine = create_engine(DATABASE_URL, echo=True)
+engine = create_engine(DATABASE_URL, echo=SQL_ECHO)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
@@ -34,5 +38,13 @@ def get_db():
 def init_db():
     """DB 초기화 (테이블 생성)"""
     from app.database.models import Base
+
+    # DB 경로 로그 출력 (DEBUG 레벨)
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.debug(f"📂 DB Directory: {DB_DIR}")
+    logger.debug(f"📄 DB File: {DB_FILE}")
+    logger.debug(f"🔗 Database URL: {DATABASE_URL}")
+
     Base.metadata.create_all(bind=engine)
     print(f"✅ Database initialized at {DB_FILE}")

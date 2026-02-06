@@ -4,7 +4,7 @@
 from yahooquery import Ticker
 from datetime import datetime, timedelta
 from deep_translator import GoogleTranslator
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Optional
 import pandas as pd
 import asyncio
 from app.models.stock import (
@@ -26,15 +26,6 @@ class StockService:
         # 캐시 저장소: {ticker: (data, timestamp)}
         self._cache: Dict[str, Tuple[StockData, datetime]] = {}
         self._cache_ttl = timedelta(minutes=5)  # 5분 캐시
-        
-        # Gemini 초기화 (한 번만)
-        self._gemini_initialized = False
-        if settings.gemini_api_key:
-            try:
-                genai.configure(api_key=settings.gemini_api_key)
-                self._gemini_initialized = True
-            except Exception:
-                pass  # 초기화 실패 시 사용 시점에 에러 발생  # 5분 캐시
 
     def get_stock_data(self, ticker_symbol: str, include_technical: bool = False, include_chart: bool = False) -> StockData:
         """
@@ -315,11 +306,22 @@ class StockService:
         except Exception as e:
             return text  # 번역 실패 시 원본 반환
 
-    async def get_comprehensive_analysis(self, stock_data: StockData) -> AIAnalysis:
+    async def get_comprehensive_analysis(
+        self, 
+        stock_data: StockData,
+        user_api_key: Optional[str] = None,  # 유저 API 키 추가
+        user_avg_price: Optional[float] = None,  # 평균 매수 단가
+        user_profit_loss_ratio: Optional[float] = None,  # 수익률
+        user_weight: Optional[float] = None  # 포트폴리오 비중
+    ) -> AIAnalysis:
         """
         Gemini AI를 사용하여 종합 주식 분석 보고서 생성
         
         타임아웃: 없음 (완료될 때까지 대기)
+        
+        Args:
+            stock_data: 주식 데이터
+            user_api_key: 유저의 Gemini API 키 (필수)
         """
         import logging
         import traceback
@@ -327,17 +329,16 @@ class StockService:
         
         logger.info(f"[Gemini] 분석 시작: {stock_data.ticker}")
         
-        if not settings.gemini_api_key:
-            logger.error("[Gemini] API 키 없음")
-            raise ValueError("Gemini API 키가 설정되지 않았습니다.")
+        # 유저 API 키 필수 확인
+        if not user_api_key:
+            logger.error("[Gemini] 유저 API 키 없음")
+            raise ValueError("Gemini API 키가 필요합니다. 설정에서 API 키를 등록해주세요.")
 
         try:
-            # Gemini 초기화 확인
-            if not self._gemini_initialized:
-                logger.info("[Gemini] 초기화 시도...")
-                genai.configure(api_key=settings.gemini_api_key)
-                self._gemini_initialized = True
-                logger.info("[Gemini] 초기화 완료")
+            # 유저의 API 키로 Gemini 초기화
+            logger.info("[Gemini] 유저 API 키로 초기화 시도...")
+            genai.configure(api_key=user_api_key)
+            logger.info("[Gemini] 초기화 완료")
             
             logger.info("[Gemini] 모델 생성 중...")
             model = genai.GenerativeModel('models/gemini-flash-latest')
@@ -351,7 +352,45 @@ class StockService:
             if stock_data.technical_indicators:
                 tech_data_str = ", ".join([f"{k}: {v}" for k, v in stock_data.technical_indicators.dict(exclude_none=True).items()])
 
-            prompt = f"""
+            # 평단가 정보가 있으면 맞춤형 프롬프트 사용
+            if user_avg_price is not None:
+                prompt = f"""
+### [System Role]
+너는 20년 경력의 베테랑 주식 분석가이자 퀀트 투자 전문가야. 단순한 종목 분석을 넘어, **사용자의 현재 매수 단가와 비중을 고려한 '개인 맞춤형 대응 전략'**을 수립하는 데 특화되어 있어.
+
+### [Input Data]
+- Ticker: {stock_data.ticker}
+
+**나의 보유 현황:**
+- 평균 매수 단가: {user_avg_price}
+- 현재 수익률: {user_profit_loss_ratio}%
+- 포트폴리오 내 비중: {user_weight}%
+
+- 가격 및 시장 데이터: {price_data_str}
+- 주요 재무 지표: {financial_data_str}
+- 기술적 지표: {tech_data_str}
+
+### [Task Guidelines]
+제공된 데이터를 바탕으로 다음 5가지 영역을 분석해줘:
+
+1. **내재 가치 및 밸류에이션**: 현재 PER, PBR 등을 업종 평균과 비교하고, 현재 가격이 내재 가치 대비 싼지 비싼지 분석해줘.
+
+2. **재무 건전성 및 수익성**: 영업이익률의 질과 부채비율을 통해 회사가 돈을 잘 벌고 있는지, 망할 위험은 없는지 평가해줘.
+
+3. **기술적 차트 및 지지선**: 현재 가격대에서의 지지선과 저항선을 짚어주고, 추세가 살아있는지 분석해줘.
+
+4. **포트폴리오 대응 전략 (핵심)**:
+   - **평단가 대비 분석**: 현재 사용자의 평단가가 매력적인 구간인지, 혹은 고점에서 물린 상황인지 냉정하게 판단해줘.
+   - **추가 매수/비중 축소 제안**: 현재 비중을 고려할 때, '물타기(추가 매수)'가 필요한 시점인지 아니면 '리스크 관리(손절/익절)'가 필요한 시점인지 구체적인 가격 가이드를 줘.
+
+5. **종합 투자의견 및 리스크**: '강력매수/보유/비중축소' 중 의견을 내고, 예상치 못한 변수(리스크)를 딱 2가지만 꼽아줘.
+
+### [Output Format]
+반드시 한국어로 작성하고, 가독성을 위해 마크다운(Markdown) 형식을 사용해줘. 전문 용어를 사용하되 초보자도 이해할 수 있게 비유를 곁들여줘.
+"""
+            else:
+                # 평단가 정보가 없으면 기존 프롬프트 사용
+                prompt = f"""
 ### [System Role]
 너는 20년 경력의 베테랑 주식 분석가이자 퀀트 투자 전문가야. 
 제공된 데이터를 바탕으로 해당 종목에 대해 다각도의 심층 분석을 수행하고, 투자자가 의사결정을 내릴 수 있도록 객관적이고 통찰력 있는 보고서를 작성해줘.

@@ -13,10 +13,15 @@ services:
       - ENVIRONMENT=production
       - HOST=0.0.0.0
       - PORT=8000
-      - ALLOWED_ORIGINS=http://localhost,http://localhost:80,http://frontend,http://localhost:5348
+      - ALLOWED_ORIGINS=http://localhost,http://localhost:80,http://frontend,http://localhost:5348,http://${SERVER_IP:-*},http://${SERVER_IP:-*}:5348
       - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - DB_DIR=/app/data
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
     env_file:
       - .env
+    volumes:
+      # 데이터베이스 영구 저장 (호스트 ./data 폴더)
+      - ./data:/app/data
     restart: on-failure
     stop_grace_period: 300s
     deploy:
@@ -29,23 +34,24 @@ services:
       - stock-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
-      interval: 60s
-      timeout: 30s
-      retries: 5
-      start_period: 40s
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
 
   # Frontend Web
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        - VITE_API_URL=http://localhost:8000
+      # VITE_API_URL 제거: 프론트엔드가 상대 경로(/api)를 사용하여
+      # nginx 프록시를 통해 백엔드에 접근하므로 환경별 설정 불필요
     container_name: stock-frontend
     ports:
       - "5348:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - stock-network

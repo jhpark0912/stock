@@ -10,9 +10,11 @@ import { ThemeToggle } from './ThemeToggle';
 interface AppLayoutProps {
   sidebar: React.ReactNode;
   children: React.ReactNode;
+  /** 헤더 우측에 표시할 추가 액션 버튼들 */
+  headerActions?: React.ReactNode;
 }
 
-export function AppLayout({ sidebar, children }: AppLayoutProps) {
+export function AppLayout({ sidebar, children, headerActions }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
@@ -36,8 +38,11 @@ export function AppLayout({ sidebar, children }: AppLayoutProps) {
             <h1 className="text-lg font-semibold text-foreground">Stock Dashboard</h1>
           </div>
 
-          {/* 우측: 다크모드 토글 */}
-          <ThemeToggle />
+          {/* 우측: 추가 액션 + 다크모드 토글 */}
+          <div className="flex items-center gap-2">
+            {headerActions}
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
