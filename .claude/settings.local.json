@@ -56,7 +56,11 @@
       "Bash(source:*)",
       "Bash(sqlite3:*)",
       "mcp__plugin_serena_serena__list_memories",
-      "mcp__plugin_serena_serena__insert_after_symbol"
+      "mcp__plugin_serena_serena__insert_after_symbol",
+      "Bash(if [ -f \"C:\\\\Exception\\\\0.STUDY\\\\stock\\\\.env.example\" ])",
+      "Bash(then cat \"C:\\\\Exception\\\\0.STUDY\\\\stock\\\\.env.example\")",
+      "Bash(else echo \"파일 없음\")",
+      "Bash(fi)"
     ]
   }
 }

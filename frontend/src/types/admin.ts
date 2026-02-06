@@ -29,3 +29,23 @@ export interface RejectUserResponse {
 export interface DeleteUserResponse {
   message: string
 }
+
+/**
+ * 로그 레벨 타입
+ */
+export type LogLevel = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR' | 'CRITICAL'
+
+/**
+ * 로그 레벨 응답
+ */
+export interface LogLevelResponse {
+  current_level: LogLevel
+  available_levels: LogLevel[]
+}
+
+/**
+ * 로그 레벨 업데이트 요청
+ */
+export interface LogLevelUpdateRequest {
+  level: LogLevel
+}

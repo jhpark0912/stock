@@ -7,10 +7,12 @@ import { useState, useEffect } from 'react'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { useAuth } from '@/contexts/AuthContext'
-import { Check, X, UserX, Trash2, RefreshCw, Shield } from 'lucide-react'
+import { Check, X, UserX, Trash2, RefreshCw, Shield, Settings, Activity, Users } from 'lucide-react'
 import * as adminApi from '@/lib/adminApi'
 import type { UserResponse } from '@/types/auth'
+import type { LogLevel, LogLevelResponse } from '@/types/admin'
 
 interface AdminPageProps {
   /** 헤더 우측에 표시할 추가 액션 버튼들 */
@@ -27,6 +29,10 @@ export function AdminPage({ headerActions }: AdminPageProps) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  // 로그 레벨 상태
+  const [logLevel, setLogLevel] = useState<LogLevelResponse | null>(null)
+  const [isUpdatingLogLevel, setIsUpdatingLogLevel] = useState(false)
+
   /**
    * 데이터 로드
    */
@@ -35,13 +41,15 @@ export function AdminPage({ headerActions }: AdminPageProps) {
     setError(null)
 
     try {
-      const [all, pending] = await Promise.all([
+      const [all, pending, logLevelData] = await Promise.all([
         adminApi.getAllUsers(),
         adminApi.getPendingUsers(),
+        adminApi.getLogLevel(),
       ])
 
       setAllUsers(all)
       setPendingUsers(pending)
+      setLogLevel(logLevelData)
     } catch (err) {
       setError(err instanceof Error ? err.message : '데이터를 불러오는데 실패했습니다')
     } finally {
@@ -120,6 +128,26 @@ export function AdminPage({ headerActions }: AdminPageProps) {
     }
   }
 
+  /**
+   * 로그 레벨 변경
+   */
+  const handleLogLevelChange = async (level: LogLevel) => {
+    if (!confirm(`로그 레벨을 "${level}"로 변경하시겠습니까?\n\n⚠️ 컨테이너 재시작 시 환경 변수 값으로 초기화됩니다.`)) {
+      return
+    }
+
+    setIsUpdatingLogLevel(true)
+    try {
+      const result = await adminApi.updateLogLevel({ level })
+      setLogLevel(result)
+      alert(`✅ 로그 레벨이 "${level}"로 변경되었습니다.`)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '로그 레벨 변경에 실패했습니다')
+    } finally {
+      setIsUpdatingLogLevel(false)
+    }
+  }
+
   // 관리자 권한 체크
   if (user?.role !== 'admin') {
     return (
@@ -159,36 +187,51 @@ export function AdminPage({ headerActions }: AdminPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* 헤더 */}
       <header className="w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="flex h-14 items-center justify-between px-6">
           <h1 className="text-lg font-semibold text-foreground">관리자 페이지</h1>
           <div className="flex items-center gap-2">
+            <Button onClick={loadData} variant="outline" size="sm">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              새로고침
+            </Button>
             {headerActions}
           </div>
         </div>
       </header>
 
-      {/* 메인 콘텐츠 */}
-      <div className="p-6">
-        <div className="max-w-6xl mx-auto space-y-6">
-        {/* 헤더 */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">사용자 관리</h1>
-            <p className="text-sm text-muted-foreground">
-              전체 {allUsers.length}명 · 승인 대기 {pendingUsers.length}명
-            </p>
-          </div>
-          <Button onClick={loadData} variant="outline" size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
-            새로고침
-          </Button>
-        </div>
+      {/* 메인 콘텐츠 - 스크롤 가능 */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-6">
+          <div className="max-w-6xl mx-auto">
+            {/* 헤더 */}
+            <div className="mb-6">
+              <h1 className="text-4xl font-bold text-foreground mb-2">관리자 대시보드</h1>
+              <p className="text-sm text-muted-foreground">
+                시스템 설정 및 사용자 관리 · 전체 {allUsers.length}명 · 승인 대기 {pendingUsers.length}명
+              </p>
+            </div>
 
-        {/* 승인 대기 섹션 */}
-        <Card className="p-6">
+            {/* 탭 */}
+            <Tabs defaultValue="users" className="w-full">
+              <TabsList className="w-full justify-start">
+                <TabsTrigger value="users" className="gap-2">
+                  <Users className="h-4 w-4" />
+                  사용자 관리
+                </TabsTrigger>
+                <TabsTrigger value="system" className="gap-2">
+                  <Settings className="h-4 w-4" />
+                  시스템 설정
+                </TabsTrigger>
+              </TabsList>
+
+              {/* 사용자 관리 탭 */}
+              <TabsContent value="users" className="space-y-6 mt-6">
+
+                {/* 승인 대기 섹션 */}
+                <Card className="p-6">
           <h2 className="text-2xl font-semibold text-foreground mb-4">
             승인 대기 ({pendingUsers.length})
           </h2>
@@ -237,10 +280,10 @@ export function AdminPage({ headerActions }: AdminPageProps) {
           )}
         </Card>
 
-        {/* 전체 사용자 섹션 */}
-        <Card className="p-6">
-          <h2 className="text-2xl font-semibold text-foreground mb-4">
-            전체 사용자 ({allUsers.length})
+                {/* 전체 사용자 섹션 */}
+                <Card className="p-6">
+                  <h2 className="text-2xl font-semibold text-foreground mb-4">
+                    전체 사용자 ({allUsers.length})
           </h2>
 
           <div className="space-y-3">
@@ -302,8 +345,81 @@ export function AdminPage({ headerActions }: AdminPageProps) {
                 )}
               </div>
             ))}
+                  </div>
+                </Card>
+              </TabsContent>
+
+              {/* 시스템 설정 탭 */}
+              <TabsContent value="system" className="space-y-6 mt-6">
+                <Card className="p-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Activity className="h-5 w-5 text-primary" />
+                    <h2 className="text-2xl font-semibold text-foreground">로그 레벨 관리</h2>
+                  </div>
+
+                  {/* 로그 레벨 설정 */}
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        애플리케이션 로그 상세도를 조정합니다. 변경 사항은 즉시 적용되지만 컨테이너 재시작 시 초기화됩니다.
+                      </p>
+
+                      {logLevel && (
+                        <div className="flex items-center gap-2 text-sm mb-4">
+                          <span className="text-muted-foreground">현재 로그 레벨:</span>
+                          <span className="font-mono bg-primary/10 text-primary px-3 py-1 rounded-md font-semibold">
+                            {logLevel.current_level}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 로그 레벨 버튼 */}
+                    {logLevel && (
+                      <div className="flex flex-wrap gap-2">
+                        {logLevel.available_levels.map((level) => {
+                          const isActive = level === logLevel.current_level
+                          const levelConfig = {
+                            DEBUG: { label: 'DEBUG', desc: '상세 디버깅', variant: 'outline' as const, color: 'text-blue-500' },
+                            INFO: { label: 'INFO', desc: '일반 정보', variant: 'outline' as const, color: 'text-green-500' },
+                            WARNING: { label: 'WARNING', desc: '경고만', variant: 'outline' as const, color: 'text-yellow-500' },
+                            ERROR: { label: 'ERROR', desc: '에러만', variant: 'outline' as const, color: 'text-orange-500' },
+                            CRITICAL: { label: 'CRITICAL', desc: '심각한 에러', variant: 'outline' as const, color: 'text-red-500' },
+                          }[level]
+
+                          return (
+                            <Button
+                              key={level}
+                              onClick={() => handleLogLevelChange(level)}
+                              disabled={isUpdatingLogLevel || isActive}
+                              size="sm"
+                              variant={isActive ? 'default' : levelConfig.variant}
+                              className={`gap-2 ${!isActive && levelConfig.color}`}
+                            >
+                              {isActive && '✓ '}
+                              {levelConfig.label}
+                              <span className="text-xs opacity-70">({levelConfig.desc})</span>
+                            </Button>
+                          )
+                        })}
+                      </div>
+                    )}
+
+                    {/* 로그 레벨 설명 */}
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg border border-border">
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        <strong className="text-foreground">💡 로그 레벨 가이드:</strong><br />
+                        • <strong>DEBUG</strong>: 모든 요청/응답 상세, Query params, Headers 등 포함 (개발용)<br />
+                        • <strong>INFO</strong>: 주요 이벤트만 기록 (기본값, 권장)<br />
+                        • <strong>WARNING</strong>: 경고 및 에러만 기록 (프로덕션 권장)<br />
+                        • <strong>ERROR/CRITICAL</strong>: 심각한 에러만 기록 (성능 최적화)
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </div>
-        </Card>
         </div>
       </div>
     </div>

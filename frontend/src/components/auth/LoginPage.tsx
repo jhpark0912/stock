@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LogIn, UserPlus, Coffee } from 'lucide-react'
+import { LogIn, UserPlus, Coffee, CheckCircle, AlertCircle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 /**
@@ -130,8 +130,8 @@ export function LoginPage() {
         password: registerForm.password,
       })
 
-      // 성공 메시지 표시
-      setSuccess('회원가입 신청이 완료되었습니다.\n커피를 보내야 빨리 승인됩니다.')
+      // 성공 메시지 표시 (구조화된 메시지는 렌더링에서 처리)
+      setSuccess('success')
 
       // 폼 초기화
       setRegisterForm({
@@ -207,19 +207,31 @@ export function LoginPage() {
 
                 {/* 에러 메시지 */}
                 {error && (
-                  <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 space-y-1">
-                    {error.split('\n').map((line, index) => (
-                      <p key={index} className="text-sm text-destructive">
-                        {line}
-                      </p>
-                    ))}
+                  <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                      <div className="space-y-1 flex-1">
+                        {error.split('\n').map((line, index) => (
+                          <p key={index} className="text-sm text-destructive">
+                            {line}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
 
                 {/* 성공 메시지 */}
                 {success && (
-                  <div className="p-3 rounded-lg bg-success/10 border border-success/20">
-                    <p className="text-sm text-success">{success}</p>
+                  <div className="p-4 rounded-lg bg-success/10 border border-success/20">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-success">
+                          로그인 성공
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -297,19 +309,35 @@ export function LoginPage() {
 
                 {/* 에러 메시지 */}
                 {error && (
-                  <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 space-y-1">
-                    {error.split('\n').map((line, index) => (
-                      <p key={index} className="text-sm text-destructive">
-                        {line}
-                      </p>
-                    ))}
+                  <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-destructive flex-shrink-0 mt-0.5" />
+                      <div className="space-y-1 flex-1">
+                        {error.split('\n').map((line, index) => (
+                          <p key={index} className="text-sm text-destructive">
+                            {line}
+                          </p>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
 
                 {/* 성공 메시지 */}
                 {success && (
-                  <div className="p-3 rounded-lg bg-success/10 border border-success/20">
-                    <p className="text-sm text-success">{success}</p>
+                  <div className="p-4 rounded-lg bg-success/10 border border-success/20">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
+                      <div className="space-y-2 flex-1">
+                        <p className="text-sm font-medium text-success">
+                          회원가입 신청이 완료되었습니다
+                        </p>
+                        <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                          <Coffee className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                          <p>관리자 승인 후 로그인이 가능합니다.<br />커피를 보내면 더 빨리 될수도</p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -333,10 +361,14 @@ export function LoginPage() {
                 </Button>
 
                 {/* 안내 메시지 */}
-                <p className="text-xs text-muted-foreground text-center pt-2 flex items-center justify-center gap-1">
-                  <Coffee className="h-3 w-3" />
-                  회원 가입은 커피를 보내셔야 승인이 됩니다.
-                </p>
+                <div className="pt-4 space-y-2">
+                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                    <Coffee className="h-4 w-4 text-primary/60" />
+                    <p className="text-center">
+                      관리자 승인 후 로그인 가능합니다
+                    </p>
+                  </div>
+                </div>
               </form>
             </TabsContent>
           </Tabs>

@@ -5,7 +5,12 @@
 
 import { api } from './api'
 import type { UserResponse } from '@/types/auth'
-import type { RejectUserResponse, DeleteUserResponse } from '@/types/admin'
+import type {
+  RejectUserResponse,
+  DeleteUserResponse,
+  LogLevelResponse,
+  LogLevelUpdateRequest
+} from '@/types/admin'
 
 const ADMIN_BASE = '/api/admin'
 
@@ -54,5 +59,21 @@ export async function deactivateUser(userId: number): Promise<UserResponse> {
  */
 export async function deleteUser(userId: number): Promise<DeleteUserResponse> {
   const response = await api.delete<DeleteUserResponse>(`${ADMIN_BASE}/users/${userId}`)
+  return response.data
+}
+
+/**
+ * 현재 로그 레벨 조회 (관리자 전용)
+ */
+export async function getLogLevel(): Promise<LogLevelResponse> {
+  const response = await api.get<LogLevelResponse>(`${ADMIN_BASE}/system/log-level`)
+  return response.data
+}
+
+/**
+ * 로그 레벨 변경 (관리자 전용)
+ */
+export async function updateLogLevel(data: LogLevelUpdateRequest): Promise<LogLevelResponse> {
+  const response = await api.put<LogLevelResponse>(`${ADMIN_BASE}/system/log-level`, data)
   return response.data
 }

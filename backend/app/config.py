@@ -41,6 +41,9 @@ class Settings:
         self.admin_username = os.getenv("ADMIN_USERNAME", "admin")
         self.admin_password = os.getenv("ADMIN_PASSWORD", "admin123")
 
+        # 로그 레벨 설정 (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        self.log_level = os.getenv("LOG_LEVEL", "INFO").upper()
+
     @property
     def is_development(self) -> bool:
         """개발 환경 여부"""

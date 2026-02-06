@@ -1,9 +1,11 @@
 """
-Admin API 라우터 (사용자 관리)
+Admin API 라우터 (사용자 관리 + 시스템 설정)
 """
+import logging
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from pydantic import BaseModel
 
 from app.database.connection import get_db
 from app.database.user_repository import UserRepository
@@ -12,6 +14,14 @@ from app.models.user import UserResponse
 from app.database.models import UserDB
 
 router = APIRouter(prefix="/admin", tags=["관리자"])
+
+# 로그 레벨 변경용 모델
+class LogLevelUpdate(BaseModel):
+    level: str  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+
+class LogLevelResponse(BaseModel):
+    current_level: str
+    available_levels: List[str]
 
 
 @router.get("/users", response_model=List[UserResponse])
@@ -131,3 +141,51 @@ def delete_user(
         )
 
     return {"message": "사용자가 삭제되었습니다"}
+
+
+# === 시스템 설정 API ===
+
+@router.get("/system/log-level", response_model=LogLevelResponse)
+def get_log_level(
+    current_admin: UserDB = Depends(get_current_admin)
+):
+    """현재 로그 레벨 조회 (Admin 전용)"""
+    current_level = logging.getLogger().level
+    level_name = logging.getLevelName(current_level)
+
+    return LogLevelResponse(
+        current_level=level_name,
+        available_levels=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+    )
+
+
+@router.put("/system/log-level", response_model=LogLevelResponse)
+def update_log_level(
+    data: LogLevelUpdate,
+    current_admin: UserDB = Depends(get_current_admin)
+):
+    """로그 레벨 변경 (Admin 전용)"""
+    level_str = data.level.upper()
+
+    # 유효한 로그 레벨인지 확인
+    valid_levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+    if level_str not in valid_levels:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"유효하지 않은 로그 레벨입니다. 사용 가능: {', '.join(valid_levels)}"
+        )
+
+    # 로그 레벨 변경
+    level = getattr(logging, level_str)
+    logging.getLogger().setLevel(level)
+
+    # 모든 핸들러의 레벨도 변경
+    for handler in logging.getLogger().handlers:
+        handler.setLevel(level)
+
+    logging.info(f"🔧 로그 레벨이 {level_str}로 변경되었습니다 (관리자: {current_admin.username})")
+
+    return LogLevelResponse(
+        current_level=level_str,
+        available_levels=valid_levels
+    )

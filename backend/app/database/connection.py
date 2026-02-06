@@ -34,5 +34,13 @@ def get_db():
 def init_db():
     """DB 초기화 (테이블 생성)"""
     from app.database.models import Base
+
+    # DB 경로 로그 출력 (DEBUG 레벨)
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.debug(f"📂 DB Directory: {DB_DIR}")
+    logger.debug(f"📄 DB File: {DB_FILE}")
+    logger.debug(f"🔗 Database URL: {DATABASE_URL}")
+
     Base.metadata.create_all(bind=engine)
     print(f"✅ Database initialized at {DB_FILE}")
