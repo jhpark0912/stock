@@ -13,12 +13,14 @@ import {
   Legend,
   CartesianGrid,
 } from 'recharts';
+import { Loader2 } from 'lucide-react';
 import type { EconomicIndicator } from '@/types/economic';
 import { cn } from '@/lib/utils';
 
 interface DetailChartProps {
   indicator: EconomicIndicator;
   compareIndicators?: EconomicIndicator[];
+  loading?: boolean;
 }
 
 type Period = '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL';
@@ -33,7 +35,7 @@ const CHART_COLORS = [
   '#06b6d4', // cyan
 ];
 
-export function DetailChart({ indicator, compareIndicators = [] }: DetailChartProps) {
+export function DetailChart({ indicator, compareIndicators = [], loading = false }: DetailChartProps) {
   // FRED 지표(월간 데이터)와 Yahoo 지표(일간 데이터) 구분
   const isFredIndicator = indicator.symbol === 'CPIAUCSL' || indicator.symbol === 'M2SL';
 
@@ -189,12 +191,19 @@ export function DetailChart({ indicator, compareIndicators = [] }: DetailChartPr
     return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
   };
 
-  // 데이터 없음
+  // 로딩 중 또는 데이터 없음
   if (!indicator.history || indicator.history.length === 0) {
     return (
       <div className="bg-card border border-border rounded-lg p-6">
-        <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-          히스토리 데이터가 없습니다
+        <div className="h-[200px] flex items-center justify-center">
+          {loading ? (
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-8 w-8 text-primary animate-spin" />
+              <p className="text-sm text-muted-foreground">차트 데이터 불러오는 중...</p>
+            </div>
+          ) : (
+            <p className="text-muted-foreground">히스토리 데이터가 없습니다</p>
+          )}
         </div>
       </div>
     );
