@@ -7,3 +7,4 @@ export { IndicatorListPanel } from './IndicatorListPanel';
 export { DetailChart } from './DetailChart';
 export { StatusGauge } from './StatusGauge';
 export { CompareSelector } from './CompareSelector';
+export { SectorHeatmap } from './SectorHeatmap';

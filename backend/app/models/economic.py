@@ -65,3 +65,27 @@ class EconomicResponse(BaseModel):
     success: bool
     data: Optional[EconomicData] = None
     error: Optional[str] = None
+
+
+# ============================================
+# 섹터 히트맵 관련 모델
+# ============================================
+
+class SectorData(BaseModel):
+    """개별 섹터 ETF 데이터"""
+    symbol: str          # ETF 심볼 (XLK)
+    name: str            # 한글명 (기술)
+    name_en: str         # 영문명 (Technology)
+    description: str     # 짧은 설명 (반도체, 소프트웨어, IT서비스)
+    price: float         # 현재가
+    change_1d: float     # 일간 변화율 (%)
+    change_1w: float     # 주간 변화율 (%)
+    change_1m: float     # 월간 변화율 (%)
+
+
+class SectorResponse(BaseModel):
+    """섹터 API 응답 형식"""
+    success: bool
+    data: Optional[List[SectorData]] = None
+    last_updated: Optional[str] = None
+    error: Optional[str] = None

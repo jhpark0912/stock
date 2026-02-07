@@ -5,9 +5,10 @@ import logging
 from fastapi import APIRouter, Query
 from datetime import datetime
 
-from app.models.economic import EconomicResponse, EconomicData
+from app.models.economic import EconomicResponse, EconomicData, SectorResponse, SectorData
 from app.services.economic_service import get_all_yahoo_indicators_parallel
 from app.services.fred_service import get_macro_data_parallel, check_fred_availability
+from app.services.sector_service import get_sector_data
 
 logger = logging.getLogger(__name__)
 
@@ -114,3 +115,46 @@ async def get_economic_status():
         },
         "fred": fred_status
     }
+
+
+@router.get("/economic/sectors", response_model=SectorResponse)
+async def get_sector_performance():
+    """
+    섹터 ETF 성과 데이터 조회
+    
+    GICS 11개 섹터 ETF의 가격 및 변화율 조회
+    - XLK (기술), XLF (금융), XLV (헬스케어), XLE (에너지)
+    - XLI (산업재), XLB (소재), XLY (경기소비재), XLP (필수소비재)
+    - XLRE (부동산), XLU (유틸리티), XLC (커뮤니케이션)
+    
+    Returns:
+    - 성공 시: 11개 섹터 ETF 데이터 (현재가, 1D/1W/1M 변화율)
+    - 실패 시: 에러 메시지
+    """
+    try:
+        logger.debug("섹터 ETF 데이터 조회 요청")
+        
+        sectors = await get_sector_data()
+        
+        if not sectors:
+            return SectorResponse(
+                success=False,
+                error="섹터 데이터를 조회할 수 없습니다."
+            )
+        
+        sector_data = [SectorData(**s) for s in sectors]
+        
+        logger.debug(f"섹터 ETF 조회 완료: {len(sector_data)}개")
+        
+        return SectorResponse(
+            success=True,
+            data=sector_data,
+            last_updated=datetime.now().isoformat()
+        )
+        
+    except Exception as e:
+        logger.error(f"섹터 ETF 조회 실패: {e}")
+        return SectorResponse(
+            success=False,
+            error=str(e)
+        )
