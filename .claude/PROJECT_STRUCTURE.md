@@ -1,6 +1,6 @@
 # 프로젝트 구조
 
-> 최종 업데이트: 2026-02-07 (불필요한 로그 정리)
+> 최종 업데이트: 2026-02-07 (섹터 히트맵 기능 추가)
 
 ## 전체 아키텍처
 
@@ -60,7 +60,8 @@ frontend/
 │   │   │   ├── IndicatorListPanel.tsx   # 좌측 지표 목록
 │   │   │   ├── DetailChart.tsx          # 메인 차트 (기간 선택)
 │   │   │   ├── StatusGauge.tsx          # 판단 기준 게이지
-│   │   │   └── CompareSelector.tsx      # 비교 지표 선택
+│   │   │   ├── CompareSelector.tsx      # 비교 지표 선택
+│   │   │   └── SectorHeatmap.tsx        # 섹터 히트맵 (GICS 11개 섹터)
 │   │   ├── layout/          # 레이아웃 컴포넌트
 │   │   │   ├── TopNav.tsx       # 상단 네비게이션 (ThemeToggle 포함)
 │   │   │   ├── PageHeader.tsx   # 공통 페이지 헤더
@@ -121,12 +122,13 @@ App.tsx
 - **커스텀 훅**:
   - `hooks/usePortfolio.ts` - 포트폴리오 데이터 관리 (상태 + 액션 분리)
 - **경제 지표 컴포넌트**:
-  - `EconomicIndicators.tsx` - 경제 지표 대시보드 (Simple/Chart 뷰 전환)
+  - `EconomicIndicators.tsx` - 경제 지표 대시보드 (서브탭: 경제 지표/섹터 히트맵)
   - `economic/EconomicChartView.tsx` - Chart 뷰 메인 레이아웃
   - `economic/IndicatorListPanel.tsx` - 좌측 지표 목록 (카테고리별 그룹핑)
   - `economic/DetailChart.tsx` - 메인 차트 (기간 선택)
   - `economic/StatusGauge.tsx` - 판단 기준 (기준값 리스트, YoY 변화율 표시)
   - `economic/CompareSelector.tsx` - 비교 지표 선택 (멀티 차트)
+  - `economic/SectorHeatmap.tsx` - 섹터 히트맵 (GICS 11개 섹터, 1D/1W/1M)
 - **주식 컴포넌트**:
   - `MainTabs.tsx` - 주식별 탭 (5개: Overview, AI, Chart, Technical, News)
   - `StockChart.tsx` - 주식 차트 (Recharts 사용)
@@ -159,7 +161,8 @@ backend/
 │   │   ├── mock_data.py     # 목 데이터 생성
 │   │   ├── economic_service.py  # 경제 지표 서비스 (yahooquery, 6개월 히스토리)
 │   │   ├── fred_service.py  # FRED API 서비스 (CPI, M2, YoY 계산)
-│   │   └── indicator_status.py  # 지표 상태 판단 로직 (YoY 변화율 기반)
+│   │   ├── indicator_status.py  # 지표 상태 판단 로직 (YoY 변화율 기반)
+│   │   └── sector_service.py    # 섹터 ETF 서비스 (GICS 11개 섹터, 5분 캐싱)
 │   ├── config.py            # 앱 설정
 │   ├── main.py              # FastAPI 앱 엔트리
 │   └── __init__.py
@@ -327,6 +330,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - `GET /api/economic` - 경제 지표 조회 (현재값만)
 - `GET /api/economic?include_history=true` - 히스토리 포함 (Yahoo: 6개월, FRED: 30개월)
 - `GET /api/economic/status` - API 상태 확인 (FRED, Yahoo)
+- `GET /api/economic/sectors` - 섹터 ETF 성과 (GICS 11개 섹터, 1D/1W/1M 변화율)
 
 ## 데이터베이스 스키마
 
@@ -379,6 +383,24 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - **프로젝트 가이드**: `CLAUDE.md`
 
 ## 최근 변경 이력
+
+### 2026-02-07: 섹터 히트맵 기능 추가
+1. **Backend**
+   - `services/sector_service.py` 신규 생성 (GICS 11개 섹터 ETF)
+   - `models/economic.py`에 `SectorData`, `SectorResponse` 모델 추가
+   - `routes/economic.py`에 `/api/economic/sectors` 엔드포인트 추가
+   - 5분 TTL 메모리 캐싱
+
+2. **Frontend**
+   - `economic/SectorHeatmap.tsx` 신규 생성
+   - `EconomicIndicators.tsx`에 서브탭 구조 추가 (경제 지표/섹터 히트맵)
+   - 기간 선택 (1D/1W/1M), 변화율 기반 색상 코딩
+   - 툴팁으로 섹터 상세정보 및 대표 종목 표시
+
+3. **섹터 목록 (GICS 11개)**
+   - XLK(기술), XLF(금융), XLV(헬스케어), XLE(에너지)
+   - XLI(산업재), XLB(소재), XLY(경기소비재), XLP(필수소비재)
+   - XLRE(부동산), XLU(유틸리티), XLC(커뮤니케이션)
 
 ### 2026-02-07: 불필요한 로그 정리
 1. **Frontend console.log 삭제**
