@@ -5,10 +5,14 @@ import logging
 from fastapi import APIRouter, Query
 from datetime import datetime
 
-from app.models.economic import EconomicResponse, EconomicData, SectorResponse, SectorData
+from app.models.economic import (
+    EconomicResponse, EconomicData, 
+    SectorResponse, SectorData,
+    SectorHoldingsResponse, SectorHolding
+)
 from app.services.economic_service import get_all_yahoo_indicators_parallel
 from app.services.fred_service import get_macro_data_parallel, check_fred_availability
-from app.services.sector_service import get_sector_data
+from app.services.sector_service import get_sector_data, get_sector_holdings
 
 logger = logging.getLogger(__name__)
 
@@ -155,6 +159,51 @@ async def get_sector_performance():
     except Exception as e:
         logger.error(f"섹터 ETF 조회 실패: {e}")
         return SectorResponse(
+            success=False,
+            error=str(e)
+        )
+
+
+@router.get("/economic/sectors/{symbol}/holdings", response_model=SectorHoldingsResponse)
+async def get_sector_holdings_api(symbol: str):
+    """
+    섹터 ETF 보유 종목 조회
+    
+    특정 섹터 ETF의 상위 10개 보유 종목을 조회합니다.
+    
+    Parameters:
+    - symbol: 섹터 ETF 심볼 (예: XLK, XLF, XLV 등)
+    
+    Returns:
+    - 성공 시: 상위 10개 보유 종목 (심볼, 종목명, 비중, 현재가, 변화율)
+    - 실패 시: 에러 메시지
+    """
+    try:
+        logger.debug(f"섹터 보유 종목 조회 요청: {symbol}")
+        
+        result = await get_sector_holdings(symbol)
+        
+        if not result:
+            return SectorHoldingsResponse(
+                success=False,
+                error=f"'{symbol}' 섹터의 보유 종목을 조회할 수 없습니다."
+            )
+        
+        holdings = [SectorHolding(**h) for h in result["holdings"]]
+        
+        logger.debug(f"섹터 보유 종목 조회 완료: {symbol} ({len(holdings)}개)")
+        
+        return SectorHoldingsResponse(
+            success=True,
+            sector_symbol=result["sector_symbol"],
+            sector_name=result["sector_name"],
+            holdings=holdings,
+            last_updated=datetime.now().isoformat()
+        )
+        
+    except Exception as e:
+        logger.error(f"섹터 보유 종목 조회 실패 ({symbol}): {e}")
+        return SectorHoldingsResponse(
             success=False,
             error=str(e)
         )

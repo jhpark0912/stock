@@ -281,6 +281,20 @@ export function SectorHeatmap() {
 
 ---
 
+## 확장 Phase 2: 섹터 상세 (보유 종목) ✅ 완료 (2026-02-07)
+
+### Backend
+1. ✅ `models/economic.py`에 `SectorHolding`, `SectorHoldingsResponse` 추가
+2. ✅ `services/sector_service.py`에 `get_sector_holdings()` 함수 추가 (24시간 캐시)
+3. ✅ `routes/economic.py`에 `/api/economic/sectors/{symbol}/holdings` 추가
+
+### Frontend
+1. ✅ `components/economic/SectorDetail.tsx` 생성 (모달 컴포넌트)
+2. ✅ `components/economic/SectorHeatmap.tsx` 클릭 핸들러 추가
+3. ✅ `components/economic/index.ts` export 추가
+
+---
+
 ## 8. 검증 방법
 
 1. **Backend API 테스트**

@@ -53,3 +53,13 @@ class PortfolioDB(Base):
 
     # Relationship
     user = relationship("UserDB", backref="portfolios")
+
+
+class SectorHoldingsCacheDB(Base):
+    """섹터 ETF 보유 종목 캐시 (하루 1회 갱신)"""
+    __tablename__ = "sector_holdings_cache"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    symbol = Column(String(10), nullable=False, unique=True, index=True)  # XLK, XLF 등
+    top_holdings = Column(Text, nullable=False)  # JSON: ["AAPL", "MSFT", "NVDA"]
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

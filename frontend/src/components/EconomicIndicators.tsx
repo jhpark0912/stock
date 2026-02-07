@@ -20,12 +20,13 @@ interface EconomicIndicatorsProps {
 
 export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
   const [data, setData] = useState<EconomicData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<EconomicViewMode>('simple');
   const [refreshing, setRefreshing] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState<EconomicTab>('indicators');
+  const [indicatorsLoaded, setIndicatorsLoaded] = useState(false);
 
   const fetchData = useCallback(async (includeHistory: boolean = false) => {
     try {
@@ -36,8 +37,8 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
 
       if (response.data.success && response.data.data) {
         setData(response.data.data);
+        setIndicatorsLoaded(true);
 
-        // 히스토리 데이터 확인
         if (includeHistory) {
           setHistoryLoaded(true);
         }
@@ -45,24 +46,25 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
         setError(response.data.error || '경제 지표를 불러올 수 없습니다.');
       }
     } catch (err) {
-      console.error('경제 지표 조회 실패:', err);
       setError('경제 지표를 불러오는 중 오류가 발생했습니다.');
     }
   }, []);
 
-  // 초기 로드 (Simple 모드)
+  // 경제 지표 탭 선택 시 데이터 로드 (최초 1회)
   useEffect(() => {
-    const loadInitialData = async () => {
-      setLoading(true);
-      await fetchData(false);
-      setLoading(false);
-    };
-    loadInitialData();
-  }, [fetchData]);
+    if (activeTab === 'indicators' && !indicatorsLoaded && !loading) {
+      const loadData = async () => {
+        setLoading(true);
+        await fetchData(false);
+        setLoading(false);
+      };
+      loadData();
+    }
+  }, [activeTab, indicatorsLoaded, loading, fetchData]);
 
   // 뷰 모드 변경 시 히스토리 데이터 로드
   useEffect(() => {
-    if (viewMode === 'chart' && !historyLoaded) {
+    if (activeTab === 'indicators' && viewMode === 'chart' && !historyLoaded) {
       const loadHistoryData = async () => {
         setRefreshing(true);
         await fetchData(true);
@@ -70,7 +72,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
       };
       loadHistoryData();
     }
-  }, [viewMode, historyLoaded, fetchData]);
+  }, [activeTab, viewMode, historyLoaded, fetchData]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -123,29 +125,37 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
   }
 
   if (loading) {
-    return <LoadingSpinner message="경제 지표 로딩 중..." />;
+    return (
+      <div className={cn('h-full', className)}>
+        <SubTabHeader />
+        <LoadingSpinner message="경제 지표 로딩 중..." />
+      </div>
+    );
   }
 
   if (error) {
     return (
-      <div className="p-6">
-        <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-6 text-center">
-          <p className="text-destructive font-medium mb-2">오류 발생</p>
-          <p className="text-sm text-muted-foreground mb-4">{error}</p>
-          <Button
-            onClick={handleRefresh}
-            variant="outline"
-            className="gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            다시 시도
-          </Button>
+      <div className={cn('h-full', className)}>
+        <SubTabHeader />
+        <div className="p-6">
+          <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-6 text-center">
+            <p className="text-destructive font-medium mb-2">오류 발생</p>
+            <p className="text-sm text-muted-foreground mb-4">{error}</p>
+            <Button
+              onClick={handleRefresh}
+              variant="outline"
+              className="gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              다시 시도
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Chart 뷰: 전체 페이지 레이아웃
+  // Chart 뷰
   if (viewMode === 'chart' && data) {
     return (
       <div className={cn('h-full', className)}>
@@ -160,7 +170,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
     );
   }
 
-  // Simple 뷰: 기존 카드 그리드 레이아웃
+  // Simple 뷰
   return (
     <div className={cn('h-full', className)}>
       <SubTabHeader />

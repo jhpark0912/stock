@@ -1,65 +1,25 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
 import { cn } from '@/lib/utils';
-import { TrendingUp, TrendingDown, RefreshCw, Clock, Info } from 'lucide-react';
+import { TrendingUp, RefreshCw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { api } from '@/lib/api';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { SectorDetail } from './SectorDetail';
 
-// 섹터 상세 정보 (툴팁용)
-const SECTOR_DETAIL: Record<string, { 
-  detail: string;          // 툴팁 상세 설명
-  examples: string[];      // 대표 기업
-}> = {
-  XLK: {
-    detail: '기술 섹터는 하드웨어, 소프트웨어, 반도체, IT 서비스 기업으로 구성됩니다. 성장주 중심으로 금리에 민감합니다.',
-    examples: ['AAPL', 'MSFT', 'NVDA'],
-  },
-  XLF: {
-    detail: '금융 섹터는 은행, 보험사, 자산운용사, 투자은행으로 구성됩니다. 금리 상승 시 수혜를 받는 경향이 있습니다.',
-    examples: ['JPM', 'BAC', 'WFC'],
-  },
-  XLV: {
-    detail: '헬스케어 섹터는 제약, 바이오테크, 의료기기, 헬스케어 서비스 기업으로 구성됩니다. 경기 방어적 성격이 있습니다.',
-    examples: ['UNH', 'JNJ', 'LLY'],
-  },
-  XLE: {
-    detail: '에너지 섹터는 석유/가스 탐사, 생산, 정제, 에너지 장비 기업으로 구성됩니다. 원유 가격에 민감합니다.',
-    examples: ['XOM', 'CVX', 'COP'],
-  },
-  XLI: {
-    detail: '산업재 섹터는 항공우주, 건설, 기계, 운송 기업으로 구성됩니다. 경기 사이클에 민감한 편입니다.',
-    examples: ['CAT', 'BA', 'UNP'],
-  },
-  XLB: {
-    detail: '소재 섹터는 화학, 금속/광업, 건축자재, 포장재 기업으로 구성됩니다. 원자재 가격에 영향을 받습니다.',
-    examples: ['LIN', 'APD', 'FCX'],
-  },
-  XLY: {
-    detail: '경기소비재 섹터는 자동차, 소매유통, 호텔/레저, 의류 기업으로 구성됩니다. 소비자 지출에 민감합니다.',
-    examples: ['AMZN', 'TSLA', 'HD'],
-  },
-  XLP: {
-    detail: '필수소비재 섹터는 식음료, 생활용품, 담배 기업으로 구성됩니다. 경기 방어적이며 배당 수익률이 높습니다.',
-    examples: ['PG', 'KO', 'PEP'],
-  },
-  XLRE: {
-    detail: '부동산 섹터는 리츠(REITs)와 부동산 개발/운영 기업으로 구성됩니다. 금리에 민감하며 배당 수익률이 높습니다.',
-    examples: ['AMT', 'PLD', 'EQIX'],
-  },
-  XLU: {
-    detail: '유틸리티 섹터는 전력, 가스, 수도 공급 기업으로 구성됩니다. 규제 산업으로 안정적이며 배당이 높습니다.',
-    examples: ['NEE', 'DUK', 'SO'],
-  },
-  XLC: {
-    detail: '커뮤니케이션 섹터는 미디어, 통신, 인터넷/소셜미디어 기업으로 구성됩니다. 광고 시장에 민감합니다.',
-    examples: ['META', 'GOOGL', 'DIS'],
-  },
+// 섹터 상세 설명 (툴팁용)
+const SECTOR_DETAIL: Record<string, string> = {
+  XLK: '기술 섹터는 하드웨어, 소프트웨어, 반도체, IT 서비스 기업으로 구성됩니다. 성장주 중심으로 금리에 민감합니다.',
+  XLF: '금융 섹터는 은행, 보험사, 자산운용사, 투자은행으로 구성됩니다. 금리 상승 시 수혜를 받는 경향이 있습니다.',
+  XLV: '헬스케어 섹터는 제약, 바이오테크, 의료기기, 헬스케어 서비스 기업으로 구성됩니다. 경기 방어적 성격이 있습니다.',
+  XLE: '에너지 섹터는 석유/가스 탐사, 생산, 정제, 에너지 장비 기업으로 구성됩니다. 원유 가격에 민감합니다.',
+  XLI: '산업재 섹터는 항공우주, 건설, 기계, 운송 기업으로 구성됩니다. 경기 사이클에 민감한 편입니다.',
+  XLB: '소재 섹터는 화학, 금속/광업, 건축자재, 포장재 기업으로 구성됩니다. 원자재 가격에 영향을 받습니다.',
+  XLY: '경기소비재 섹터는 자동차, 소매유통, 호텔/레저, 의류 기업으로 구성됩니다. 소비자 지출에 민감합니다.',
+  XLP: '필수소비재 섹터는 식음료, 생활용품, 담배 기업으로 구성됩니다. 경기 방어적이며 배당 수익률이 높습니다.',
+  XLRE: '부동산 섹터는 리츠(REITs)와 부동산 개발/운영 기업으로 구성됩니다. 금리에 민감하며 배당 수익률이 높습니다.',
+  XLU: '유틸리티 섹터는 전력, 가스, 수도 공급 기업으로 구성됩니다. 규제 산업으로 안정적이며 배당이 높습니다.',
+  XLC: '커뮤니케이션 섹터는 미디어, 통신, 인터넷/소셜미디어 기업으로 구성됩니다. 광고 시장에 민감합니다.',
 };
 
 type Period = '1D' | '1W' | '1M';
@@ -73,6 +33,8 @@ interface SectorData {
   change_1d: number;
   change_1w: number;
   change_1m: number;
+  market_cap: number;
+  top_holdings: string[];  // 상위 보유 종목 (API에서 동적 조회)
 }
 
 interface SectorResponse {
@@ -82,6 +44,165 @@ interface SectorResponse {
   error: string | null;
 }
 
+// 변화율에 따른 색상 반환 (더 진한 색상으로 가시성 향상)
+const getChangeColor = (change: number): string => {
+  if (change >= 3) return '#15803d';      // green-700
+  if (change >= 1) return '#16a34a';      // green-600
+  if (change >= 0) return '#22c55e';      // green-500
+  if (change >= -1) return '#ef4444';     // red-500
+  if (change >= -3) return '#dc2626';     // red-600
+  return '#b91c1c';                        // red-700
+};
+
+// 텍스트 색상 (항상 흰색으로 통일)
+const getTextColor = (): string => '#ffffff';
+
+// 커스텀 툴팁
+const CustomTooltip = ({ active, payload }: any) => {
+  if (!active || !payload || !payload.length) return null;
+
+  const data = payload[0].payload;
+  const detail = SECTOR_DETAIL[data.symbol];
+  const topHoldings = data.data?.top_holdings || [];
+
+  if (!detail) return null;
+
+  return (
+    <div className="bg-popover border rounded-lg shadow-lg p-3 max-w-xs">
+      <div className="font-semibold mb-1">
+        {data.symbol} ({data.korName})
+      </div>
+      <p className="text-xs text-muted-foreground mb-2">{detail}</p>
+      {topHoldings.length > 0 && (
+        <p className="text-xs">
+          <span className="text-muted-foreground">대표 종목: </span>
+          {topHoldings.join(', ')}
+        </p>
+      )}
+      <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
+        클릭하여 상위 종목 확인
+      </div>
+    </div>
+  );
+};
+
+// 커스텀 Treemap 셀
+const CustomTreemapContent = (props: any) => {
+  const { x, y, width, height, depth, symbol, korName, change, price, color, onSectorClick, data } = props;
+
+  // root 노드는 렌더링하지 않음 (depth === 1이 실제 데이터)
+  if (depth === 0 || !symbol) {
+    return null;
+  }
+
+  // 너무 작은 셀은 텍스트 생략
+  const showFullInfo = width > 100 && height > 70;
+  const showSymbol = width > 60 && height > 40;
+  const textColor = getTextColor();
+
+  return (
+    <g>
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        fill={color}
+        stroke="#1f2937"
+        strokeWidth={2}
+        rx={4}
+        className="cursor-pointer transition-opacity hover:opacity-90"
+        onClick={() => data && onSectorClick(data)}
+      />
+      {showSymbol && (
+        <>
+          {/* 심볼 */}
+          <text
+            x={x + width / 2}
+            y={y + (showFullInfo ? height / 2 - 18 : height / 2 - 6)}
+            textAnchor="middle"
+            fill={textColor}
+            stroke="none"
+            fontSize={showFullInfo ? 18 : 14}
+            fontWeight="bold"
+            style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+            className="pointer-events-none select-none"
+          >
+            {symbol}
+          </text>
+
+          {showFullInfo && (
+            <>
+              {/* 한글명 */}
+              <text
+                x={x + width / 2}
+                y={y + height / 2 + 2}
+                textAnchor="middle"
+                fill={textColor}
+                stroke="none"
+                fontSize={13}
+                fontWeight="500"
+                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+                className="pointer-events-none select-none"
+              >
+                {korName}
+              </text>
+
+              {/* 변화율 */}
+              <text
+                x={x + width / 2}
+                y={y + height / 2 + 22}
+                textAnchor="middle"
+                fill={textColor}
+                stroke="none"
+                fontSize={16}
+                fontWeight="bold"
+                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+                className="pointer-events-none select-none"
+              >
+                {(change ?? 0) >= 0 ? '+' : ''}{(change ?? 0).toFixed(2)}%
+              </text>
+
+              {/* 가격 */}
+              {width > 120 && height > 90 && price != null && (
+                <text
+                  x={x + width / 2}
+                  y={y + height / 2 + 40}
+                  textAnchor="middle"
+                  fill={textColor}
+                  stroke="none"
+                  fontSize={12}
+                  style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+                  className="pointer-events-none select-none"
+                >
+                  ${price.toFixed(2)}
+                </text>
+              )}
+            </>
+          )}
+
+          {/* 작은 셀에서 변화율만 표시 */}
+          {!showFullInfo && width > 70 && (
+            <text
+              x={x + width / 2}
+              y={y + height / 2 + 10}
+              textAnchor="middle"
+              fill={textColor}
+              stroke="none"
+              fontSize={12}
+              fontWeight="bold"
+              style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+              className="pointer-events-none select-none"
+            >
+              {(change ?? 0) >= 0 ? '+' : ''}{(change ?? 0).toFixed(1)}%
+            </text>
+          )}
+        </>
+      )}
+    </g>
+  );
+};
+
 export function SectorHeatmap() {
   const [period, setPeriod] = useState<Period>('1D');
   const [loading, setLoading] = useState(true);
@@ -89,12 +210,13 @@ export function SectorHeatmap() {
   const [error, setError] = useState<string | null>(null);
   const [sectors, setSectors] = useState<SectorData[]>([]);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
+  const [selectedSector, setSelectedSector] = useState<SectorData | null>(null);
 
   const fetchData = useCallback(async () => {
     try {
       setError(null);
       const response = await api.get<SectorResponse>('/api/economic/sectors');
-      
+
       if (response.data.success && response.data.data) {
         setSectors(response.data.data);
         setLastUpdated(response.data.last_updated);
@@ -102,12 +224,10 @@ export function SectorHeatmap() {
         setError(response.data.error || '섹터 데이터를 불러올 수 없습니다.');
       }
     } catch (err) {
-      console.error('섹터 데이터 조회 실패:', err);
       setError('섹터 데이터를 불러오는 중 오류가 발생했습니다.');
     }
   }, []);
 
-  // 초기 로드
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -117,7 +237,7 @@ export function SectorHeatmap() {
     loadData();
   }, [fetchData]);
 
-  // 기간에 따른 변화율 가져오기
+  // 기간에 따른 변화율
   const getChange = (sector: SectorData): number => {
     switch (period) {
       case '1D': return sector.change_1d;
@@ -126,26 +246,37 @@ export function SectorHeatmap() {
     }
   };
 
-  // 변화율에 따른 배경색
-  const getChangeColor = (change: number): string => {
-    if (change >= 3) return 'bg-green-600 text-white';
-    if (change >= 1) return 'bg-green-500 text-white';
-    if (change >= 0) return 'bg-green-400/70 text-green-900 dark:text-green-100';
-    if (change >= -1) return 'bg-red-400/70 text-red-900 dark:text-red-100';
-    if (change >= -3) return 'bg-red-500 text-white';
-    return 'bg-red-600 text-white';
-  };
-
-  // 변화율에 따른 텍스트 색상 (보조 정보용)
-  const getSecondaryTextColor = (change: number): string => {
-    if (change >= 1 || change <= -1) return 'text-white/70';
-    return change >= 0 ? 'text-green-700/70 dark:text-green-200/70' : 'text-red-700/70 dark:text-red-200/70';
-  };
+  // Treemap 데이터 생성
+  const treemapData = sectors.map((sector) => {
+    const change = getChange(sector);
+    return {
+      name: sector.symbol,
+      symbol: sector.symbol,
+      korName: sector.name,
+      size: Math.max(sector.market_cap, 1000000000), // 최소 크기 보장
+      change,
+      price: sector.price,
+      color: getChangeColor(change),
+      data: sector,
+    };
+  });
 
   const handleRefresh = async () => {
     setRefreshing(true);
     await fetchData();
     setRefreshing(false);
+  };
+
+  const handleSectorClick = (sector: SectorData) => {
+    setSelectedSector(sector);
+  };
+
+  const handleCloseSectorDetail = () => {
+    setSelectedSector(null);
+  };
+
+  const handleStockClick = (symbol: string) => {
+    window.open(`/stock/${symbol}`, '_blank');
   };
 
   if (loading) {
@@ -158,11 +289,7 @@ export function SectorHeatmap() {
         <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-6 text-center">
           <p className="text-destructive font-medium mb-2">오류 발생</p>
           <p className="text-sm text-muted-foreground mb-4">{error}</p>
-          <Button
-            onClick={handleRefresh}
-            variant="outline"
-            className="gap-2"
-          >
+          <Button onClick={handleRefresh} variant="outline" className="gap-2">
             <RefreshCw className="h-4 w-4" />
             다시 시도
           </Button>
@@ -172,7 +299,7 @@ export function SectorHeatmap() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-4">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -181,7 +308,7 @@ export function SectorHeatmap() {
           </div>
           <div>
             <h2 className="text-xl font-semibold text-foreground">섹터 로테이션</h2>
-            <p className="text-sm text-muted-foreground">GICS 11개 섹터 ETF 성과</p>
+            <p className="text-sm text-muted-foreground">GICS 11개 섹터 ETF (AUM 기준)</p>
           </div>
         </div>
 
@@ -218,74 +345,50 @@ export function SectorHeatmap() {
         </div>
       </div>
 
-      {/* 히트맵 그리드 */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {sectors.map((sector) => {
-          const change = getChange(sector);
-          const colorClass = getChangeColor(change);
-          const secondaryTextClass = getSecondaryTextColor(change);
-          const detail = SECTOR_DETAIL[sector.symbol];
+      {/* 트리맵 */}
+      <div className="h-[400px] w-full rounded-lg overflow-hidden border bg-gray-900">
+        <ResponsiveContainer width="100%" height="100%">
+          <Treemap
+            data={treemapData}
+            dataKey="size"
+            aspectRatio={4 / 3}
+            stroke="#374151"
+            isAnimationActive={false}
+            content={<CustomTreemapContent onSectorClick={handleSectorClick} />}
+          >
+            <Tooltip content={<CustomTooltip />} />
+          </Treemap>
+        </ResponsiveContainer>
+      </div>
 
-          return (
-            <div
-              key={sector.symbol}
-              className={cn(
-                'rounded-lg p-4 transition-all duration-200 cursor-pointer hover:scale-[1.02] hover:shadow-lg',
-                colorClass
-              )}
-            >
-              {/* 상단: 심볼 + 한글명 + 툴팁 */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-lg">{sector.symbol}</div>
-                  <div className="text-sm opacity-90">{sector.name}</div>
-                </div>
-                <TooltipProvider delayDuration={200}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button className="p-1 rounded hover:bg-white/20 transition-colors">
-                        <Info className="h-4 w-4 opacity-70 cursor-help" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent 
-                      side="top" 
-                      className="max-w-xs whitespace-pre-line text-left"
-                    >
-                      <p className="font-medium mb-1">{sector.symbol} ({sector.name})</p>
-                      <p className="text-xs text-muted-foreground mb-2">{detail?.detail}</p>
-                      <p className="text-xs">
-                        <span className="text-muted-foreground">대표 종목: </span>
-                        {detail?.examples.join(', ')}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              
-              {/* 설명 */}
-              <div className={cn('text-xs mt-2 line-clamp-1', secondaryTextClass)}>
-                {sector.description}
-              </div>
-              
-              {/* 변화율 */}
-              <div className="flex items-center gap-1 mt-3">
-                <span className="text-xl font-semibold">
-                  {change >= 0 ? '+' : ''}{change.toFixed(2)}%
-                </span>
-                {change >= 0 ? (
-                  <TrendingUp className="h-4 w-4" />
-                ) : (
-                  <TrendingDown className="h-4 w-4" />
-                )}
-              </div>
-              
-              {/* 현재가 */}
-              <div className={cn('text-sm', secondaryTextClass)}>
-                ${sector.price.toFixed(2)}
-              </div>
-            </div>
-          );
-        })}
+      {/* 범례 */}
+      <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-3 rounded-sm bg-green-600" />
+            <span>+3% 이상</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-3 rounded-sm bg-green-500" />
+            <span>+1~3%</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-3 rounded-sm bg-green-300" />
+            <span>0~+1%</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-3 rounded-sm bg-red-300" />
+            <span>0~-1%</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-3 rounded-sm bg-red-500" />
+            <span>-1~-3%</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-4 h-3 rounded-sm bg-red-600" />
+            <span>-3% 이하</span>
+          </div>
+        </div>
       </div>
 
       {/* 푸터 */}
@@ -293,15 +396,23 @@ export function SectorHeatmap() {
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4" />
           <span>
-            마지막 업데이트: {lastUpdated 
-              ? new Date(lastUpdated).toLocaleString('ko-KR') 
+            마지막 업데이트: {lastUpdated
+              ? new Date(lastUpdated).toLocaleString('ko-KR')
               : '-'}
           </span>
         </div>
-        {refreshing && (
-          <div className="text-xs">업데이트 중...</div>
-        )}
+        <div className="text-xs">클릭하여 상위 종목 확인</div>
       </div>
+
+      {/* 섹터 상세 모달 */}
+      {selectedSector && (
+        <SectorDetail
+          symbol={selectedSector.symbol}
+          name={selectedSector.name}
+          onClose={handleCloseSectorDetail}
+          onStockClick={handleStockClick}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 # 프로젝트 구조
 
-> 최종 업데이트: 2026-02-07 (섹터 히트맵 기능 추가)
+> 최종 업데이트: 2026-02-07 (섹터 상세 트리맵 및 초보자 설명 추가)
 
 ## 전체 아키텍처
 
@@ -61,7 +61,8 @@ frontend/
 │   │   │   ├── DetailChart.tsx          # 메인 차트 (기간 선택)
 │   │   │   ├── StatusGauge.tsx          # 판단 기준 게이지
 │   │   │   ├── CompareSelector.tsx      # 비교 지표 선택
-│   │   │   └── SectorHeatmap.tsx        # 섹터 히트맵 (GICS 11개 섹터)
+│   │   │   ├── SectorHeatmap.tsx        # 섹터 히트맵 (GICS 11개 섹터)
+│   │   │   └── SectorDetail.tsx         # 섹터 상세 모달 (보유종목 트리맵)
 │   │   ├── layout/          # 레이아웃 컴포넌트
 │   │   │   ├── TopNav.tsx       # 상단 네비게이션 (ThemeToggle 포함)
 │   │   │   ├── PageHeader.tsx   # 공통 페이지 헤더
@@ -129,6 +130,7 @@ App.tsx
   - `economic/StatusGauge.tsx` - 판단 기준 (기준값 리스트, YoY 변화율 표시)
   - `economic/CompareSelector.tsx` - 비교 지표 선택 (멀티 차트)
   - `economic/SectorHeatmap.tsx` - 섹터 히트맵 (GICS 11개 섹터, 1D/1W/1M)
+  - `economic/SectorDetail.tsx` - 섹터 상세 모달 (보유종목 트리맵, 초보자 설명)
 - **주식 컴포넌트**:
   - `MainTabs.tsx` - 주식별 탭 (5개: Overview, AI, Chart, Technical, News)
   - `StockChart.tsx` - 주식 차트 (Recharts 사용)
@@ -331,6 +333,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - `GET /api/economic?include_history=true` - 히스토리 포함 (Yahoo: 6개월, FRED: 30개월)
 - `GET /api/economic/status` - API 상태 확인 (FRED, Yahoo)
 - `GET /api/economic/sectors` - 섹터 ETF 성과 (GICS 11개 섹터, 1D/1W/1M 변화율)
+- `GET /api/economic/sectors/{symbol}/holdings` - 섹터 보유종목 상세 (상위 10개, DB 캐시)
 
 ## 데이터베이스 스키마
 
@@ -383,6 +386,26 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - **프로젝트 가이드**: `CLAUDE.md`
 
 ## 최근 변경 이력
+
+### 2026-02-07: 섹터 상세 트리맵 및 초보자 설명 추가
+1. **섹터 상세 모달 트리맵 구조로 변경**
+   - `SectorDetail.tsx`: 리스트 → 트리맵 시각화로 변경
+   - 셀 크기 = 종목 비중, 셀 색상 = 일일 변화율
+   - 섹터 히트맵과 동일한 디자인/색상 기준
+
+2. **초보자 친화 설명 추가 (metaphor 스타일)**
+   - 각 섹터별 비유 문구: 💻 "미래를 만드는 기업들의 집합소" (XLK)
+   - 쉬운 설명: "금리가 오르면 주가가 빠지는 경향이 있어요"
+   - 경제지표 탭의 metaphor 스타일과 일관성 유지
+
+3. **섹터 보유종목 DB 캐싱**
+   - `SectorHoldingsCacheDB` 모델 추가 (backend/database/models.py)
+   - 미국 장 마감 시간(ET 16:00) 기준 캐시 갱신
+   - top_holdings만 DB 캐시, 실시간 가격/변화율은 API 호출
+
+4. **Lazy Loading 적용**
+   - 경제지표/섹터히트맵 탭 클릭 시에만 데이터 로드
+   - `indicatorsLoaded` 상태 플래그로 중복 로딩 방지
 
 ### 2026-02-07: 섹터 히트맵 기능 추가
 1. **Backend**
