@@ -193,7 +193,7 @@ def get_macro_data_parallel(include_history: bool = False) -> MacroData:
     results = {}
     
     start_time = time_module.time()
-    logger.info(f"FRED 지표 병렬 조회 시작 (include_history={include_history})")
+    logger.debug(f"FRED 지표 병렬 조회 시작 (include_history={include_history})")
     
     with ThreadPoolExecutor(max_workers=2) as executor:
         future_to_series = {
@@ -210,7 +210,7 @@ def get_macro_data_parallel(include_history: bool = False) -> MacroData:
                 results[series_id] = None
     
     elapsed = time_module.time() - start_time
-    logger.info(f"FRED 지표 병렬 조회 완료: {elapsed:.2f}초")
+    logger.debug(f"FRED 지표 병렬 조회 완료: {elapsed:.2f}초")
     
     return MacroData(
         cpi=results.get("CPIAUCSL"),

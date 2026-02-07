@@ -68,7 +68,10 @@
       "Bash(git add:*)",
       "Bash(git commit -m \"$\\(cat <<''EOF''\n:wrench: [chore] Git commit 자동화 설정 \\(Husky + Convention\\)\n\n- Husky 기반 Git hooks 설정 \\(pre-commit, commit-msg\\)\n- 커밋 메시지 형식: :[emoji]: [type] message\n- main/master 직접 커밋 경고\n- Docker 빌드 시 Husky 스킵 \\(HUSKY=0\\)\n- 커밋 컨벤션 문서 추가\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git push:*)",
-      "mcp__plugin_serena_serena__think_about_whether_you_are_done"
+      "mcp__plugin_serena_serena__think_about_whether_you_are_done",
+      "Bash(python3:*)",
+      "Bash(git commit:*)",
+      "Bash(pkill:*)"
     ]
   }
 }

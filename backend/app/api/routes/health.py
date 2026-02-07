@@ -43,7 +43,7 @@ async def gemini_health_check() -> Dict:
         }
     
     try:
-        logger.info("[Health] Gemini 테스트 시작")
+        logger.debug("[Health] Gemini 테스트 시작")
         
         # Gemini 초기화
         genai.configure(api_key=settings.gemini_api_key)
@@ -51,9 +51,9 @@ async def gemini_health_check() -> Dict:
         
         # 간단한 테스트 프롬프트
         def _test():
-            logger.info("[Health] Gemini API 호출 중...")
+            logger.debug("[Health] Gemini API 호출 중...")
             result = model.generate_content("Say 'Hello' in Korean")
-            logger.info("[Health] Gemini API 응답 받음")
+            logger.debug("[Health] Gemini API 응답 받음")
             return result
         
         # 타임아웃 10초
@@ -62,7 +62,7 @@ async def gemini_health_check() -> Dict:
             timeout=10.0
         )
         
-        logger.info("[Health] Gemini 테스트 성공")
+        logger.debug("[Health] Gemini 테스트 성공")
         return {
             "status": "ok",
             "message": "Gemini API 연결 성공",

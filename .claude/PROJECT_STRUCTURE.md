@@ -1,6 +1,6 @@
 # 프로젝트 구조
 
-> 최종 업데이트: 2026-02-06 (페이지 레이아웃 구조 개선, usePortfolio 훅 분리)
+> 최종 업데이트: 2026-02-07 (불필요한 로그 정리)
 
 ## 전체 아키텍처
 
@@ -379,6 +379,28 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - **프로젝트 가이드**: `CLAUDE.md`
 
 ## 최근 변경 이력
+
+### 2026-02-07: 불필요한 로그 정리
+1. **Frontend console.log 삭제**
+   - `EconomicIndicators.tsx`: API 호출/응답 로그 3개 삭제
+   - `DetailChart.tsx`: 디버깅 로그 1개 삭제
+
+2. **Backend logger.info → logger.debug 변경**
+   - `stock.py`: 라우터 초기화, 조회, 분석 과정 로그 (11개)
+   - `stock_service.py`: Gemini 분석 과정 로그 (11개)
+   - `health.py`: Gemini 테스트 로그 (4개)
+   - `main.py`: 404 핸들러 로그 간소화
+   - `fred_service.py`: 병렬 조회 로그 (2개)
+   - `economic_service.py`: 병렬 조회 로그 (2개)
+
+3. **유지된 로그**
+   - `ERROR`: 에러/예외 상황 (API 키 없음, 예외 발생)
+   - `WARNING`: 경고 상황 (데이터 없음, 라이브러리 미설치)
+   - `INFO`: 서버 시작 시 1회성 이벤트 (DB 초기화, Admin 계정 생성)
+
+4. **로깅 가이드라인 문서화**
+   - `CLAUDE.md`에 로깅 가이드라인 섹션 추가
+   - 로그 레벨 정책, 운영 환경 설정, Frontend/Backend 로깅 가이드
 
 ### 2026-02-06: 페이지 레이아웃 구조 개선
 1. **공통 레이아웃 컴포넌트 추가**

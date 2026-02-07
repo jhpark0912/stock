@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 stock_service = StockService()
 
-logger.info("📌 Stock 라우터 초기화 완료")
+logger.debug("📌 Stock 라우터 초기화 완료")
 
 
 @router.get("/stock/{ticker}", response_model=StockResponse)
@@ -46,7 +46,7 @@ async def get_stock(
         - GET /api/stock/AAPL?include_technical=true&include_chart=true
         - GET /api/stock/TSLA
     """
-    logger.info(f"📈 주식 데이터 조회: GET /stock/{ticker}")
+    logger.debug(f"📈 주식 데이터 조회: GET /stock/{ticker}")
     try:
         stock_data = stock_service.get_stock_data(
             ticker,
@@ -82,7 +82,7 @@ async def get_stock_news(
     Examples:
         - GET /api/stock/AAPL/news
     """
-    logger.info(f"📰 뉴스 조회: GET /stock/{ticker}/news")
+    logger.debug(f"📰 뉴스 조회: GET /stock/{ticker}/news")
     try:
         news_data = stock_service.get_news(ticker)
         return NewsResponse(
@@ -157,9 +157,9 @@ async def get_stock_analysis(
         Headers: { "Authorization": "Bearer <token>" }
         Body: { "ticker": "AAPL", "timestamp": "2024-01-01T00:00:00", ... }
     """
-    logger.info(f"💡 분석 요청 수신: POST /stock/{ticker}/analysis")
-    logger.info(f"   👤 사용자: {current_user.username}")
-    logger.info(f"   📊 데이터 티커: {stock_data.ticker}")
+    logger.debug(f"💡 분석 요청 수신: POST /stock/{ticker}/analysis")
+    logger.debug(f"   👤 사용자: {current_user.username}")
+    logger.debug(f"   📊 데이터 티커: {stock_data.ticker}")
     
     try:
         # 유저의 Gemini API 키 조회
@@ -172,7 +172,7 @@ async def get_stock_analysis(
             if current_user.role == "admin":
                 from app.config import settings
                 if settings.gemini_api_key:
-                    logger.info(f"   🔑 Admin 사용자 - 환경변수 API 키 사용")
+                    logger.debug(f"   🔑 Admin 사용자 - 환경변수 API 키 사용")
                     gemini_key = settings.gemini_api_key
                 else:
                     logger.error(f"   ❌ 환경변수에 Gemini API 키가 설정되지 않음")
@@ -188,7 +188,7 @@ async def get_stock_analysis(
                     detail="Gemini API 키가 등록되지 않았습니다. 설정에서 API 키를 등록해주세요."
                 )
         else:
-            logger.info(f"   🔑 사용자 API 키 확인 완료")
+            logger.debug(f"   🔑 사용자 API 키 확인 완료")
         
         # 티커 일치 여부 확인
         if stock_data.ticker.upper() != ticker.upper():
@@ -197,7 +197,7 @@ async def get_stock_analysis(
                 f"URL의 티커({ticker})와 요청 본문의 티커({stock_data.ticker})가 일치하지 않습니다."
             )
 
-        logger.info(f"   ✅ 티커 일치 확인 완료")
+        logger.debug(f"   ✅ 티커 일치 확인 완료")
         
         # 포트폴리오에서 평단가 정보 조회 (유저별)
         portfolio_item = PortfolioRepository.get_by_ticker(db, current_user.id, ticker)
@@ -210,11 +210,11 @@ async def get_stock_analysis(
             user_avg_price = float(portfolio_item.purchase_price)
             if portfolio_item.profit_percent:
                 user_profit_loss_ratio = float(portfolio_item.profit_percent)
-            logger.info(f"   📊 포트폴리오 정보: 평단가={user_avg_price}, 수익률={user_profit_loss_ratio}%")
+            logger.debug(f"   📊 포트폴리오 정보: 평단가={user_avg_price}, 수익률={user_profit_loss_ratio}%")
         else:
-            logger.info(f"   📊 포트폴리오 정보 없음 - 일반 분석 진행")
+            logger.debug(f"   📊 포트폴리오 정보 없음 - 일반 분석 진행")
         
-        logger.info(f"   🤖 Gemini AI 분석 시작...")
+        logger.debug(f"   🤖 Gemini AI 분석 시작...")
         
         # Gemini AI로 분석 (유저 API 키 + 평단가 정보 사용)
         analysis_result = await stock_service.get_comprehensive_analysis(
@@ -225,7 +225,7 @@ async def get_stock_analysis(
             user_weight=user_weight
         )
 
-        logger.info(f"   ✅ Gemini AI 분석 완료")
+        logger.debug(f"   ✅ Gemini AI 분석 완료")
         
         return AnalysisResponse(
             success=True,

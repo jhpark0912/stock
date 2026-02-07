@@ -94,11 +94,7 @@ async def startup_event():
 # 404 에러 핸들러
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc):
-    logger.error(f"🚨 404 에러 발생!")
-    logger.error(f"   ❌ 요청 URL: {request.method} {request.url.path}")
-    logger.error(f"   ❌ 등록된 라우트 목록:")
-    for route in app.routes:
-        logger.error(f"      - {route.path} [{', '.join(route.methods) if hasattr(route, 'methods') else 'N/A'}]")
+    logger.debug(f"🚨 404 에러: {request.method} {request.url.path}")
     
     return JSONResponse(
         status_code=404,

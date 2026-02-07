@@ -240,7 +240,7 @@ def get_all_yahoo_indicators_parallel(include_history: bool = False) -> Dict[str
     results = {}
     
     start_time = time.time()
-    logger.info(f"Yahoo 지표 병렬 조회 시작 (include_history={include_history})")
+    logger.debug(f"Yahoo 지표 병렬 조회 시작 (include_history={include_history})")
     
     with ThreadPoolExecutor(max_workers=5) as executor:
         future_to_symbol = {
@@ -257,7 +257,7 @@ def get_all_yahoo_indicators_parallel(include_history: bool = False) -> Dict[str
                 results[symbol] = None
     
     elapsed = time.time() - start_time
-    logger.info(f"Yahoo 지표 병렬 조회 완료: {elapsed:.2f}초")
+    logger.debug(f"Yahoo 지표 병렬 조회 완료: {elapsed:.2f}초")
     
     return {
         "rates": RatesData(

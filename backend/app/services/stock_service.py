@@ -327,7 +327,7 @@ class StockService:
         import traceback
         logger = logging.getLogger(__name__)
         
-        logger.info(f"[Gemini] 분석 시작: {stock_data.ticker}")
+        logger.debug(f"[Gemini] 분석 시작: {stock_data.ticker}")
         
         # 유저 API 키 필수 확인
         if not user_api_key:
@@ -336,16 +336,16 @@ class StockService:
 
         try:
             # 유저의 API 키로 Gemini 초기화
-            logger.info("[Gemini] 유저 API 키로 초기화 시도...")
+            logger.debug("[Gemini] 유저 API 키로 초기화 시도...")
             genai.configure(api_key=user_api_key)
-            logger.info("[Gemini] 초기화 완료")
+            logger.debug("[Gemini] 초기화 완료")
             
-            logger.info("[Gemini] 모델 생성 중...")
+            logger.debug("[Gemini] 모델 생성 중...")
             model = genai.GenerativeModel('models/gemini-flash-latest')
-            logger.info("[Gemini] 모델 생성 완료")
+            logger.debug("[Gemini] 모델 생성 완료")
 
             # 프롬프트에 필요한 데이터 포맷팅
-            logger.info("[Gemini] 프롬프트 생성 중...")
+            logger.debug("[Gemini] 프롬프트 생성 중...")
             price_data_str = f"현재가: {stock_data.price.current}, 시가총액: {stock_data.market_cap}"
             financial_data_str = ", ".join([f"{k}: {v}" for k, v in stock_data.financials.dict().items() if v is not None])
             tech_data_str = "N/A"
@@ -412,14 +412,14 @@ class StockService:
 ### [Output Format]
 반드시 한국어로 작성하고, 가독성을 위해 마크다운(Markdown) 형식을 사용해줘. 전문 용어를 사용하되 초보자도 이해할 수 있게 쉬운 비유를 곁들여줘.
 """
-            logger.info(f"[Gemini] 프롬프트 길이: {len(prompt)} 문자")
+            logger.debug(f"[Gemini] 프롬프트 길이: {len(prompt)} 문자")
             
             # 블로킹 호출을 비동기로 감싸기
             def _generate():
-                logger.info("[Gemini] API 호출 시작")
+                logger.debug("[Gemini] API 호출 시작")
                 try:
                     result = model.generate_content(prompt)
-                    logger.info("[Gemini] API 호출 성공")
+                    logger.debug("[Gemini] API 호출 성공")
                     return result
                 except Exception as e:
                     logger.error(f"[Gemini] API 호출 실패: {type(e).__name__}: {str(e)}")
@@ -427,10 +427,10 @@ class StockService:
                     raise
             
             # 타임아웃 없이 완료될 때까지 대기
-            logger.info("[Gemini] asyncio.to_thread 시작 (타임아웃: 없음)")
+            logger.debug("[Gemini] asyncio.to_thread 시작 (타임아웃: 없음)")
             try:
                 response = await asyncio.to_thread(_generate)
-                logger.info(f"[Gemini] 응답 받음, 길이: {len(response.text) if response.text else 0}")
+                logger.debug(f"[Gemini] 응답 받음, 길이: {len(response.text) if response.text else 0}")
                 return AIAnalysis(report=response.text)
             except Exception as e:
                 logger.error(f"[Gemini] asyncio 에러: {type(e).__name__}: {str(e)}")

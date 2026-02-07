@@ -398,6 +398,57 @@ translated_summary = translator.translate(summary)
 3. `ticker.history(start=..., end=...)` 호출
 4. 결과를 DataFrame으로 처리 (현재는 단일 행만 처리)
 
+---
+
+## 로깅 가이드라인
+
+### 로그 레벨 정책
+
+| 레벨 | 용도 | 예시 |
+|------|------|------|
+| `ERROR` | 에러/예외 상황 (반드시 유지) | API 키 없음, 예외 발생 |
+| `WARNING` | 경고 상황 (유지 권장) | 데이터 없음, 라이브러리 미설치 |
+| `INFO` | 서버 시작 등 1회성 이벤트 | DB 초기화, Admin 계정 생성 |
+| `DEBUG` | 상세 디버깅 정보 | API 호출 과정, 요청/응답 로그 |
+
+### 운영 환경 설정
+
+- 기본 로그 레벨: `INFO` (환경변수 `LOG_LEVEL`로 설정)
+- 디버깅 필요 시: `LOG_LEVEL=DEBUG`로 변경
+
+### Frontend 로깅
+
+- **운영 환경**: `console.log` 사용 금지
+- **개발 환경**: 필요 시 조건부 로깅 사용
+  ```typescript
+  if (import.meta.env.DEV) {
+    console.log('디버깅 정보');
+  }
+  ```
+
+### Backend 로깅
+
+- **상세 과정 로그**: `logger.debug()` 사용
+  - API 호출/응답 과정
+  - 데이터 조회 과정
+  - 분석 단계별 진행 상황
+- **에러 로그**: `logger.error()` 유지
+- **경고 로그**: `logger.warning()` 유지
+
+### 정리된 파일 목록 (2026-02-07)
+
+**Frontend (console.log 삭제)**:
+- `EconomicIndicators.tsx`
+- `DetailChart.tsx`
+
+**Backend (info → debug 변경)**:
+- `stock.py` - 라우터 초기화, 조회, 분석 과정 로그
+- `stock_service.py` - Gemini 분석 과정 로그
+- `health.py` - Gemini 테스트 로그
+- `main.py` - 404 핸들러 로그
+- `fred_service.py` - 병렬 조회 로그
+- `economic_service.py` - 병렬 조회 로그
+
 ## 알려진 제약사항
 
 1. **Python 3.13 호환성**:

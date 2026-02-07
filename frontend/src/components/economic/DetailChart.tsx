@@ -42,16 +42,6 @@ export function DetailChart({ indicator, compareIndicators = [], loading = false
   // FRED: 장기 기간, Yahoo: 단기 기간
   const [period, setPeriod] = useState<Period>(isFredIndicator ? '1Y' : '1M');
 
-  // 디버깅: 히스토리 데이터 확인
-  console.log('[DetailChart] Indicator:', {
-    symbol: indicator.symbol,
-    name: indicator.name,
-    hasHistory: !!indicator.history,
-    historyLength: indicator.history?.length,
-    history: indicator.history,
-    isFredIndicator
-  });
-
   // 기간에 따라 데이터 필터링
   const filterByPeriod = (data: { date: string; value: number }[], period: Period, isFred: boolean) => {
     if (!data || data.length === 0) return [];

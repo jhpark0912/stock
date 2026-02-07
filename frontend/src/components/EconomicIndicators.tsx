@@ -27,23 +27,15 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
   const fetchData = useCallback(async (includeHistory: boolean = false) => {
     try {
       setError(null);
-      console.log('[EconomicIndicators] API 호출:', { includeHistory });
       const response = await api.get<EconomicResponse>(
         `/api/economic${includeHistory ? '?include_history=true' : ''}`
       );
-
-      console.log('[EconomicIndicators] API 응답:', response.data);
 
       if (response.data.success && response.data.data) {
         setData(response.data.data);
 
         // 히스토리 데이터 확인
         if (includeHistory) {
-          console.log('[EconomicIndicators] 히스토리 로드 확인:', {
-            treasury_10y: response.data.data.rates.treasury_10y?.history?.length,
-            cpi: response.data.data.macro.cpi?.history?.length,
-            m2: response.data.data.macro.m2?.history?.length,
-          });
           setHistoryLoaded(true);
         }
       } else {
