@@ -9,5 +9,4 @@ export { StatusGauge } from './StatusGauge';
 export { CompareSelector } from './CompareSelector';
 export { SectorHeatmap } from './SectorHeatmap';
 export { SectorDetail } from './SectorDetail';
-export { MarketCycleSample } from './MarketCycleSample';
 export { MarketCycleSection } from './MarketCycleSection';
