@@ -10,3 +10,4 @@ export { CompareSelector } from './CompareSelector';
 export { SectorHeatmap } from './SectorHeatmap';
 export { SectorDetail } from './SectorDetail';
 export { MarketCycleSection } from './MarketCycleSection';
+export { CountryTab } from './CountryTab';

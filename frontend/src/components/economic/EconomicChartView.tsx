@@ -9,44 +9,74 @@ import { IndicatorListPanel } from './IndicatorListPanel';
 import { DetailChart } from './DetailChart';
 import { StatusGauge } from './StatusGauge';
 import { CompareSelector } from './CompareSelector';
-import type { EconomicData, EconomicIndicator } from '@/types/economic';
+import type { EconomicData, KoreaEconomicData, EconomicIndicator, Country } from '@/types/economic';
 import { cn } from '@/lib/utils';
 
 interface EconomicChartViewProps {
-  data: EconomicData;
+  data: EconomicData | KoreaEconomicData;
   onRefresh: () => void;
   refreshing: boolean;
   onViewModeChange: (mode: 'simple' | 'chart') => void;
+  country: Country;
 }
 
-// 모든 지표를 플랫 배열로 변환
-function getAllIndicators(data: EconomicData): { indicator: EconomicIndicator; category: string }[] {
+// 모든 지표를 플랫 배열로 변환 - 미국 데이터
+function getUsIndicators(data: EconomicData): { indicator: EconomicIndicator; category: string }[] {
   const indicators: { indicator: EconomicIndicator; category: string }[] = [];
 
   // 금리 & 변동성
-  if (data.rates.treasury_10y) indicators.push({ indicator: data.rates.treasury_10y, category: '금리 & 변동성' });
-  if (data.rates.treasury_3m) indicators.push({ indicator: data.rates.treasury_3m, category: '금리 & 변동성' });
-  if (data.rates.vix) indicators.push({ indicator: data.rates.vix, category: '금리 & 변동성' });
+  if (data.rates.treasury_10y) indicators.push({ indicator: data.rates.treasury_10y, category: '💵 금리 & 변동성' });
+  if (data.rates.treasury_3m) indicators.push({ indicator: data.rates.treasury_3m, category: '💵 금리 & 변동성' });
+  if (data.rates.vix) indicators.push({ indicator: data.rates.vix, category: '💵 금리 & 변동성' });
 
   // 거시경제
-  if (data.macro.cpi) indicators.push({ indicator: data.macro.cpi, category: '거시경제' });
-  if (data.macro.m2) indicators.push({ indicator: data.macro.m2, category: '거시경제' });
+  if (data.macro.cpi) indicators.push({ indicator: data.macro.cpi, category: '📊 거시경제' });
+  if (data.macro.m2) indicators.push({ indicator: data.macro.m2, category: '📊 거시경제' });
 
   // 원자재
-  if (data.commodities.wti_oil) indicators.push({ indicator: data.commodities.wti_oil, category: '원자재' });
-  if (data.commodities.gold) indicators.push({ indicator: data.commodities.gold, category: '원자재' });
+  if (data.commodities.wti_oil) indicators.push({ indicator: data.commodities.wti_oil, category: '🛢️ 원자재' });
+  if (data.commodities.gold) indicators.push({ indicator: data.commodities.gold, category: '🛢️ 원자재' });
 
   return indicators;
+}
+
+// 모든 지표를 플랫 배열로 변환 - 한국 데이터
+function getKrIndicators(data: KoreaEconomicData): { indicator: EconomicIndicator; category: string }[] {
+  const indicators: { indicator: EconomicIndicator; category: string }[] = [];
+
+  // 금리
+  if (data.rates.bond_10y) indicators.push({ indicator: data.rates.bond_10y, category: '🇰🇷 금리' });
+  if (data.rates.base_rate) indicators.push({ indicator: data.rates.base_rate, category: '🇰🇷 금리' });
+  if (data.rates.credit_spread) indicators.push({ indicator: data.rates.credit_spread, category: '🇰🇷 금리' });
+
+  // 거시경제
+  if (data.macro.cpi) indicators.push({ indicator: data.macro.cpi, category: '🇰🇷 거시경제' });
+  if (data.macro.m2) indicators.push({ indicator: data.macro.m2, category: '🇰🇷 거시경제' });
+
+  // 환율
+  if (data.fx.usd_krw) indicators.push({ indicator: data.fx.usd_krw, category: '🇰🇷 환율' });
+
+  return indicators;
+}
+
+// 국가에 따라 적절한 함수 호출
+function getAllIndicators(data: EconomicData | KoreaEconomicData, country: Country): { indicator: EconomicIndicator; category: string }[] {
+  if (country === 'kr') {
+    return getKrIndicators(data as KoreaEconomicData);
+  } else {
+    return getUsIndicators(data as EconomicData);
+  }
 }
 
 export function EconomicChartView({
   data,
   onRefresh,
   refreshing,
-  onViewModeChange
+  onViewModeChange,
+  country
 }: EconomicChartViewProps) {
   // 선택된 지표 (기본: 첫 번째 지표)
-  const allIndicators = useMemo(() => getAllIndicators(data), [data]);
+  const allIndicators = useMemo(() => getAllIndicators(data, country), [data, country]);
   const [selectedSymbol, setSelectedSymbol] = useState<string>(
     allIndicators[0]?.indicator.symbol || ''
   );

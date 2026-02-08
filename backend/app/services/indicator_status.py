@@ -143,8 +143,105 @@ def get_wti_status(value: float) -> Tuple[IndicatorStatus, str]:
     return status, STATUS_LABELS["economic"][status]
 
 
+# ============================================
+# 한국 경제 지표 상태 판단 함수
+# ============================================
+
+def get_kr_bond_10y_status(value: float) -> Tuple[IndicatorStatus, str]:
+    """
+    한국 국고채 10년물 금리 상태 판단
+    - 좋음: < 3.0%
+    - 주의: 3.0% - 4.0%
+    - 위험: > 4.0%
+    """
+    if value < 3.0:
+        status = IndicatorStatus.GOOD
+    elif value <= 4.0:
+        status = IndicatorStatus.CAUTION
+    else:
+        status = IndicatorStatus.DANGER
+    
+    return status, STATUS_LABELS["economic"][status]
+
+
+def get_kr_base_rate_status(value: float) -> Tuple[IndicatorStatus, str]:
+    """
+    한국은행 기준금리 상태 판단
+    - 좋음: < 2.5%
+    - 주의: 2.5% - 3.5%
+    - 위험: > 3.5%
+    """
+    if value < 2.5:
+        status = IndicatorStatus.GOOD
+    elif value <= 3.5:
+        status = IndicatorStatus.CAUTION
+    else:
+        status = IndicatorStatus.DANGER
+    
+    return status, STATUS_LABELS["economic"][status]
+
+
+def get_kr_credit_spread_status(value: float) -> Tuple[IndicatorStatus, str]:
+    """
+    한국 신용 스프레드 (회사채-국고채 금리 차이) 상태 판단
+    - 안정: < 0.5%p (50bp)
+    - 주의: 0.5% - 1.0%p (50-100bp)
+    - 위험: > 1.0%p (100bp)
+
+    신용 스프레드는 시장 불안도를 측정하는 지표
+    스프레드 확대 = 시장 불안 증가
+    """
+    if value < 0.5:
+        status = IndicatorStatus.GOOD
+    elif value <= 1.0:
+        status = IndicatorStatus.CAUTION
+    else:
+        status = IndicatorStatus.DANGER
+
+    return status, STATUS_LABELS["fear"][status]  # 불안도 지표이므로 "fear" 라벨 사용
+
+
+def get_kr_cpi_status(yoy_change: float) -> Tuple[IndicatorStatus, str]:
+    """
+    한국 CPI (소비자물가지수) YoY 변화율 상태 판단
+    - 좋음: 1.5% - 2.5%
+    - 주의: 2.5% - 4.0% (또는 0% - 1.5%)
+    - 위험: > 4.0% 또는 < 0%
+    """
+    if yoy_change < 0:
+        status = IndicatorStatus.DANGER  # 디플레이션
+    elif yoy_change > 4.0:
+        status = IndicatorStatus.DANGER  # 고인플레이션
+    elif 1.5 <= yoy_change <= 2.5:
+        status = IndicatorStatus.GOOD
+    else:
+        status = IndicatorStatus.CAUTION
+    
+    return status, STATUS_LABELS["economic"][status]
+
+
+def get_usd_krw_status(value: float) -> Tuple[IndicatorStatus, str]:
+    """
+    원/달러 환율 상태 판단
+    - 안정: 1200 - 1300
+    - 주의: 1300 - 1400 (또는 1100 - 1200)
+    - 위험: > 1400 또는 < 1100
+    """
+    if value < 1100:
+        status = IndicatorStatus.DANGER  # 원화 초강세 (수출 위험)
+    elif value > 1400:
+        status = IndicatorStatus.DANGER  # 원화 약세 (수입 물가 상승)
+    elif 1200 <= value <= 1300:
+        status = IndicatorStatus.GOOD
+    else:
+        status = IndicatorStatus.CAUTION
+    
+    return status, STATUS_LABELS["economic"][status]
+
+
 # 지표별 판단 기준 설명
 INDICATOR_CRITERIA = {
+    # 미국 지표
     "^VIX": "🟢 안정: < 20\n🟡 불안: 20 - 30\n🔴 공포: > 30",
     "^TNX": "🟢 좋음: < 3.5%\n🟡 주의: 3.5% - 4.5%\n🔴 위험: > 4.5%",
     "^IRX": "🟢 좋음: < 3.0%\n🟡 주의: 3.0% - 5.0%\n🔴 위험: > 5.0%",
@@ -152,6 +249,14 @@ INDICATOR_CRITERIA = {
     "M2SL": "🟢 좋음: 4% - 8%\n🟡 주의: 1% - 4%\n🔴 위험: < 0% (유동성 수축)",
     "CL=F": "🟢 좋음: $60 - $80\n🟡 주의: $80 - $95\n🔴 위험: > $95 또는 < $40",
     "GC=F": None,  # 측정 안 함
+    
+    # 한국 지표
+    "KR_BOND_10Y": "🟢 좋음: < 3.0%\n🟡 주의: 3.0% - 4.0%\n🔴 위험: > 4.0%",
+    "KR_BASE_RATE": "🟢 좋음: < 2.5%\n🟡 주의: 2.5% - 3.5%\n🔴 위험: > 3.5%",
+    "KR_CREDIT_SPREAD": "🟢 안정: < 0.5%p\n🟡 주의: 0.5% - 1.0%p\n🔴 위험: > 1.0%p",
+    "KR_CPI": "🟢 좋음: 1.5% - 2.5%\n🟡 주의: 2.5% - 4.0%\n🔴 위험: > 4.0% 또는 < 0%",
+    "KR_M2": "🟢 좋음: 4% - 8%\n🟡 주의: 1% - 4%\n🔴 위험: < 0% (유동성 수축)",
+    "KRW=X": "🟢 안정: 1200 - 1300원\n🟡 주의: 1300 - 1400원\n🔴 위험: > 1400원",
 }
 
 
@@ -200,6 +305,30 @@ def get_indicator_status(symbol: str, value: Optional[float], yoy_change: Option
             status, label = get_m2_status(yoy_change)
             return status, label, criteria
         return IndicatorStatus.NONE, "-", criteria
+    
+    # 한국 지표
+    elif symbol == "KR_BOND_10Y":
+        status, label = get_kr_bond_10y_status(value)
+        return status, label, criteria
+    elif symbol == "KR_BASE_RATE":
+        status, label = get_kr_base_rate_status(value)
+        return status, label, criteria
+    elif symbol == "KR_CREDIT_SPREAD":
+        status, label = get_kr_credit_spread_status(value)
+        return status, label, criteria
+    elif symbol == "KR_CPI":
+        if yoy_change is not None:
+            status, label = get_kr_cpi_status(yoy_change)
+            return status, label, criteria
+        return IndicatorStatus.NONE, "-", criteria
+    elif symbol == "KR_M2":
+        if yoy_change is not None:
+            status, label = get_m2_status(yoy_change)  # 미국과 동일한 기준 사용
+            return status, label, criteria
+        return IndicatorStatus.NONE, "-", criteria
+    elif symbol == "KRW=X":
+        status, label = get_usd_krw_status(value)
+        return status, label, criteria
     
     # 알 수 없는 지표
     return IndicatorStatus.NONE, "-", None

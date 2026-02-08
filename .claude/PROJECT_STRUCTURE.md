@@ -1,6 +1,6 @@
 # 프로젝트 구조
 
-> 최종 업데이트: 2026-02-08 (시장 사이클 판단 근거 및 지표 설명 추가)
+> 최종 업데이트: 2026-02-08 (한국 경제 지표 차트 기능 완성 및 ECOS API 최적화)
 
 ## 전체 아키텍처
 
@@ -38,7 +38,9 @@ stock/
   - python-jose (JWT)
   - passlib + bcrypt (비밀번호 해싱)
 - **주식 데이터**: yahooquery 2.4.1
-- **경제 지표**: fredapi 0.5.2 (FRED API)
+- **경제 지표**:
+  - fredapi 0.5.2 (미국 FRED API)
+  - requests (한국 ECOS API, 한국은행 경제통계시스템)
 - **AI 분석**: Google Generative AI 0.8.3 (Gemini)
 - **번역**: deep-translator 1.11.4
 - **기타**:
@@ -260,18 +262,35 @@ Frontend (토큰 저장)
    - bcrypt 비밀번호 해싱
 
 5. **경제 지표 API**
-   - 금리: 미국채 10년물 (^TNX), 3개월 T-Bill (^IRX)
-   - 변동성: VIX (^VIX)
-   - 거시경제: CPI (CPIAUCSL), M2 통화량 (M2SL) - FRED API
-   - 원자재: WTI 원유 (CL=F), 금 (GC=F)
-   - **히스토리**: Yahoo(6개월), FRED(최근 30개 데이터 포인트)
+   - **미국 지표**:
+     - 금리: 미국채 10년물 (^TNX), 3개월 T-Bill (^IRX)
+     - 변동성: VIX (^VIX)
+     - 거시경제: CPI (CPIAUCSL), M2 통화량 (M2SL) - FRED API
+     - 원자재: WTI 원유 (CL=F), 금 (GC=F)
+   - **한국 지표** (2026-02-08 추가):
+     - 금리: 국고채 10년물 (KR_BOND_10Y), 기준금리 (KR_BASE_RATE) - ECOS API (일간)
+     - 신용 스프레드: 회사채-국고채 금리 차이 (KR_CREDIT_SPREAD) - ECOS API (일간)
+     - 거시경제: CPI (KR_CPI), M2 통화량 (KR_M2) - ECOS API (월간)
+     - 환율: 원/달러 환율 (KRW=X) - Yahoo Finance (일간)
+   - **히스토리 데이터**:
+     - Yahoo: 6개월 (일간 데이터, period="6mo")
+     - FRED: 최근 30개 데이터 포인트 (월간)
+     - ECOS: 일간 200개 (약 7~8개월), 월간 30개 (약 2.5년)
+     - **ECOS API 페이징**: `/1/10000/` (최대 10,000개 조회)
    - **상태 판단**:
-     - FRED: YoY 변화율 기반 (CPI: 1.5-2.5% 좋음, M2: 4-8% 좋음)
-     - Yahoo: 절대값 기반 (금리, VIX, 원자재)
-   - **Chart 뷰**:
-     - 기간 필터링: FRED(데이터 포인트 개수), Yahoo(날짜 기준)
-     - 판단 기준: 기준값 리스트 + 현재값 표시
-     - 지표 비교: 멀티 라인 차트
+     - FRED/ECOS: YoY 변화율 기반 (CPI: 1.5-2.5% 좋음, M2: 4-8% 좋음)
+     - Yahoo: 절대값 기반 (금리, VIX, 원자재, 환율)
+     - 한국 금리: KR_BOND_10Y(<3%), KR_BASE_RATE(<2.5%), KR_CREDIT_SPREAD(<0.5%p)
+   - **Chart 뷰** (2026-02-08 완성):
+     - **데이터 주기 구분**:
+       - 월간: FRED(CPI, M2), ECOS(KR_CPI, KR_M2, KR_INDPRO, KR_EXPORT)
+       - 일간: Yahoo(금리, 원자재, 환율), ECOS(KR_BOND_10Y, KR_BASE_RATE, KR_CREDIT_SPREAD)
+     - **기간 필터링**:
+       - 월간 데이터: 3M/6M/1Y/ALL (데이터 포인트 개수 기준)
+       - 일간 데이터: 1W/1M/3M/6M (날짜 기준)
+     - **판단 기준**: 기준값 리스트 + 현재값 표시 게이지
+     - **지표 비교**: 멀티 라인 차트 (최대 5개)
+   - **국가 선택**: 미국/한국/전체 탭으로 전환
 
 ## 환경 변수
 
@@ -285,7 +304,8 @@ VITE_API_URL=http://localhost:8000
 DATABASE_URL=sqlite:///./data/stock.db
 SECRET_KEY=your-secret-key
 GEMINI_API_KEY=your-gemini-api-key
-FRED_API_KEY=your-fred-api-key  # 경제 지표용 (선택)
+FRED_API_KEY=your-fred-api-key  # 미국 경제 지표용 (선택)
+ECOS_API_KEY=your-ecos-api-key  # 한국 경제 지표용 (선택)
 LOG_LEVEL=INFO
 ```
 
@@ -329,9 +349,11 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - `DELETE /api/admin/users/{id}` - 사용자 삭제
 
 ### 경제 지표
-- `GET /api/economic` - 경제 지표 조회 (현재값만)
-- `GET /api/economic?include_history=true` - 히스토리 포함 (Yahoo: 6개월, FRED: 30개월)
-- `GET /api/economic/status` - API 상태 확인 (FRED, Yahoo)
+- `GET /api/economic?country=us` - 미국 경제 지표 조회 (기본값)
+- `GET /api/economic?country=kr` - 한국 경제 지표 조회
+- `GET /api/economic?country=all` - 미국+한국 통합 조회
+- `GET /api/economic?include_history=true` - 히스토리 포함 (Yahoo: 6개월, FRED: 30개월, ECOS: 13개월)
+- `GET /api/economic/status` - API 상태 확인 (FRED, Yahoo, ECOS)
 - `GET /api/economic/sectors` - 섹터 ETF 성과 (GICS 11개 섹터, 1D/1W/1M 변화율)
 - `GET /api/economic/sectors/{symbol}/holdings` - 섹터 보유종목 상세 (상위 10개, DB 캐시)
 - `GET /api/economic/market-cycle` - 시장 사이클 조회 (일반 사용자)
@@ -388,6 +410,75 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - **프로젝트 가이드**: `CLAUDE.md`
 
 ## 최근 변경 이력
+
+### 2026-02-08: 샘플 페이지 삭제 및 신용 스프레드 적용
+1. **샘플 페이지 삭제**
+   - `frontend/src/components/economic/KoreaEconomicSample.tsx` 삭제
+   - `frontend/src/components/economic/index.ts`에서 export 제거
+   - 실제 ECOS API 연동으로 충분하여 샘플 페이지 불필요
+
+2. **VKOSPI → 신용 스프레드로 대체**
+   - Yahoo Finance/ECOS에서 VKOSPI 미제공으로 신용 스프레드 사용
+   - 신용 스프레드 = 회사채 금리 - 국고채 금리 (시장 불안 온도계)
+   - `backend/app/services/korea_economic_service.py`
+     - `get_credit_spread()` 함수 추가
+     - 회사채 3년물(AA-) - 국고채 3년물 계산
+   - `backend/app/services/indicator_status.py`
+     - `get_kr_credit_spread_status()` 추가
+     - 안정: < 0.5%p, 주의: 0.5-1.0%p, 위험: > 1.0%p
+   - `backend/app/models/economic.py`
+     - `KoreaRatesData.vkospi` → `credit_spread`로 변경
+   - `frontend/src/types/economic.ts`
+     - `KoreaRatesData` 타입 수정
+
+3. **ECOS API 타임아웃 증가**
+   - 정부 서버 응답 지연 대응
+   - `requests.get()` timeout: 10s → 20s
+   - `ThreadPoolExecutor` timeout: 15s → 30s
+
+### 2026-02-08: 한국 경제 지표 추가
+1. **Backend**
+   - `services/korea_economic_service.py` 신규 생성
+     - ECOS API 통합 (한국은행 경제통계시스템)
+     - Yahoo Finance 한국 지표 (원/달러 환율)
+     - 24시간 캐싱 (ECOS), 5분 캐싱 (Yahoo)
+   - `models/economic.py`에 한국 지표 모델 추가
+     - `KoreaRatesData`, `KoreaMacroData`, `KoreaFxData`
+     - `KoreaEconomicData`, `KoreaEconomicResponse`
+     - `AllEconomicData`, `AllEconomicResponse` (통합)
+   - `services/indicator_status.py`에 한국 지표 상태 판단 추가
+     - `get_kr_bond_10y_status()`: < 3.0% 좋음, 3.0-4.0% 주의, > 4.0% 위험
+     - `get_kr_base_rate_status()`: < 2.5% 좋음, 2.5-3.5% 주의, > 3.5% 위험
+     - `get_kr_credit_spread_status()`: < 0.5%p 안정, 0.5-1.0%p 주의, > 1.0%p 위험
+     - `get_kr_cpi_status()`: 1.5-2.5% 좋음, 2.5-4.0% 주의, > 4.0% 위험
+     - `get_usd_krw_status()`: 1200-1300 안정, 1300-1400 주의, > 1400 위험
+   - `routes/economic.py` 수정
+     - `country` 파라미터 추가 (us/kr/all)
+     - 미국/한국/통합 조회 분기 처리
+   - `config.py`에 `ECOS_API_KEY` 환경 변수 추가
+
+2. **Frontend**
+   - `components/economic/CountryTab.tsx` 신규 생성
+     - 🇺🇸 미국 / 🇰🇷 한국 / 🌏 전체 탭 UI
+   - `components/EconomicIndicators.tsx` 수정
+     - `country` 상태 및 `CountryTab` 추가
+     - 국가별 데이터 조회 및 렌더링 분기
+     - 한국 지표 섹션 (금리, 신용 스프레드, 거시경제, 환율)
+   - `types/economic.ts`에 한국 타입 추가
+     - `Country`, `KoreaRatesData`, `KoreaMacroData`, `KoreaFxData`
+     - `KoreaEconomicData`, `KoreaEconomicResponse`, `AllEconomicData`
+   - `components/economic/IndicatorListPanel.tsx` 수정
+     - 한국 카테고리/지표 아이콘 추가
+
+3. **한국 지표 목록**
+   - 금리: 국고채 10년물 (KR_BOND_10Y), 한국은행 기준금리 (KR_BASE_RATE)
+   - 신용 스프레드: 회사채-국고채 금리 차이 (KR_CREDIT_SPREAD)
+   - 거시경제: 소비자물가지수 (KR_CPI), M2 통화량 (KR_M2)
+   - 환율: 원/달러 환율 (KRW=X)
+
+4. **ECOS API 사전 준비**
+   - 발급: https://ecos.bok.or.kr/api/ 가입 후 자동 발급
+   - 환경 변수: `ECOS_API_KEY`
 
 ### 2026-02-07: 섹터 상세 트리맵 및 초보자 설명 추가
 1. **섹터 상세 모달 트리맵 구조로 변경**

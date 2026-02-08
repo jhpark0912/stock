@@ -226,8 +226,8 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
     );
   }
 
-  // Chart 뷰
-  if (viewMode === 'chart' && data) {
+  // Chart 뷰 - 미국
+  if (viewMode === 'chart' && country === 'us' && data) {
     return (
       <div className={cn('h-full', className)}>
         <SubTabHeader />
@@ -236,6 +236,23 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
           onRefresh={handleRefresh}
           refreshing={refreshing}
           onViewModeChange={handleViewModeChange}
+          country="us"
+        />
+      </div>
+    );
+  }
+
+  // Chart 뷰 - 한국
+  if (viewMode === 'chart' && country === 'kr' && krData) {
+    return (
+      <div className={cn('h-full', className)}>
+        <SubTabHeader />
+        <EconomicChartView
+          data={krData as any}  // 타입 호환을 위해 임시로 any 사용
+          onRefresh={handleRefresh}
+          refreshing={refreshing}
+          onViewModeChange={handleViewModeChange}
+          country="kr"
         />
       </div>
     );

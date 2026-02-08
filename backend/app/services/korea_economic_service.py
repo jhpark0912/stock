@@ -174,16 +174,17 @@ def get_ecos_indicator(
         end_date = today.strftime("%Y%m")
         start_date = (today - timedelta(days=460)).strftime("%Y%m")
     else:
-        # 일간 데이터: 최근 60일
+        # 일간 데이터: 최근 200일 (6개월 + 여유)
         end_date = today.strftime("%Y%m%d")
-        start_date = (today - timedelta(days=60)).strftime("%Y%m%d")
+        start_date = (today - timedelta(days=200)).strftime("%Y%m%d")
 
     try:
         # item_code2가 있으면 URL에 추가
+        # ECOS API는 한 번에 최대 100,000개까지 조회 가능
         if item_code2:
-            url = f"{ECOS_BASE_URL}/{api_key}/json/kr/1/100/{stat_code}/{cycle}/{start_date}/{end_date}/{item_code}/{item_code2}"
+            url = f"{ECOS_BASE_URL}/{api_key}/json/kr/1/10000/{stat_code}/{cycle}/{start_date}/{end_date}/{item_code}/{item_code2}"
         else:
-            url = f"{ECOS_BASE_URL}/{api_key}/json/kr/1/100/{stat_code}/{cycle}/{start_date}/{end_date}/{item_code}"
+            url = f"{ECOS_BASE_URL}/{api_key}/json/kr/1/10000/{stat_code}/{cycle}/{start_date}/{end_date}/{item_code}"
 
         logger.debug(f"ECOS API 호출: {series_id}")
         logger.debug(f"ECOS URL: {url}")
@@ -205,10 +206,13 @@ def get_ecos_indicator(
         if not rows:
             logger.warning(f"ECOS 데이터 없음: {series_id}")
             return None
-        
+
         # 최신 값 추출
         latest = rows[-1]
+        latest_date = latest.get("TIME", "")
         value = float(latest.get("DATA_VALUE", 0))
+
+        logger.info(f"✅ ECOS {series_id}: 최신 데이터 {latest_date} = {value} (총 {len(rows)}개)")
         
         # 변화율 계산 (전기 대비)
         change = None
@@ -231,7 +235,9 @@ def get_ecos_indicator(
         history = None
         if include_history:
             history = []
-            for row in rows[-30:]:  # 최근 30개
+            # 일간 데이터: 최근 200개 (약 7~8개월), 월간 데이터: 최근 30개 (약 2.5년)
+            max_points = 200 if cycle == "D" else 30
+            for row in rows[-max_points:]:
                 date_str = row.get("TIME", "")
                 if cycle == "M":
                     # YYYYMM -> YYYY-MM
@@ -239,7 +245,7 @@ def get_ecos_indicator(
                 else:
                     # YYYYMMDD -> YYYY-MM-DD
                     date_str = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:]}"
-                
+
                 history.append(HistoryPoint(
                     date=date_str,
                     value=float(row.get("DATA_VALUE", 0))
@@ -308,11 +314,11 @@ def get_credit_spread(
     # 날짜 범위 설정 (일간 데이터)
     today = datetime.now()
     end_date = today.strftime("%Y%m%d")
-    start_date = (today - timedelta(days=60)).strftime("%Y%m%d")
+    start_date = (today - timedelta(days=200)).strftime("%Y%m%d")
 
     try:
-        # 국고채 3년 조회
-        treasury_url = f"{ECOS_BASE_URL}/{api_key}/json/kr/1/100/{stat_code}/D/{start_date}/{end_date}/{treasury_code}"
+        # 국고채 3년 조회 (최대 10000개)
+        treasury_url = f"{ECOS_BASE_URL}/{api_key}/json/kr/1/10000/{stat_code}/D/{start_date}/{end_date}/{treasury_code}"
         logger.debug(f"국고채 3년 URL: {treasury_url}")
 
         treasury_response = requests.get(treasury_url, timeout=20)
@@ -328,8 +334,8 @@ def get_credit_spread(
             logger.warning("국고채 3년 데이터 없음")
             return None
 
-        # 회사채 3년(AA-) 조회
-        corporate_url = f"{ECOS_BASE_URL}/{api_key}/json/kr/1/100/{stat_code}/D/{start_date}/{end_date}/{corporate_code}"
+        # 회사채 3년(AA-) 조회 (최대 10000개)
+        corporate_url = f"{ECOS_BASE_URL}/{api_key}/json/kr/1/10000/{stat_code}/D/{start_date}/{end_date}/{corporate_code}"
         logger.debug(f"회사채 3년 URL: {corporate_url}")
 
         corporate_response = requests.get(corporate_url, timeout=20)
@@ -346,9 +352,12 @@ def get_credit_spread(
             return None
 
         # 최신 스프레드 계산
+        latest_date = treasury_rows[-1].get("TIME", "")
         latest_treasury = float(treasury_rows[-1].get("DATA_VALUE", 0))
         latest_corporate = float(corporate_rows[-1].get("DATA_VALUE", 0))
         spread = latest_corporate - latest_treasury
+
+        logger.info(f"✅ ECOS 신용스프레드: 최신 데이터 {latest_date} = {spread:.3f}%p (국고채: {len(treasury_rows)}개, 회사채: {len(corporate_rows)}개)")
 
         # 이전 스프레드 (변화율 계산용)
         change = None
@@ -366,9 +375,10 @@ def get_credit_spread(
         history = None
         if include_history:
             history = []
-            # 날짜별로 스프레드 계산
+            # 날짜별로 스프레드 계산 (일간 데이터: 최근 200개)
             min_len = min(len(treasury_rows), len(corporate_rows))
-            for i in range(max(0, min_len - 30), min_len):  # 최근 30개
+            max_points = 200  # 약 7~8개월
+            for i in range(max(0, min_len - max_points), min_len):
                 date_str = treasury_rows[i].get("TIME", "")
                 # YYYYMMDD -> YYYY-MM-DD
                 date_str = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:]}"
@@ -461,7 +471,7 @@ def get_yahoo_kr_indicator(
         # 히스토리 조회
         history = None
         if include_history:
-            hist = ticker.history(period="1mo", interval="1d")
+            hist = ticker.history(period="6mo", interval="1d")
             if not hist.empty:
                 history = []
                 for date, row in hist.iterrows():

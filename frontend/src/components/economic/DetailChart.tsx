@@ -13,7 +13,7 @@ import {
   Legend,
   CartesianGrid,
 } from 'recharts';
-import { Loader2 } from 'lucide-react';
+
 import type { EconomicIndicator } from '@/types/economic';
 import { cn } from '@/lib/utils';
 
@@ -36,14 +36,27 @@ const CHART_COLORS = [
 ];
 
 export function DetailChart({ indicator, compareIndicators = [], loading = false }: DetailChartProps) {
-  // FRED 지표(월간 데이터)와 Yahoo 지표(일간 데이터) 구분
-  const isFredIndicator = indicator.symbol === 'CPIAUCSL' || indicator.symbol === 'M2SL';
+  // 데이터 주기 판별 함수 (월간 vs 일간)
+  const isMonthlyData = (symbol: string): boolean => {
+    // FRED: 미국 월간 데이터
+    if (symbol === 'CPIAUCSL' || symbol === 'M2SL') return true;
 
-  // FRED: 장기 기간, Yahoo: 단기 기간
-  const [period, setPeriod] = useState<Period>(isFredIndicator ? '1Y' : '1M');
+    // ECOS 월간 데이터
+    if (symbol === 'KR_CPI' || symbol === 'KR_M2' || symbol === 'KR_INDPRO' || symbol === 'KR_EXPORT') {
+      return true;
+    }
+
+    // 그 외: 일간 데이터 (미국 금리, 한국 금리, 환율 등)
+    return false;
+  };
+
+  const isMonthly = isMonthlyData(indicator.symbol);
+
+  // 월간 데이터: 장기 기간, 일간 데이터: 단기 기간
+  const [period, setPeriod] = useState<Period>(isMonthly ? '1Y' : '1M');
 
   // 기간에 따라 데이터 필터링
-  const filterByPeriod = (data: { date: string; value: number }[], period: Period, isFred: boolean) => {
+  const filterByPeriod = (data: { date: string; value: number }[], period: Period, isMonthly: boolean) => {
     if (!data || data.length === 0) return [];
 
     // 전체 데이터 표시
@@ -51,8 +64,8 @@ export function DetailChart({ indicator, compareIndicators = [], loading = false
       return data;
     }
 
-    // FRED 데이터(월간): 데이터 포인트 개수 기준
-    if (isFred) {
+    // 월간 데이터(FRED, ECOS): 데이터 포인트 개수 기준
+    if (isMonthly) {
       let pointsToShow = 12; // 기본 1년 = 12개월
 
       switch (period) {
@@ -71,7 +84,7 @@ export function DetailChart({ indicator, compareIndicators = [], loading = false
       return data.slice(-pointsToShow);
     }
 
-    // Yahoo 데이터(일간): 날짜 기준
+    // 일간 데이터(Yahoo): 날짜 기준
     const now = new Date();
     let daysBack = 30;
 
@@ -112,7 +125,7 @@ export function DetailChart({ indicator, compareIndicators = [], loading = false
   // 메인 지표 + 비교 지표 데이터 병합
   const chartData = useMemo(() => {
     const mainHistory = indicator.history || [];
-    const filteredMain = filterByPeriod(mainHistory, period, isFredIndicator);
+    const filteredMain = filterByPeriod(mainHistory, period, isMonthly);
 
     if (filteredMain.length === 0) return [];
 
@@ -130,8 +143,8 @@ export function DetailChart({ indicator, compareIndicators = [], loading = false
     // 비교 지표 추가
     compareIndicators.forEach(comp => {
       const compHistory = comp.history || [];
-      const compIsFred = comp.symbol === 'CPIAUCSL' || comp.symbol === 'M2SL';
-      const filteredComp = filterByPeriod(compHistory, period, compIsFred);
+      const compIsMonthly = isMonthlyData(comp.symbol);
+      const filteredComp = filterByPeriod(compHistory, period, compIsMonthly);
 
       filteredComp.forEach(point => {
         const existing = dateMap.get(point.date);
@@ -143,7 +156,7 @@ export function DetailChart({ indicator, compareIndicators = [], loading = false
 
     // 날짜순 정렬
     return Array.from(dateMap.values()).sort((a, b) => a.date - b.date);
-  }, [indicator, compareIndicators, period, isFredIndicator]);
+  }, [indicator, compareIndicators, period, isMonthly]);
 
   // Y축 도메인 계산
   const yDomain = useMemo(() => {
@@ -181,19 +194,12 @@ export function DetailChart({ indicator, compareIndicators = [], loading = false
     return `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
   };
 
-  // 로딩 중 또는 데이터 없음
+  // 데이터 없음
   if (!indicator.history || indicator.history.length === 0) {
     return (
       <div className="bg-card border border-border rounded-lg p-6">
         <div className="h-[200px] flex items-center justify-center">
-          {loading ? (
-            <div className="flex flex-col items-center gap-3">
-              <Loader2 className="h-8 w-8 text-primary animate-spin" />
-              <p className="text-sm text-muted-foreground">차트 데이터 불러오는 중...</p>
-            </div>
-          ) : (
-            <p className="text-muted-foreground">히스토리 데이터가 없습니다</p>
-          )}
+          <p className="text-muted-foreground">히스토리 데이터가 없습니다</p>
         </div>
       </div>
     );
@@ -207,8 +213,8 @@ export function DetailChart({ indicator, compareIndicators = [], loading = false
       {/* 기간 선택 */}
       <div className="flex justify-end mb-4">
         <div className="flex items-center bg-muted rounded-lg p-1 gap-0.5">
-          {/* FRED: 월간 데이터 (장기), Yahoo: 일간 데이터 (단기+중기) */}
-          {(isFredIndicator
+          {/* 월간 데이터: 장기, 일간 데이터: 단기+중기 */}
+          {(isMonthly
             ? (['3M', '6M', '1Y', 'ALL'] as Period[])
             : (['1W', '1M', '3M', '6M'] as Period[])
           ).map((p) => (

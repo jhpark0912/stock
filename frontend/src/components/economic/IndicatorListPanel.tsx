@@ -18,13 +18,19 @@ interface IndicatorListPanelProps {
 
 // 카테고리별 아이콘
 const categoryIcons: Record<string, string> = {
-  '금리 & 변동성': '💹',
-  '거시경제': '📈',
-  '원자재': '🛢️',
+  // 미국
+  '💵 금리 & 변동성': '💹',
+  '📊 거시경제': '📈',
+  '🛢️ 원자재': '🛢️',
+  // 한국
+  '🇰🇷 금리': '💹',
+  '🇰🇷 거시경제': '📈',
+  '🇰🇷 환율': '💱',
 };
 
 // 지표별 아이콘
 const indicatorIcons: Record<string, string> = {
+  // 미국
   '^TNX': '🏛️',
   '^IRX': '🏛️',
   '^VIX': '📊',
@@ -32,6 +38,13 @@ const indicatorIcons: Record<string, string> = {
   'GC=F': '💰',
   'CPIAUCSL': '📊',
   'M2SL': '💵',
+  // 한국
+  'KR_BOND_10Y': '🏛️',
+  'KR_BASE_RATE': '🏛️',
+  'KR_CREDIT_SPREAD': '📊',
+  'KR_CPI': '📊',
+  'KR_M2': '💵',
+  'KRW=X': '💱',
 };
 
 // 상태별 스타일
@@ -78,7 +91,7 @@ export function IndicatorListPanel({
   };
 
   return (
-    <div className="w-56 border-r border-border bg-card overflow-y-auto">
+    <div className="w-56 border-r border-border bg-card">
       {Object.entries(grouped).map(([category, items]) => (
         <div key={category} className="py-2">
           {/* 카테고리 헤더 */}
