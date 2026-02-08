@@ -8,7 +8,8 @@ from datetime import datetime
 from app.models.economic import (
     EconomicResponse, EconomicData, 
     SectorResponse, SectorData,
-    SectorHoldingsResponse, SectorHolding
+    SectorHoldingsResponse, SectorHolding,
+    MarketCycleResponse
 )
 from app.services.economic_service import get_all_yahoo_indicators_parallel
 from app.services.fred_service import get_macro_data_parallel, check_fred_availability
@@ -204,6 +205,103 @@ async def get_sector_holdings_api(symbol: str):
     except Exception as e:
         logger.error(f"섹터 보유 종목 조회 실패 ({symbol}): {e}")
         return SectorHoldingsResponse(
+            success=False,
+            error=str(e)
+        )
+
+
+@router.get("/economic/market-cycle", response_model=MarketCycleResponse)
+async def get_market_cycle():
+    """
+    시장 사이클 (경기 계절) 조회
+
+    PMI, CPI, VIX/금리차 기반으로 시장을 4계절로 분류:
+    - 봄 (회복기): PMI 상승, 저물가
+    - 여름 (활황기): PMI 50+, 양호한 물가
+    - 가을 (후퇴기): PMI 하락, 고물가
+    - 겨울 (침체기): PMI 50-, 디플레
+
+    Returns:
+    - 성공 시: 시장 사이클 데이터 (계절, 지표, 신뢰도)
+    - 실패 시: 에러 메시지
+    """
+    try:
+        logger.debug("시장 사이클 조회 요청")
+
+        # Phase 2: 실제 데이터 기반 판단
+        from app.services.market_cycle_service import get_real_market_cycle
+
+        cycle_data = get_real_market_cycle()
+
+        logger.debug(f"시장 사이클 조회 완료: {cycle_data.season}")
+
+        return MarketCycleResponse(
+            success=True,
+            data=cycle_data
+        )
+
+    except Exception as e:
+        logger.error(f"시장 사이클 조회 실패: {e}", exc_info=True)
+        return MarketCycleResponse(
+            success=False,
+            error=str(e)
+        )
+
+
+@router.get("/economic/market-cycle/analysis", response_model=MarketCycleResponse)
+async def get_market_cycle_with_ai():
+    """
+    시장 사이클 + AI 분석 조회 (Admin 전용)
+
+    기본 시장 사이클 데이터에 Gemini AI 기반 멘토 코멘트 추가
+
+    Returns:
+    - 성공 시: 시장 사이클 데이터 + AI 코멘트/추천
+    - 실패 시: 에러 메시지
+
+    Note:
+    - Gemini API 키 필요 (환경 변수 GEMINI_API_KEY)
+    - Admin 권한 필요 (향후 추가)
+    """
+    try:
+        import os
+        from app.services.market_cycle_service import get_real_market_cycle, generate_ai_comment
+
+        logger.debug("시장 사이클 AI 분석 조회 요청")
+
+        # Phase 2: 실제 데이터 기반 판단
+        cycle_data = get_real_market_cycle()
+
+        # Gemini API 키 확인
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            logger.warning("GEMINI_API_KEY 없음 - AI 코멘트 생략")
+            return MarketCycleResponse(
+                success=True,
+                data=cycle_data
+            )
+
+        # AI 코멘트 생성
+        try:
+            ai_result = generate_ai_comment(cycle_data, api_key)
+            cycle_data.ai_comment = ai_result['comment']
+            cycle_data.ai_recommendation = ai_result['recommendation']
+            cycle_data.ai_risk = ai_result.get('risk')
+
+            logger.debug(f"AI 코멘트 생성 완료: {len(ai_result['comment'])}자")
+
+        except Exception as ai_error:
+            logger.error(f"AI 코멘트 생성 실패 (무시): {ai_error}")
+            # AI 실패해도 기본 데이터는 반환
+
+        return MarketCycleResponse(
+            success=True,
+            data=cycle_data
+        )
+
+    except Exception as e:
+        logger.error(f"시장 사이클 AI 분석 조회 실패: {e}", exc_info=True)
+        return MarketCycleResponse(
             success=False,
             error=str(e)
         )

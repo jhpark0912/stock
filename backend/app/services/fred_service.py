@@ -60,6 +60,12 @@ FRED_METADATA = {
         "metaphor": "바닷물의 양",
         "description": "현금 + 예금 + MMF 등 유동성이 높은 자산의 총량",
         "impact": "증가 시 자산가격 상승, 감소 시 하락 압력"
+    },
+    "INDPRO": {
+        "name": "산업생산지수",
+        "metaphor": "공장 가동률",
+        "description": "제조업, 광업, 유틸리티의 실질 생산량 지수 (2017=100). 매달 15일 발표",
+        "impact": "YoY 변화율로 경기 확장/수축 판단 (0% 기준)"
     }
 }
 
@@ -177,30 +183,31 @@ def get_fred_indicator(
 
 
 def get_macro_data(include_history: bool = False) -> MacroData:
-    """거시경제 지표 조회 (CPI, M2)"""
+    """거시경제 지표 조회 (CPI, M2, INDPRO)"""
     return MacroData(
         cpi=get_fred_indicator("CPIAUCSL", include_history),
-        m2=get_fred_indicator("M2SL", include_history)
+        m2=get_fred_indicator("M2SL", include_history),
+        indpro=get_fred_indicator("INDPRO", include_history)
     )
 
 
 def get_macro_data_parallel(include_history: bool = False) -> MacroData:
-    """거시경제 지표 병렬 조회 (CPI, M2)"""
+    """거시경제 지표 병렬 조회 (CPI, M2, INDPRO)"""
     from concurrent.futures import ThreadPoolExecutor, as_completed
     import time as time_module
-    
-    series_ids = ["CPIAUCSL", "M2SL"]
+
+    series_ids = ["CPIAUCSL", "M2SL", "INDPRO"]
     results = {}
-    
+
     start_time = time_module.time()
     logger.debug(f"FRED 지표 병렬 조회 시작 (include_history={include_history})")
-    
-    with ThreadPoolExecutor(max_workers=2) as executor:
+
+    with ThreadPoolExecutor(max_workers=3) as executor:
         future_to_series = {
             executor.submit(get_fred_indicator, series_id, include_history): series_id
             for series_id in series_ids
         }
-        
+
         for future in as_completed(future_to_series):
             series_id = future_to_series[future]
             try:
@@ -208,13 +215,14 @@ def get_macro_data_parallel(include_history: bool = False) -> MacroData:
             except Exception as e:
                 logger.error(f"FRED 지표 조회 실패 ({series_id}): {e}")
                 results[series_id] = None
-    
+
     elapsed = time_module.time() - start_time
     logger.debug(f"FRED 지표 병렬 조회 완료: {elapsed:.2f}초")
-    
+
     return MacroData(
         cpi=results.get("CPIAUCSL"),
-        m2=results.get("M2SL")
+        m2=results.get("M2SL"),
+        indpro=results.get("INDPRO")
     )
 
 

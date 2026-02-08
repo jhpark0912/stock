@@ -57,3 +57,43 @@ export interface EconomicResponse {
 
 // 뷰 모드 타입
 export type EconomicViewMode = 'simple' | 'chart';
+
+// ============================================
+// 시장 사이클 타입
+// ============================================
+
+export type MarketSeason = 'spring' | 'summer' | 'autumn' | 'winter';
+
+export interface MarketCycleIndicator {
+  value: number;
+  trend: string;  // "상승 추세", "하락 추세", "안정"
+  label?: string;
+  mom_change?: string;  // 전월 대비 변화 ("+0.2", "-0.1")
+}
+
+export interface MarketCycleData {
+  season: MarketSeason;
+  season_name: string;  // "봄 (회복기)", "여름 (활황기)" 등
+  season_emoji: string;  // 🌸, ☀️, 🍂, ❄️
+  confidence: number;  // 0-100
+  score: number;
+  transition_signal: string;  // "안정적 유지", "가을로 전환 가능성 있음" 등
+  reasoning: string;  // 판단 근거 (1-2문장)
+
+  // 지표 상세
+  indpro: MarketCycleIndicator;  // 산업생산지수 (INDPRO)
+  cpi: MarketCycleIndicator;
+  vix: MarketCycleIndicator;
+  yield_spread?: number;  // 10Y-3M 금리차 (basis points)
+
+  // AI 분석 (Admin 전용)
+  ai_comment?: string;
+  ai_recommendation?: string;
+  ai_risk?: string;
+}
+
+export interface MarketCycleResponse {
+  success: boolean;
+  data: MarketCycleData | null;
+  error?: string;
+}

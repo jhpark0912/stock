@@ -44,6 +44,7 @@ class MacroData(BaseModel):
     """거시경제 지표 (FRED)"""
     cpi: Optional[EconomicIndicator] = None
     m2: Optional[EconomicIndicator] = None
+    indpro: Optional[EconomicIndicator] = None
 
 
 class CommoditiesData(BaseModel):
@@ -113,4 +114,45 @@ class SectorHoldingsResponse(BaseModel):
     sector_name: Optional[str] = None     # 섹터명 (기술)
     holdings: Optional[List[SectorHolding]] = None
     last_updated: Optional[str] = None
+    error: Optional[str] = None
+
+
+# ============================================
+# 시장 사이클 관련 모델
+# ============================================
+
+class MarketCycleIndicator(BaseModel):
+    """시장 사이클 판단을 위한 개별 지표"""
+    value: float
+    trend: str  # "상승 추세", "하락 추세", "안정"
+    label: Optional[str] = None
+    mom_change: Optional[str] = None  # 전월 대비 변화 ("+0.2", "-0.1")
+
+
+class MarketCycleData(BaseModel):
+    """시장 사이클 데이터"""
+    season: str  # spring, summer, autumn, winter
+    season_name: str  # "봄 (회복기)", "여름 (활황기)" 등
+    season_emoji: str  # 🌸, ☀️, 🍂, ❄️
+    confidence: int  # 0-100
+    score: float  # 가중치 점수
+    transition_signal: str  # "안정적 유지", "가을로 전환 가능성 있음" 등
+    reasoning: str  # 판단 근거 (1-2문장)
+
+    # 지표 상세
+    indpro: MarketCycleIndicator  # 산업생산지수 (INDPRO)
+    cpi: MarketCycleIndicator
+    vix: MarketCycleIndicator
+    yield_spread: Optional[float] = None  # 10Y-3M 금리차 (basis points)
+    
+    # AI 분석 (Admin 전용)
+    ai_comment: Optional[str] = None
+    ai_recommendation: Optional[str] = None
+    ai_risk: Optional[str] = None
+
+
+class MarketCycleResponse(BaseModel):
+    """시장 사이클 API 응답"""
+    success: bool
+    data: Optional[MarketCycleData] = None
     error: Optional[str] = None

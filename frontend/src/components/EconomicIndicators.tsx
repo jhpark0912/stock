@@ -7,10 +7,11 @@ import { RefreshCw, TrendingUp, BarChart3, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IndicatorCard } from './IndicatorCard';
 import { LoadingSpinner } from './LoadingSpinner';
-import { EconomicChartView, SectorHeatmap } from './economic';
+import { EconomicChartView, SectorHeatmap, MarketCycleSection } from './economic';
 import { api } from '@/lib/api';
 import type { EconomicData, EconomicViewMode, EconomicResponse } from '@/types/economic';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 type EconomicTab = 'indicators' | 'sectors';
 
@@ -19,6 +20,7 @@ interface EconomicIndicatorsProps {
 }
 
 export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
+  const { user } = useAuth();
   const [data, setData] = useState<EconomicData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -228,6 +230,9 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
             데이터 업데이트 중...
           </div>
         )}
+
+        {/* 시장 사이클 섹션 */}
+        <MarketCycleSection isAdmin={user?.role === 'admin'} />
 
         {/* 금리 & 변동성 섹션 */}
         <section>
