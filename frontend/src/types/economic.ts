@@ -58,6 +58,53 @@ export interface EconomicResponse {
 // 뷰 모드 타입
 export type EconomicViewMode = 'simple' | 'chart';
 
+// 국가 타입
+export type Country = 'us' | 'kr' | 'all' | null;
+
+// ============================================
+// 한국 경제 지표 타입
+// ============================================
+
+export interface KoreaRatesData {
+  bond_10y: EconomicIndicator | null;  // 국고채 10년물
+  base_rate: EconomicIndicator | null;  // 한국은행 기준금리
+  credit_spread: EconomicIndicator | null;  // 신용 스프레드 (회사채-국고채)
+}
+
+export interface KoreaMacroData {
+  cpi: EconomicIndicator | null;  // 소비자물가지수
+  m2: EconomicIndicator | null;  // M2 통화량
+}
+
+export interface KoreaFxData {
+  usd_krw: EconomicIndicator | null;  // 원/달러 환율
+}
+
+export interface KoreaEconomicData {
+  rates: KoreaRatesData;
+  macro: KoreaMacroData;
+  fx: KoreaFxData;
+  last_updated: string;
+}
+
+export interface KoreaEconomicResponse {
+  success: boolean;
+  data: KoreaEconomicData | null;
+  error: string | null;
+}
+
+// 미국 + 한국 통합
+export interface AllEconomicData {
+  us: EconomicData;
+  kr: KoreaEconomicData;
+}
+
+export interface AllEconomicResponse {
+  success: boolean;
+  data: AllEconomicData | null;
+  error: string | null;
+}
+
 // ============================================
 // 시장 사이클 타입
 // ============================================
@@ -95,5 +142,45 @@ export interface MarketCycleData {
 export interface MarketCycleResponse {
   success: boolean;
   data: MarketCycleData | null;
+  error?: string;
+}
+
+// ============================================
+// 한국 시장 사이클 타입
+// ============================================
+
+export interface KrMarketCycleIndicator {
+  value: number;
+  trend: string;  // "상승 추세", "하락 추세", "안정"
+  label?: string;
+  mom_change?: string;  // 전월 대비 변화 ("+0.2", "-0.1")
+}
+
+export interface KrMarketCycleData {
+  season: MarketSeason;
+  season_name: string;  // "봄 (회복기)", "여름 (활황기)" 등
+  season_emoji: string;  // 🌸, ☀️, 🍂, ❄️
+  confidence: number;  // 0-100
+  score: number;
+  transition_signal: string;  // "안정적 유지", "가을로 전환 가능성 있음" 등
+  reasoning: string;  // 판단 근거 (1-2문장)
+
+  // 한국 지표
+  export: KrMarketCycleIndicator;  // 수출액 YoY
+  cpi: KrMarketCycleIndicator;  // 소비자물가지수
+  credit_spread: KrMarketCycleIndicator;  // 신용 스프레드
+
+  // 한국 특화 섹터
+  sectors?: string[];
+
+  // AI 분석 (Admin 전용)
+  ai_comment?: string;
+  ai_recommendation?: string;
+  ai_risk?: string;
+}
+
+export interface KrMarketCycleResponse {
+  success: boolean;
+  data: KrMarketCycleData | null;
   error?: string;
 }

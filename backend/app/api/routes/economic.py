@@ -4,24 +4,33 @@
 import logging
 from fastapi import APIRouter, Query
 from datetime import datetime
+from typing import Literal
 
 from app.models.economic import (
-    EconomicResponse, EconomicData, 
+    EconomicResponse, EconomicData,
+    KoreaEconomicResponse, KoreaEconomicData, KoreaRatesData, KoreaMacroData, KoreaFxData,
+    AllEconomicResponse, AllEconomicData,
     SectorResponse, SectorData,
     SectorHoldingsResponse, SectorHolding,
-    MarketCycleResponse
+    MarketCycleResponse,
+    KrMarketCycleResponse
 )
 from app.services.economic_service import get_all_yahoo_indicators_parallel
 from app.services.fred_service import get_macro_data_parallel, check_fred_availability
 from app.services.sector_service import get_sector_data, get_sector_holdings
+from app.services.korea_economic_service import get_all_korea_indicators, check_ecos_availability
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
 
-@router.get("/economic", response_model=EconomicResponse)
+@router.get("/economic")
 async def get_economic_indicators(
+    country: Literal["us", "kr", "all"] = Query(
+        default="us",
+        description="조회할 국가 (us: 미국, kr: 한국, all: 전체)"
+    ),
     include_history: bool = Query(
         default=False, 
         description="30일 히스토리 데이터 포함 여부"
@@ -30,75 +39,202 @@ async def get_economic_indicators(
     """
     경제 지표 조회
     
+    **미국 (country=us)**:
     - 금리: 미국채 10년물, 3개월 T-Bill
     - 변동성: VIX
     - 거시경제: CPI, M2 (FRED API 필요)
     - 원자재: WTI 원유, 금
     
+    **한국 (country=kr)**:
+    - 금리: 국고채 10년물, 한국은행 기준금리
+    - 변동성: VKOSPI
+    - 거시경제: 소비자물가지수, M2 통화량 (ECOS API 필요)
+    - 환율: 원/달러 환율
+    
+    **전체 (country=all)**:
+    - 미국 + 한국 지표 통합 조회
+    
     Parameters:
+    - country: 조회할 국가 (기본값: us)
     - include_history: true 시 30일 히스토리 포함 (스파크라인용)
     
     Returns:
-    - 성공 시: 모든 경제 지표 데이터
+    - 성공 시: 해당 국가의 경제 지표 데이터
     - 실패 시: 에러 메시지
     """
     try:
-        logger.debug(f"경제 지표 조회 요청 (include_history={include_history})")
+        logger.debug(f"경제 지표 조회 요청 (country={country}, include_history={include_history})")
         
         import time
         start_time = time.time()
         
-        # Yahoo + FRED 병렬 조회
-        from concurrent.futures import ThreadPoolExecutor
+        # 미국 지표만 조회
+        if country == "us":
+            return await _get_us_indicators(include_history)
         
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            yahoo_future = executor.submit(get_all_yahoo_indicators_parallel, include_history)
-            fred_future = executor.submit(get_macro_data_parallel, include_history)
-            
-            yahoo_data = yahoo_future.result()
-            macro_data = fred_future.result()
+        # 한국 지표만 조회
+        elif country == "kr":
+            return await _get_kr_indicators(include_history)
         
-        elapsed = time.time() - start_time
-        logger.debug(f"전체 경제 지표 조회 완료: {elapsed:.2f}초")
-        
-        # 응답 구성
-        economic_data = EconomicData(
-            rates=yahoo_data["rates"],
-            macro=macro_data,
-            commodities=yahoo_data["commodities"],
-            last_updated=datetime.now().isoformat()
-        )
-        
-        # 조회된 지표 개수 로깅
-        total_indicators = 0
-        if economic_data.rates.treasury_10y:
-            total_indicators += 1
-        if economic_data.rates.treasury_3m:
-            total_indicators += 1
-        if economic_data.rates.vix:
-            total_indicators += 1
-        if economic_data.macro.cpi:
-            total_indicators += 1
-        if economic_data.macro.m2:
-            total_indicators += 1
-        if economic_data.commodities.wti_oil:
-            total_indicators += 1
-        if economic_data.commodities.gold:
-            total_indicators += 1
-        
-        logger.debug(f"경제 지표 조회 완료: {total_indicators}개 지표")
-        
-        return EconomicResponse(
-            success=True,
-            data=economic_data
-        )
+        # 전체 조회
+        else:
+            return await _get_all_indicators(include_history)
         
     except Exception as e:
         logger.error(f"경제 지표 조회 실패: {e}")
-        return EconomicResponse(
-            success=False,
-            error=str(e)
-        )
+        return {"success": False, "error": str(e)}
+
+
+async def _get_us_indicators(include_history: bool) -> EconomicResponse:
+    """미국 경제 지표 조회"""
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+    
+    start_time = time.time()
+    
+    # Yahoo + FRED 병렬 조회
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        yahoo_future = executor.submit(get_all_yahoo_indicators_parallel, include_history)
+        fred_future = executor.submit(get_macro_data_parallel, include_history)
+        
+        yahoo_data = yahoo_future.result()
+        macro_data = fred_future.result()
+    
+    elapsed = time.time() - start_time
+    logger.debug(f"미국 경제 지표 조회 완료: {elapsed:.2f}초")
+    
+    # 응답 구성
+    economic_data = EconomicData(
+        rates=yahoo_data["rates"],
+        macro=macro_data,
+        commodities=yahoo_data["commodities"],
+        last_updated=datetime.now().isoformat()
+    )
+    
+    # 조회된 지표 개수 로깅
+    total_indicators = sum([
+        1 for ind in [
+            economic_data.rates.treasury_10y,
+            economic_data.rates.treasury_3m,
+            economic_data.rates.vix,
+            economic_data.macro.cpi,
+            economic_data.macro.m2,
+            economic_data.commodities.wti_oil,
+            economic_data.commodities.gold
+        ] if ind
+    ])
+    
+    logger.debug(f"미국 경제 지표 조회 완료: {total_indicators}개 지표")
+    
+    return EconomicResponse(
+        success=True,
+        data=economic_data
+    )
+
+
+async def _get_kr_indicators(include_history: bool) -> KoreaEconomicResponse:
+    """한국 경제 지표 조회"""
+    import time
+    
+    start_time = time.time()
+    
+    kr_data = get_all_korea_indicators(include_history)
+    
+    elapsed = time.time() - start_time
+    logger.debug(f"한국 경제 지표 조회 완료: {elapsed:.2f}초")
+    
+    # 응답 구성
+    korea_data = KoreaEconomicData(
+        rates=KoreaRatesData(
+            bond_10y=kr_data["rates"]["bond_10y"],
+            base_rate=kr_data["rates"]["base_rate"],
+            credit_spread=kr_data["rates"]["credit_spread"]
+        ),
+        macro=KoreaMacroData(
+            cpi=kr_data["macro"]["cpi"],
+            m2=kr_data["macro"]["m2"]
+        ),
+        fx=KoreaFxData(
+            usd_krw=kr_data["fx"]["usd_krw"]
+        ),
+        last_updated=datetime.now().isoformat()
+    )
+
+    # 조회된 지표 개수 로깅
+    total_indicators = sum([
+        1 for ind in [
+            korea_data.rates.bond_10y,
+            korea_data.rates.base_rate,
+            korea_data.rates.credit_spread,
+            korea_data.macro.cpi,
+            korea_data.macro.m2,
+            korea_data.fx.usd_krw
+        ] if ind
+    ])
+    
+    logger.debug(f"한국 경제 지표 조회 완료: {total_indicators}개 지표")
+    
+    return KoreaEconomicResponse(
+        success=True,
+        data=korea_data
+    )
+
+
+async def _get_all_indicators(include_history: bool) -> AllEconomicResponse:
+    """미국 + 한국 경제 지표 통합 조회"""
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+    
+    start_time = time.time()
+    
+    # 미국 + 한국 병렬 조회
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        yahoo_future = executor.submit(get_all_yahoo_indicators_parallel, include_history)
+        fred_future = executor.submit(get_macro_data_parallel, include_history)
+        korea_future = executor.submit(get_all_korea_indicators, include_history)
+        
+        yahoo_data = yahoo_future.result()
+        macro_data = fred_future.result()
+        kr_data = korea_future.result()
+    
+    elapsed = time.time() - start_time
+    logger.debug(f"전체 경제 지표 조회 완료: {elapsed:.2f}초")
+    
+    # 미국 데이터
+    us_data = EconomicData(
+        rates=yahoo_data["rates"],
+        macro=macro_data,
+        commodities=yahoo_data["commodities"],
+        last_updated=datetime.now().isoformat()
+    )
+    
+    # 한국 데이터
+    kr_economic_data = KoreaEconomicData(
+        rates=KoreaRatesData(
+            bond_10y=kr_data["rates"]["bond_10y"],
+            base_rate=kr_data["rates"]["base_rate"],
+            credit_spread=kr_data["rates"]["credit_spread"]
+        ),
+        macro=KoreaMacroData(
+            cpi=kr_data["macro"]["cpi"],
+            m2=kr_data["macro"]["m2"]
+        ),
+        fx=KoreaFxData(
+            usd_krw=kr_data["fx"]["usd_krw"]
+        ),
+        last_updated=datetime.now().isoformat()
+    )
+    
+    # 통합 응답
+    all_data = AllEconomicData(
+        us=us_data,
+        kr=kr_economic_data
+    )
+    
+    return AllEconomicResponse(
+        success=True,
+        data=all_data
+    )
 
 
 @router.get("/economic/status")
@@ -107,18 +243,21 @@ async def get_economic_status():
     경제 지표 서비스 상태 확인
     
     Returns:
-    - FRED API 상태
+    - FRED API 상태 (미국 거시경제)
     - Yahoo Finance 상태
+    - ECOS API 상태 (한국 경제지표)
     """
     from app.services.economic_service import YAHOOQUERY_AVAILABLE
     
     fred_status = check_fred_availability()
+    ecos_status = check_ecos_availability()
     
     return {
         "yahoo": {
             "available": YAHOOQUERY_AVAILABLE
         },
-        "fred": fred_status
+        "fred": fred_status,
+        "ecos": ecos_status
     }
 
 
@@ -210,50 +349,77 @@ async def get_sector_holdings_api(symbol: str):
         )
 
 
-@router.get("/economic/market-cycle", response_model=MarketCycleResponse)
-async def get_market_cycle():
+@router.get("/economic/market-cycle")
+async def get_market_cycle(
+    country: Literal["us", "kr"] = Query(
+        default="us",
+        description="조회할 국가 (us: 미국, kr: 한국)"
+    )
+):
     """
     시장 사이클 (경기 계절) 조회
 
-    PMI, CPI, VIX/금리차 기반으로 시장을 4계절로 분류:
-    - 봄 (회복기): PMI 상승, 저물가
-    - 여름 (활황기): PMI 50+, 양호한 물가
-    - 가을 (후퇴기): PMI 하락, 고물가
-    - 겨울 (침체기): PMI 50-, 디플레
+    **미국 (country=us)**:
+    - INDPRO, CPI, VIX/금리차 기반으로 시장을 4계절로 분류
+    - 봄 (회복기): INDPRO 상승, 저물가
+    - 여름 (활황기): INDPRO 1.5%+, 양호한 물가
+    - 가을 (후퇴기): INDPRO 하락, 고물가
+    - 겨울 (침체기): INDPRO 마이너스, 디플레
+
+    **한국 (country=kr)**:
+    - 수출, CPI, 신용 스프레드 기반으로 시장을 4계절로 분류
+    - 봄 (회복기): 수출 0~10% 상승, 저물가
+    - 여름 (활황기): 수출 10%+, 양호한 물가
+    - 가을 (후퇴기): 수출 하락세, 고물가
+    - 겨울 (침체기): 수출 역성장, 고위험
+
+    Parameters:
+    - country: 조회할 국가 (기본값: us)
 
     Returns:
     - 성공 시: 시장 사이클 데이터 (계절, 지표, 신뢰도)
     - 실패 시: 에러 메시지
     """
     try:
-        logger.debug("시장 사이클 조회 요청")
+        logger.debug(f"시장 사이클 조회 요청 (country={country})")
 
-        # Phase 2: 실제 데이터 기반 판단
-        from app.services.market_cycle_service import get_real_market_cycle
-
-        cycle_data = get_real_market_cycle()
-
-        logger.debug(f"시장 사이클 조회 완료: {cycle_data.season}")
-
-        return MarketCycleResponse(
-            success=True,
-            data=cycle_data
-        )
+        if country == "us":
+            from app.services.market_cycle_service import get_real_market_cycle
+            cycle_data = get_real_market_cycle()
+            logger.debug(f"미국 시장 사이클 조회 완료: {cycle_data.season}")
+            return MarketCycleResponse(success=True, data=cycle_data)
+        else:  # kr
+            from app.services.kr_market_cycle_service import get_real_kr_market_cycle, get_sample_kr_market_cycle
+            try:
+                cycle_data = get_real_kr_market_cycle()
+                logger.debug(f"한국 시장 사이클 조회 완료: {cycle_data.season}")
+            except Exception as kr_error:
+                logger.warning(f"한국 시장 사이클 실제 데이터 조회 실패, 샘플 데이터 반환: {kr_error}")
+                cycle_data = get_sample_kr_market_cycle()
+            return KrMarketCycleResponse(success=True, data=cycle_data)
 
     except Exception as e:
-        logger.error(f"시장 사이클 조회 실패: {e}", exc_info=True)
-        return MarketCycleResponse(
-            success=False,
-            error=str(e)
-        )
+        logger.error(f"시장 사이클 조회 실패 (country={country}): {e}", exc_info=True)
+        if country == "us":
+            return MarketCycleResponse(success=False, error=str(e))
+        else:
+            return KrMarketCycleResponse(success=False, error=str(e))
 
 
-@router.get("/economic/market-cycle/analysis", response_model=MarketCycleResponse)
-async def get_market_cycle_with_ai():
+@router.get("/economic/market-cycle/analysis")
+async def get_market_cycle_with_ai(
+    country: Literal["us", "kr"] = Query(
+        default="us",
+        description="조회할 국가 (us: 미국, kr: 한국)"
+    )
+):
     """
     시장 사이클 + AI 분석 조회 (Admin 전용)
 
     기본 시장 사이클 데이터에 Gemini AI 기반 멘토 코멘트 추가
+
+    Parameters:
+    - country: 조회할 국가 (기본값: us)
 
     Returns:
     - 성공 시: 시장 사이클 데이터 + AI 코멘트/추천
@@ -265,43 +431,62 @@ async def get_market_cycle_with_ai():
     """
     try:
         import os
-        from app.services.market_cycle_service import get_real_market_cycle, generate_ai_comment
 
-        logger.debug("시장 사이클 AI 분석 조회 요청")
-
-        # Phase 2: 실제 데이터 기반 판단
-        cycle_data = get_real_market_cycle()
+        logger.debug(f"시장 사이클 AI 분석 조회 요청 (country={country})")
 
         # Gemini API 키 확인
         api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key:
-            logger.warning("GEMINI_API_KEY 없음 - AI 코멘트 생략")
-            return MarketCycleResponse(
-                success=True,
-                data=cycle_data
-            )
 
-        # AI 코멘트 생성
-        try:
-            ai_result = generate_ai_comment(cycle_data, api_key)
-            cycle_data.ai_comment = ai_result['comment']
-            cycle_data.ai_recommendation = ai_result['recommendation']
-            cycle_data.ai_risk = ai_result.get('risk')
+        if country == "us":
+            from app.services.market_cycle_service import get_real_market_cycle, generate_ai_comment
 
-            logger.debug(f"AI 코멘트 생성 완료: {len(ai_result['comment'])}자")
+            cycle_data = get_real_market_cycle()
 
-        except Exception as ai_error:
-            logger.error(f"AI 코멘트 생성 실패 (무시): {ai_error}")
-            # AI 실패해도 기본 데이터는 반환
+            if not api_key:
+                logger.warning("GEMINI_API_KEY 없음 - AI 코멘트 생략")
+                return MarketCycleResponse(success=True, data=cycle_data)
 
-        return MarketCycleResponse(
-            success=True,
-            data=cycle_data
-        )
+            # AI 코멘트 생성
+            try:
+                ai_result = generate_ai_comment(cycle_data, api_key)
+                cycle_data.ai_comment = ai_result['comment']
+                cycle_data.ai_recommendation = ai_result['recommendation']
+                cycle_data.ai_risk = ai_result.get('risk')
+                logger.debug(f"AI 코멘트 생성 완료: {len(ai_result['comment'])}자")
+            except Exception as ai_error:
+                logger.error(f"AI 코멘트 생성 실패 (무시): {ai_error}")
+
+            return MarketCycleResponse(success=True, data=cycle_data)
+
+        else:  # kr
+            from app.services.kr_market_cycle_service import get_real_kr_market_cycle, get_sample_kr_market_cycle, generate_kr_ai_comment
+
+            # 실제 데이터 조회 (실패 시 샘플 데이터)
+            try:
+                cycle_data = get_real_kr_market_cycle()
+            except Exception as kr_error:
+                logger.warning(f"한국 시장 사이클 실제 데이터 조회 실패, 샘플 데이터 반환: {kr_error}")
+                cycle_data = get_sample_kr_market_cycle()
+
+            if not api_key:
+                logger.warning("GEMINI_API_KEY 없음 - AI 코멘트 생략")
+                return KrMarketCycleResponse(success=True, data=cycle_data)
+
+            # AI 코멘트 생성
+            try:
+                ai_result = generate_kr_ai_comment(cycle_data, api_key)
+                cycle_data.ai_comment = ai_result['comment']
+                cycle_data.ai_recommendation = ai_result['recommendation']
+                cycle_data.ai_risk = ai_result.get('risk')
+                logger.debug(f"AI 코멘트 생성 완료: {len(ai_result['comment'])}자")
+            except Exception as ai_error:
+                logger.error(f"AI 코멘트 생성 실패 (무시): {ai_error}")
+
+            return KrMarketCycleResponse(success=True, data=cycle_data)
 
     except Exception as e:
-        logger.error(f"시장 사이클 AI 분석 조회 실패: {e}", exc_info=True)
-        return MarketCycleResponse(
-            success=False,
-            error=str(e)
-        )
+        logger.error(f"시장 사이클 AI 분석 조회 실패 (country={country}): {e}", exc_info=True)
+        if country == "us":
+            return MarketCycleResponse(success=False, error=str(e))
+        else:
+            return KrMarketCycleResponse(success=False, error=str(e))

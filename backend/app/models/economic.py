@@ -54,7 +54,7 @@ class CommoditiesData(BaseModel):
 
 
 class EconomicData(BaseModel):
-    """경제 지표 전체 응답"""
+    """경제 지표 전체 응답 (미국)"""
     rates: RatesData
     macro: MacroData
     commodities: CommoditiesData
@@ -65,6 +65,56 @@ class EconomicResponse(BaseModel):
     """API 응답 형식"""
     success: bool
     data: Optional[EconomicData] = None
+    error: Optional[str] = None
+
+
+# ============================================
+# 한국 경제 지표 관련 모델
+# ============================================
+
+class KoreaRatesData(BaseModel):
+    """한국 금리 및 변동성 지표"""
+    bond_10y: Optional[EconomicIndicator] = None  # 국고채 10년물
+    base_rate: Optional[EconomicIndicator] = None  # 한국은행 기준금리
+    credit_spread: Optional[EconomicIndicator] = None  # 신용 스프레드 (회사채-국고채)
+
+
+class KoreaMacroData(BaseModel):
+    """한국 거시경제 지표"""
+    cpi: Optional[EconomicIndicator] = None  # 소비자물가지수
+    m2: Optional[EconomicIndicator] = None  # M2 통화량
+
+
+class KoreaFxData(BaseModel):
+    """한국 환율 지표"""
+    usd_krw: Optional[EconomicIndicator] = None  # 원/달러 환율
+
+
+class KoreaEconomicData(BaseModel):
+    """한국 경제 지표 전체 응답"""
+    rates: KoreaRatesData
+    macro: KoreaMacroData
+    fx: KoreaFxData
+    last_updated: str
+
+
+class KoreaEconomicResponse(BaseModel):
+    """한국 경제 지표 API 응답 형식"""
+    success: bool
+    data: Optional[KoreaEconomicData] = None
+    error: Optional[str] = None
+
+
+class AllEconomicData(BaseModel):
+    """미국 + 한국 통합 경제 지표"""
+    us: EconomicData
+    kr: KoreaEconomicData
+
+
+class AllEconomicResponse(BaseModel):
+    """통합 경제 지표 API 응답 형식"""
+    success: bool
+    data: Optional[AllEconomicData] = None
     error: Optional[str] = None
 
 
@@ -155,4 +205,47 @@ class MarketCycleResponse(BaseModel):
     """시장 사이클 API 응답"""
     success: bool
     data: Optional[MarketCycleData] = None
+    error: Optional[str] = None
+
+
+# ============================================
+# 한국 시장 사이클 관련 모델
+# ============================================
+
+class KrMarketCycleIndicator(BaseModel):
+    """한국 시장 사이클 판단을 위한 개별 지표"""
+    value: float
+    trend: str  # "상승 추세", "하락 추세", "안정"
+    label: Optional[str] = None
+    mom_change: Optional[str] = None  # 전월 대비 변화 ("+0.2", "-0.1")
+
+
+class KrMarketCycleData(BaseModel):
+    """한국 시장 사이클 데이터"""
+    season: str  # spring, summer, autumn, winter
+    season_name: str  # "봄 (회복기)", "여름 (활황기)" 등
+    season_emoji: str  # 🌸, ☀️, 🍂, ❄️
+    confidence: int  # 0-100
+    score: float  # 가중치 점수
+    transition_signal: str  # "안정적 유지", "가을로 전환 가능성 있음" 등
+    reasoning: str  # 판단 근거 (1-2문장)
+
+    # 한국 지표
+    export: KrMarketCycleIndicator  # 수출액 YoY
+    cpi: KrMarketCycleIndicator  # 소비자물가지수
+    credit_spread: KrMarketCycleIndicator  # 신용 스프레드
+
+    # 한국 특화 섹터
+    sectors: Optional[List[str]] = None
+
+    # AI 분석 (Admin 전용)
+    ai_comment: Optional[str] = None
+    ai_recommendation: Optional[str] = None
+    ai_risk: Optional[str] = None
+
+
+class KrMarketCycleResponse(BaseModel):
+    """한국 시장 사이클 API 응답"""
+    success: bool
+    data: Optional[KrMarketCycleData] = None
     error: Optional[str] = None

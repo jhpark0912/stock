@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
-import type { MarketCycleResponse, MarketCycleData } from '@/types/economic';
+import type { MarketCycleResponse, MarketCycleData, KrMarketCycleResponse, KrMarketCycleData } from '@/types/economic';
 
 // ============================================================
 // Types
@@ -39,13 +39,15 @@ interface SeasonInfo {
 
 interface MarketCycleSectionProps {
   isAdmin?: boolean;
+  country?: 'us' | 'kr';
 }
 
 // ============================================================
 // Constants
 // ============================================================
 
-const SEASONS: SeasonInfo[] = [
+// 미국 시장 사이클
+const US_SEASONS: SeasonInfo[] = [
   {
     key: 'spring',
     name: '봄',
@@ -96,16 +98,71 @@ const SEASONS: SeasonInfo[] = [
   },
 ];
 
+// 한국 시장 사이클
+const KR_SEASONS: SeasonInfo[] = [
+  {
+    key: 'spring',
+    name: '봄',
+    subName: '회복기',
+    emoji: '🌸',
+    description: '수출 회복, 경기 반등 시작',
+    characteristics: ['수출 증가 전환', '물가 안정', '신용 스프레드 축소'],
+    color: 'text-pink-600 dark:text-pink-400',
+    bgColor: 'bg-pink-50 dark:bg-pink-950/30',
+    borderColor: 'border-pink-300 dark:border-pink-700',
+    sectors: ['반도체', '2차전지', 'IT 서비스'],
+  },
+  {
+    key: 'summer',
+    name: '여름',
+    subName: '활황기',
+    emoji: '☀️',
+    description: '수출 호조, 기업 실적 확장',
+    characteristics: ['수출 확장', '양호한 물가', '낮은 리스크'],
+    color: 'text-amber-600 dark:text-amber-400',
+    bgColor: 'bg-amber-50 dark:bg-amber-950/30',
+    borderColor: 'border-amber-300 dark:border-amber-700',
+    sectors: ['자동차', '조선', '철강', '화학'],
+  },
+  {
+    key: 'autumn',
+    name: '가을',
+    subName: '후퇴기',
+    emoji: '🍂',
+    description: '수출 둔화, 불확실성 증가',
+    characteristics: ['수출 둔화', '물가 상승', '스프레드 확대'],
+    color: 'text-orange-600 dark:text-orange-400',
+    bgColor: 'bg-orange-50 dark:bg-orange-950/30',
+    borderColor: 'border-orange-300 dark:border-orange-700',
+    sectors: ['유틸리티', '통신', '필수소비재'],
+  },
+  {
+    key: 'winter',
+    name: '겨울',
+    subName: '침체기',
+    emoji: '❄️',
+    description: '수출 역성장, 방어적 투자',
+    characteristics: ['수출 마이너스', '물가 급변동', '높은 신용 리스크'],
+    color: 'text-blue-600 dark:text-blue-400',
+    bgColor: 'bg-blue-50 dark:bg-blue-950/30',
+    borderColor: 'border-blue-300 dark:border-blue-700',
+    sectors: ['국채', '현금', '방어주', '헬스케어'],
+  },
+];
+
 // ============================================================
 // Main Component
 // ============================================================
 
-export function MarketCycleSection({ isAdmin = false }: MarketCycleSectionProps) {
+export function MarketCycleSection({ isAdmin = false, country = 'us' }: MarketCycleSectionProps) {
   const [expanded, setExpanded] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
 
-  // 시장 사이클 데이터 상태
-  const [cycleData, setCycleData] = useState<MarketCycleData | null>(null);
+  // 국가에 따른 시즌 정보
+  const SEASONS = country === 'kr' ? KR_SEASONS : US_SEASONS;
+
+  // 시장 사이클 데이터 상태 (국가별 타입)
+  const [cycleData, setCycleData] = useState<MarketCycleData | KrMarketCycleData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedSeason, setSelectedSeason] = useState<MarketSeason | null>(null);
@@ -126,13 +183,13 @@ export function MarketCycleSection({ isAdmin = false }: MarketCycleSectionProps)
       setError(null);
 
       try {
-        const response = await api.get<MarketCycleResponse>(
-          '/api/economic/market-cycle'
-        );
+        const response = country === 'kr'
+          ? await api.get<KrMarketCycleResponse>(`/api/economic/market-cycle?country=kr`)
+          : await api.get<MarketCycleResponse>(`/api/economic/market-cycle?country=us`);
 
         if (response.data.success && response.data.data) {
           setCycleData(response.data.data);
-          setSelectedSeason(response.data.data.season);
+          setSelectedSeason(response.data.data.season as MarketSeason);
         } else {
           setError(response.data.error || '시장 사이클 데이터를 불러올 수 없습니다.');
         }
@@ -144,7 +201,7 @@ export function MarketCycleSection({ isAdmin = false }: MarketCycleSectionProps)
     };
 
     fetchCycleData();
-  }, []);
+  }, [country]);
 
   const selectedSeasonInfo = SEASONS.find((s) => s.key === (selectedSeason || cycleData?.season))!;
 
@@ -154,13 +211,13 @@ export function MarketCycleSection({ isAdmin = false }: MarketCycleSectionProps)
     setError(null);
 
     try {
-      const response = await api.get<MarketCycleResponse>(
-        '/api/economic/market-cycle'
-      );
+      const response = country === 'kr'
+        ? await api.get<KrMarketCycleResponse>(`/api/economic/market-cycle?country=kr`)
+        : await api.get<MarketCycleResponse>(`/api/economic/market-cycle?country=us`);
 
       if (response.data.success && response.data.data) {
         setCycleData(response.data.data);
-        setSelectedSeason(response.data.data.season);
+        setSelectedSeason(response.data.data.season as MarketSeason);
       } else {
         setError(response.data.error || '시장 사이클 데이터를 불러올 수 없습니다.');
       }
@@ -179,13 +236,13 @@ export function MarketCycleSection({ isAdmin = false }: MarketCycleSectionProps)
     setAiError(null);
 
     try {
-      const response = await api.get<MarketCycleResponse>(
-        '/api/economic/market-cycle/analysis'
-      );
+      const response = country === 'kr'
+        ? await api.get<KrMarketCycleResponse>(`/api/economic/market-cycle/analysis?country=kr`)
+        : await api.get<MarketCycleResponse>(`/api/economic/market-cycle/analysis?country=us`);
 
       if (response.data.success && response.data.data) {
         const { ai_comment, ai_recommendation, ai_risk } = response.data.data;
-        
+
         if (ai_comment && ai_recommendation) {
           setAiAnalysis({
             comment: ai_comment,
@@ -199,7 +256,6 @@ export function MarketCycleSection({ isAdmin = false }: MarketCycleSectionProps)
         setAiError(response.data.error || 'AI 분석 요청 실패');
       }
     } catch (error) {
-      console.error('AI 분석 요청 오류:', error);
       setAiError('AI 분석 요청 중 오류가 발생했습니다.');
     } finally {
       setLoadingAI(false);
@@ -277,7 +333,10 @@ export function MarketCycleSection({ isAdmin = false }: MarketCycleSectionProps)
           {showTooltip && (
             <div className="absolute right-0 top-full mt-2 w-56 p-3 bg-popover border rounded-lg shadow-lg z-10">
               <p className="text-xs text-muted-foreground">
-                산업생산, CPI, VIX 지표를 종합하여 현재 시장 사이클을 판단합니다.
+                {country === 'kr'
+                  ? '수출액, CPI, 신용 스프레드 지표를 종합하여 현재 시장 사이클을 판단합니다.'
+                  : '산업생산, CPI, VIX 지표를 종합하여 현재 시장 사이클을 판단합니다.'
+                }
               </p>
             </div>
           )}
@@ -333,24 +392,51 @@ export function MarketCycleSection({ isAdmin = false }: MarketCycleSectionProps)
           <div className="space-y-2">
             <div className="flex items-center justify-between px-2 py-2 bg-muted/50 rounded-lg">
               <div className="flex items-center gap-4 text-sm">
+                {/* 첫 번째 지표: 미국=산업생산, 한국=수출 */}
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="cursor-help">
-                        <span className="text-muted-foreground">산업생산 </span>
-                        <span className="font-medium">{cycleData.indpro.value > 0 ? '+' : ''}{cycleData.indpro.value.toFixed(1)}%</span>
+                        {country === 'kr' ? (
+                          <>
+                            <span className="text-muted-foreground">수출 </span>
+                            <span className="font-medium">
+                              {'export' in cycleData && cycleData.export.value > 0 ? '+' : ''}
+                              {'export' in cycleData ? cycleData.export.value.toFixed(1) : '0.0'}%
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-muted-foreground">산업생산 </span>
+                            <span className="font-medium">
+                              {'indpro' in cycleData && cycleData.indpro.value > 0 ? '+' : ''}
+                              {'indpro' in cycleData ? cycleData.indpro.value.toFixed(1) : '0.0'}%
+                            </span>
+                          </>
+                        )}
                       </span>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-xs whitespace-pre-line text-left">
-                      <p className="font-medium mb-1">🏭 산업생산지수 - "경제의 체온계"</p>
-                      <p className="text-xs mb-1">공장·광산·전기 생산량을 측정하는 지표.</p>
-                      <p className="text-xs text-muted-foreground">YoY 0% 기준으로 경기 확장/수축 판단. 상승하면 경기 회복, 하락하면 둔화 신호</p>
+                      {country === 'kr' ? (
+                        <>
+                          <p className="font-medium mb-1">🚢 수출액 - "세계 경제 체온계"</p>
+                          <p className="text-xs mb-1">한국 상품 수출 금액 (YoY 변화율).</p>
+                          <p className="text-xs text-muted-foreground">0% 기준으로 경기 확장/수축 판단. 상승 시 경기 확장, 하락 시 수축 신호</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="font-medium mb-1">🏭 산업생산지수 - "경제의 체온계"</p>
+                          <p className="text-xs mb-1">공장·광산·전기 생산량을 측정하는 지표.</p>
+                          <p className="text-xs text-muted-foreground">YoY 0% 기준으로 경기 확장/수축 판단. 상승하면 경기 회복, 하락하면 둔화 신호</p>
+                        </>
+                      )}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
 
                 <span className="text-muted-foreground">|</span>
 
+                {/* 두 번째 지표: 공통=CPI */}
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -369,18 +455,42 @@ export function MarketCycleSection({ isAdmin = false }: MarketCycleSectionProps)
 
                 <span className="text-muted-foreground">|</span>
 
+                {/* 세 번째 지표: 미국=VIX, 한국=신용스프레드 */}
                 <TooltipProvider delayDuration={200}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="cursor-help">
-                        <span className="text-muted-foreground">VIX </span>
-                        <span className="font-medium">{cycleData.vix.value.toFixed(1)}</span>
+                        {country === 'kr' ? (
+                          <>
+                            <span className="text-muted-foreground">스프레드 </span>
+                            <span className="font-medium">
+                              {'credit_spread' in cycleData ? cycleData.credit_spread.value.toFixed(0) : '0'}bp
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-muted-foreground">VIX </span>
+                            <span className="font-medium">
+                              {'vix' in cycleData ? cycleData.vix.value.toFixed(1) : '0.0'}
+                            </span>
+                          </>
+                        )}
                       </span>
                     </TooltipTrigger>
                     <TooltipContent side="top" className="max-w-xs whitespace-pre-line text-left">
-                      <p className="font-medium mb-1">📊 변동성지수 - "공포 지수"</p>
-                      <p className="text-xs mb-1">투자자들의 불안감을 숫자로 표현한 지표.</p>
-                      <p className="text-xs text-muted-foreground">20 이하=안정, 30 이상=공포. 높을수록 변동성 크고 안전자산 선호</p>
+                      {country === 'kr' ? (
+                        <>
+                          <p className="font-medium mb-1">📈 신용 스프레드 - "리스크 체감 온도"</p>
+                          <p className="text-xs mb-1">회사채와 국고채 금리 차이 (basis point).</p>
+                          <p className="text-xs text-muted-foreground">60bp 이하=안정, 80bp 이상=위험. 높을수록 시장 불안</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="font-medium mb-1">📊 변동성지수 - "공포 지수"</p>
+                          <p className="text-xs mb-1">투자자들의 불안감을 숫자로 표현한 지표.</p>
+                          <p className="text-xs text-muted-foreground">20 이하=안정, 30 이상=공포. 높을수록 변동성 크고 안전자산 선호</p>
+                        </>
+                      )}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
