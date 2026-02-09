@@ -47,4 +47,4 @@ def init_db():
     logger.debug(f"🔗 Database URL: {DATABASE_URL}")
 
     Base.metadata.create_all(bind=engine)
-    print(f"✅ Database initialized at {DB_FILE}")
+    print(f"Database initialized at {DB_FILE}")

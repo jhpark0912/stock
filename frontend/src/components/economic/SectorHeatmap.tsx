@@ -129,7 +129,7 @@ const CustomTreemapContent = (props: any) => {
       />
       {showSymbol && (
         <>
-          {/* 심볼 */}
+          {/* 메인 텍스트: 한국은 종목명, 미국은 심볼 */}
           <text
             x={x + width / 2}
             y={y + (showFullInfo ? height / 2 - 18 : height / 2 - 6)}
@@ -141,12 +141,12 @@ const CustomTreemapContent = (props: any) => {
             style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
             className="pointer-events-none select-none"
           >
-            {symbol}
+            {isKorea ? korName : symbol}
           </text>
 
           {showFullInfo && (
             <>
-              {/* 한글명 */}
+              {/* 서브 텍스트: 한국은 심볼, 미국은 한글명 */}
               <text
                 x={x + width / 2}
                 y={y + height / 2 + 2}
@@ -158,7 +158,7 @@ const CustomTreemapContent = (props: any) => {
                 style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
                 className="pointer-events-none select-none"
               >
-                {korName}
+                {isKorea ? symbol : korName}
               </text>
 
               {/* 변화율 */}

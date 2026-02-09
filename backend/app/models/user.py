@@ -26,6 +26,7 @@ class UserResponse(BaseModel):
     is_active: bool
     is_approved: bool
     has_gemini_key: bool = False  # Gemini API 키 보유 여부
+    has_kis_credentials: bool = False  # 한국투자증권 API 인증정보 보유 여부
     created_at: datetime
     updated_at: datetime
 
@@ -42,6 +43,19 @@ class GeminiKeyStatus(BaseModel):
     """Gemini API 키 상태 응답 스키마"""
     has_key: bool
     key_preview: Optional[str] = None  # 마스킹된 키 미리보기 (예: AIza...xyz)
+
+
+class KISCredentialsUpdate(BaseModel):
+    """한국투자증권 API 인증정보 업데이트 요청 스키마"""
+    app_key: str = Field(..., min_length=10, description="한국투자증권 App Key")
+    app_secret: str = Field(..., min_length=10, description="한국투자증권 App Secret")
+
+
+class KISCredentialsStatus(BaseModel):
+    """한국투자증권 API 인증정보 상태 응답 스키마"""
+    has_credentials: bool
+    app_key_preview: Optional[str] = None  # 마스킹된 App Key (예: PS0n...xyz)
+    app_secret_preview: Optional[str] = None  # 마스킹된 App Secret (예: 1a2b...xyz)
 
 
 class Token(BaseModel):

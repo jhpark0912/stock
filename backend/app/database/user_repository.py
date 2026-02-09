@@ -4,6 +4,7 @@
 from typing import Optional, List
 from sqlalchemy.orm import Session
 from app.database.models import UserDB
+from app.utils.crypto import encrypt_api_key, decrypt_api_key
 
 
 class UserRepository:
@@ -85,11 +86,13 @@ class UserRepository:
         return self.db.query(UserDB).filter(UserDB.username == username).first() is not None
 
 
+    # ==================== Gemini API 키 관리 ====================
+
     def update_gemini_key(self, user_id: int, api_key: str) -> Optional[UserDB]:
-        """사용자의 Gemini API 키 업데이트"""
+        """사용자의 Gemini API 키 업데이트 (암호화 저장)"""
         user = self.get_by_id(user_id)
         if user:
-            user.gemini_api_key = api_key
+            user.gemini_api_key = encrypt_api_key(api_key)
             self.db.commit()
             self.db.refresh(user)
         return user
@@ -104,6 +107,57 @@ class UserRepository:
         return user
 
     def get_gemini_key(self, user_id: int) -> Optional[str]:
-        """사용자의 Gemini API 키 조회"""
+        """사용자의 Gemini API 키 조회 (복호화 반환)"""
         user = self.get_by_id(user_id)
-        return user.gemini_api_key if user else None
+        if user and user.gemini_api_key:
+            try:
+                return decrypt_api_key(user.gemini_api_key)
+            except Exception:
+                # 복호화 실패 시 None 반환 (키가 손상됨)
+                return None
+        return None
+
+    # ==================== 한국투자증권 API 키 관리 ====================
+
+    def update_kis_credentials(
+        self,
+        user_id: int,
+        app_key: str,
+        app_secret: str
+    ) -> Optional[UserDB]:
+        """한국투자증권 API 인증정보 업데이트 (암호화 저장)"""
+        user = self.get_by_id(user_id)
+        if user:
+            user.kis_app_key = encrypt_api_key(app_key)
+            user.kis_app_secret = encrypt_api_key(app_secret)
+            self.db.commit()
+            self.db.refresh(user)
+        return user
+
+    def delete_kis_credentials(self, user_id: int) -> Optional[UserDB]:
+        """한국투자증권 API 인증정보 삭제"""
+        user = self.get_by_id(user_id)
+        if user:
+            user.kis_app_key = None
+            user.kis_app_secret = None
+            self.db.commit()
+            self.db.refresh(user)
+        return user
+
+    def get_kis_credentials(self, user_id: int) -> Optional[tuple[str, str]]:
+        """
+        한국투자증권 API 인증정보 조회 (복호화 반환)
+
+        Returns:
+            (app_key, app_secret) 튜플 또는 None
+        """
+        user = self.get_by_id(user_id)
+        if user and user.kis_app_key and user.kis_app_secret:
+            try:
+                app_key = decrypt_api_key(user.kis_app_key)
+                app_secret = decrypt_api_key(user.kis_app_secret)
+                return (app_key, app_secret)
+            except Exception:
+                # 복호화 실패 시 None 반환 (키가 손상됨)
+                return None
+        return None

@@ -13,6 +13,8 @@ import type {
   ValidationErrorItem,
   GeminiKeyUpdate,
   GeminiKeyStatus,
+  KISCredentialsUpdate,
+  KISCredentialsStatus,
 } from '@/types/auth'
 
 /**
@@ -180,4 +182,65 @@ export async function getGeminiKeyStatus(token: string): Promise<GeminiKeyStatus
   })
 
   return handleResponse<GeminiKeyStatus>(response)
+}
+
+/**
+ * 한국투자증권 API 키 설정
+ * @param token JWT 액세스 토큰
+ * @param appKey 한국투자증권 App Key
+ * @param appSecret 한국투자증권 App Secret
+ * @returns API 키 상태 (has_credentials, app_key_preview)
+ * @throws 인증 실패 등의 오류
+ */
+export async function updateKISCredentials(
+  token: string,
+  appKey: string,
+  appSecret: string
+): Promise<KISCredentialsStatus> {
+  const response = await fetch(`${API_BASE}/kis-credentials`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ app_key: appKey, app_secret: appSecret } as KISCredentialsUpdate),
+  })
+
+  return handleResponse<KISCredentialsStatus>(response)
+}
+
+/**
+ * 한국투자증권 API 키 삭제
+ * @param token JWT 액세스 토큰
+ * @returns 성공 메시지
+ * @throws 인증 실패 등의 오류
+ */
+export async function deleteKISCredentials(token: string): Promise<{ message: string }> {
+  const response = await fetch(`${API_BASE}/kis-credentials`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  return handleResponse<{ message: string }>(response)
+}
+
+/**
+ * 한국투자증권 API 키 상태 조회
+ * @param token JWT 액세스 토큰
+ * @returns API 키 상태 (has_credentials, app_key_preview)
+ * @throws 인증 실패 등의 오류
+ */
+export async function getKISCredentialsStatus(token: string): Promise<KISCredentialsStatus> {
+  const response = await fetch(`${API_BASE}/kis-credentials/status`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  return handleResponse<KISCredentialsStatus>(response)
 }

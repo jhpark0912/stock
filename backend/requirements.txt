@@ -28,3 +28,6 @@ sqlalchemy>=2.0.35
 python-jose[cryptography]==3.3.0
 passlib==1.7.4
 bcrypt==4.0.1
+
+# Encryption (API Key 암호화)
+cryptography>=41.0.0

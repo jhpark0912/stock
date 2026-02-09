@@ -161,11 +161,13 @@ class SectorHolding(BaseModel):
 class SectorHoldingsResponse(BaseModel):
     """섹터 보유 종목 API 응답 형식"""
     success: bool
-    sector_symbol: Optional[str] = None   # ETF 심볼 (XLK)
-    sector_name: Optional[str] = None     # 섹터명 (기술)
+    sector_symbol: Optional[str] = None   # ETF 심볼 (XLK, 091160.KS)
+    sector_name: Optional[str] = None     # 섹터명 (기술, 반도체)
     holdings: Optional[List[SectorHolding]] = None
     last_updated: Optional[str] = None
+    note: Optional[str] = None            # 데이터 출처 안내
     error: Optional[str] = None
+    requires_kis_key: Optional[bool] = None  # 한국투자증권 API 키 필요 여부
 
 
 # ============================================

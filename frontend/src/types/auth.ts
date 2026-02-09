@@ -57,6 +57,22 @@ export interface GeminiKeyStatus {
 }
 
 /**
+ * 한국투자증권 API 키 업데이트 요청
+ */
+export interface KISCredentialsUpdate {
+  app_key: string
+  app_secret: string
+}
+
+/**
+ * 한국투자증권 API 키 상태 응답
+ */
+export interface KISCredentialsStatus {
+  has_credentials: boolean
+  app_key_preview?: string  // 마스킹된 App Key 미리보기
+}
+
+/**
  * 회원가입 응답
  */
 export interface RegisterResponse {

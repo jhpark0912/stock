@@ -2,9 +2,10 @@
 경제 지표 API 라우터
 """
 import logging
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from datetime import datetime
 from typing import Literal
+from sqlalchemy.orm import Session
 
 from app.models.economic import (
     EconomicResponse, EconomicData,
@@ -19,6 +20,10 @@ from app.services.economic_service import get_all_yahoo_indicators_parallel
 from app.services.fred_service import get_macro_data_parallel, check_fred_availability
 from app.services.sector_service import get_sector_data, get_sector_holdings
 from app.services.korea_economic_service import get_all_korea_indicators, check_ecos_availability
+from app.services.auth_service import get_current_user
+from app.database.connection import get_db
+from app.database.models import UserDB
+from app.database.user_repository import UserRepository
 
 logger = logging.getLogger(__name__)
 
@@ -307,20 +312,29 @@ async def get_sector_performance(
 
 
 @router.get("/economic/sectors/{symbol}/holdings", response_model=SectorHoldingsResponse)
-async def get_sector_holdings_api(symbol: str):
+async def get_sector_holdings_api(
+    symbol: str,
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
-    섹터 ETF 보유 종목 조회
-    
+    섹터 ETF 보유 종목 조회 (인증 필요)
+
     특정 섹터 ETF의 상위 보유 종목을 조회합니다.
-    
+
     Parameters:
     - symbol: 섹터 ETF 심볼
       - 미국: XLK, XLF, XLV 등
-      - 한국: 091160.KS, 091170.KS 등
-    
+      - 한국: 091160.KS, 091170.KS 등 (KIS API 키 필수)
+
     Returns:
     - 성공 시: 상위 보유 종목 (심볼, 종목명, 비중, 현재가, 변화율)
-    - 실패 시: 에러 메시지
+    - 실패 시: 에러 메시지 (한국 섹터의 경우 requires_kis_key=True 포함)
+
+    Notes:
+    - 한국 섹터는 한국투자증권 API 키 필수
+    - API 키가 없으면 키 입력 요구 (requires_kis_key=True)
+    - Admin은 환경변수 키를 사용할 수 있음
     """
     try:
         logger.debug(f"섹터 보유 종목 조회 요청: {symbol}")
@@ -328,7 +342,36 @@ async def get_sector_holdings_api(symbol: str):
         # 한국 섹터인지 확인 (.KS 접미사)
         if symbol.endswith('.KS'):
             from app.services.korea_sector_service import get_korea_sector_holdings
-            result = await get_korea_sector_holdings(symbol)
+
+            # KIS API 인증정보 조회
+            user_repo = UserRepository(db)
+            kis_credentials = user_repo.get_kis_credentials(current_user.id)
+
+            if kis_credentials:
+                logger.debug(f"   사용자 {current_user.username}의 KIS 인증정보 확인")
+            else:
+                # Admin인 경우 환경변수 키 사용 (fallback)
+                if current_user.role == "admin":
+                    from app.config import settings
+                    if settings.kis_app_key and settings.kis_app_secret:
+                        logger.debug(f"   Admin 사용자 - 환경변수 KIS 키 사용")
+                        kis_credentials = (settings.kis_app_key, settings.kis_app_secret)
+                    else:
+                        logger.debug(f"   환경변수에 KIS 키 없음 - API 키 필요")
+                        return SectorHoldingsResponse(
+                            success=False,
+                            error="한국 섹터 ETF 구성종목을 조회하려면 한국투자증권 API 키가 필요합니다.",
+                            requires_kis_key=True
+                        )
+                else:
+                    logger.debug(f"   KIS 인증정보 없음 - API 키 필요")
+                    return SectorHoldingsResponse(
+                        success=False,
+                        error="한국 섹터 ETF 구성종목을 조회하려면 한국투자증권 API 키가 필요합니다.",
+                        requires_kis_key=True
+                    )
+
+            result = await get_korea_sector_holdings(symbol, kis_credentials)
         else:
             result = await get_sector_holdings(symbol)
         
@@ -347,7 +390,8 @@ async def get_sector_holdings_api(symbol: str):
             sector_symbol=result["sector_symbol"],
             sector_name=result["sector_name"],
             holdings=holdings,
-            last_updated=datetime.now().isoformat()
+            last_updated=datetime.now().isoformat(),
+            note=result.get("note")
         )
         
     except Exception as e:

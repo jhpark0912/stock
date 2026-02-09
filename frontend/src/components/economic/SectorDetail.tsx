@@ -4,7 +4,8 @@ import { cn } from '@/lib/utils';
 import {
   X,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Key
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
@@ -24,6 +25,8 @@ interface SectorHoldingsResponse {
   holdings: SectorHolding[] | null;
   last_updated: string | null;
   error: string | null;
+  note?: string | null;
+  requires_kis_key?: boolean;
 }
 
 interface SectorDetailProps {
@@ -143,10 +146,10 @@ const CustomTooltip = ({ active, payload }: any) => {
   return (
     <div className="bg-popover border rounded-lg shadow-lg p-3 max-w-xs">
       <div className="font-semibold mb-1">
-        {data.symbol}
+        {data.isKorea ? data.name : data.symbol}
       </div>
       <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
-        {data.name}
+        {data.isKorea ? data.symbol : data.name}
       </p>
       <div className="space-y-1 text-xs">
         <div className="flex justify-between">
@@ -180,7 +183,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 // 커스텀 Treemap 셀 (섹터 히트맵과 동일한 스타일)
 const CustomTreemapContent = (props: any) => {
-  const { x, y, width, height, depth, symbol, weight, change, color, onStockClick } = props;
+  const { x, y, width, height, depth, symbol, name, weight, change, color, onStockClick, isKorea } = props;
 
   // root 노드는 렌더링하지 않음 (depth === 1이 실제 데이터)
   if (depth === 0 || !symbol) {
@@ -207,7 +210,7 @@ const CustomTreemapContent = (props: any) => {
       />
       {showSymbol && (
         <>
-          {/* 심볼 */}
+          {/* 메인 텍스트: 한국은 종목명, 미국은 심볼 */}
           <text
             x={x + width / 2}
             y={y + (showFullInfo ? height / 2 - 12 : height / 2 - 4)}
@@ -219,7 +222,7 @@ const CustomTreemapContent = (props: any) => {
             style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
             className="pointer-events-none select-none"
           >
-            {symbol}
+            {isKorea ? name : symbol}
           </text>
 
           {showFullInfo && (
@@ -284,12 +287,14 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [holdings, setHoldings] = useState<SectorHolding[]>([]);
+  const [requiresKisKey, setRequiresKisKey] = useState(false);
 
   useEffect(() => {
     const fetchHoldings = async () => {
       try {
         setLoading(true);
         setError(null);
+        setRequiresKisKey(false);
 
         const response = await api.get<SectorHoldingsResponse>(
           `/api/economic/sectors/${symbol}/holdings`
@@ -297,6 +302,9 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
 
         if (response.data.success && response.data.holdings) {
           setHoldings(response.data.holdings);
+        } else if (response.data.requires_kis_key) {
+          setRequiresKisKey(true);
+          setError(response.data.error || '한국투자증권 API 키가 필요합니다.');
         } else {
           setError(response.data.error || '보유 종목을 불러올 수 없습니다.');
         }
@@ -316,6 +324,9 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
     }
   };
 
+  // 한국 섹터인지 확인
+  const isKorea = symbol.endsWith('.KS');
+
   // Treemap 데이터 생성
   const treemapData = holdings.map((holding) => ({
     symbol: holding.symbol,
@@ -325,6 +336,7 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
     price: holding.price,
     change: holding.change_1d,
     color: getChangeColor(holding.change_1d),
+    isKorea,
   }));
 
   return (
@@ -372,10 +384,40 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
               <span className="ml-3 text-muted-foreground">로딩 중...</span>
             </div>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <AlertCircle className="h-10 w-10 text-destructive mb-3" />
-              <p className="text-destructive font-medium mb-1">오류 발생</p>
-              <p className="text-sm text-muted-foreground">{error}</p>
+            <div className="flex flex-col items-center justify-center py-16 text-center px-6">
+              {requiresKisKey ? (
+                <>
+                  {/* KIS 키 필요 안내 */}
+                  <Key className="h-12 w-12 text-primary mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">한국투자증권 API 키 필요</h3>
+                  <p className="text-sm text-muted-foreground mb-6 max-w-md">
+                    한국 섹터 ETF의 실시간 구성종목 정보를 조회하려면 한국투자증권 API 키가 필요합니다.
+                    설정 페이지에서 App Key와 App Secret을 입력해주세요.
+                  </p>
+                  <div className="space-y-3">
+                    <Button
+                      onClick={() => {
+                        onClose();
+                        window.location.href = '/settings';
+                      }}
+                      className="w-full"
+                    >
+                      <Key className="h-4 w-4 mr-2" />
+                      설정에서 키 입력하기
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      한국투자증권 API 포털에서 무료로 키를 발급받을 수 있습니다
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* 일반 에러 */}
+                  <AlertCircle className="h-10 w-10 text-destructive mb-3" />
+                  <p className="text-destructive font-medium mb-1">오류 발생</p>
+                  <p className="text-sm text-muted-foreground">{error}</p>
+                </>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -425,13 +467,13 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
                 </div>
               </div>
 
-              {/* 상위 3개 종목 상세 */}
+              {/* 상위 5개 종목 상세 */}
               <div className="border rounded-lg overflow-hidden">
                 <div className="bg-muted/50 px-3 py-2 text-sm font-medium">
-                  상위 3개 종목
+                  상위 5개 보유 종목
                 </div>
                 <div className="divide-y">
-                  {holdings.slice(0, 3).map((holding, index) => (
+                  {holdings.slice(0, 5).map((holding, index) => (
                     <div
                       key={holding.symbol}
                       onClick={() => handleStockClick(holding.symbol)}
@@ -442,9 +484,11 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
                           {index + 1}
                         </span>
                         <div>
-                          <div className="font-semibold text-sm">{holding.symbol}</div>
+                          <div className="font-semibold text-sm">
+                            {isKorea ? holding.name : holding.symbol}
+                          </div>
                           <div className="text-xs text-muted-foreground line-clamp-1 max-w-[200px]">
-                            {holding.name}
+                            {isKorea ? holding.symbol : holding.name}
                           </div>
                         </div>
                       </div>

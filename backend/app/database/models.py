@@ -19,7 +19,12 @@ class UserDB(Base):
     role = Column(String(20), nullable=False, default="user")  # user, admin
     is_active = Column(Boolean, default=True)
     is_approved = Column(Boolean, default=False)  # Admin 승인 여부
-    gemini_api_key = Column(String(255), nullable=True)  # 유저별 Gemini API 키
+    
+    # API 키 (암호화 저장)
+    gemini_api_key = Column(String(512), nullable=True)  # Gemini API 키 (암호화)
+    kis_app_key = Column(String(512), nullable=True)     # 한국투자증권 App Key (암호화)
+    kis_app_secret = Column(String(512), nullable=True)  # 한국투자증권 App Secret (암호화)
+    
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
@@ -27,6 +32,11 @@ class UserDB(Base):
     def has_gemini_key(self) -> bool:
         """Gemini API 키 보유 여부"""
         return bool(self.gemini_api_key)
+    
+    @property
+    def has_kis_credentials(self) -> bool:
+        """한국투자증권 API 인증정보 보유 여부"""
+        return bool(self.kis_app_key and self.kis_app_secret)
 
 
 class PortfolioDB(Base):

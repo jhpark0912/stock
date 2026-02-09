@@ -7,7 +7,11 @@ from sqlalchemy.orm import Session
 from app.database.connection import get_db
 from app.database.user_repository import UserRepository
 from app.services.auth_service import AuthService, get_current_user
-from app.models.user import UserCreate, UserLogin, Token, UserResponse, GeminiKeyUpdate, GeminiKeyStatus
+from app.models.user import (
+    UserCreate, UserLogin, Token, UserResponse,
+    GeminiKeyUpdate, GeminiKeyStatus,
+    KISCredentialsUpdate, KISCredentialsStatus
+)
 from app.database.models import UserDB
 
 router = APIRouter(prefix="/auth", tags=["인증"])
@@ -135,3 +139,55 @@ def get_gemini_key_status(
     if key:
         return GeminiKeyStatus(has_key=True, key_preview=f"{key[:4]}...{key[-4:]}")
     return GeminiKeyStatus(has_key=False)
+
+
+
+# ==================== 한국투자증권 API 인증정보 관리 ====================
+
+@router.put("/kis-credentials", response_model=KISCredentialsStatus)
+def update_kis_credentials(
+    credentials: KISCredentialsUpdate,
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """한국투자증권 API 인증정보 설정"""
+    repo = UserRepository(db)
+    repo.update_kis_credentials(
+        current_user.id,
+        credentials.app_key,
+        credentials.app_secret
+    )
+    return KISCredentialsStatus(
+        has_credentials=True,
+        app_key_preview=f"{credentials.app_key[:4]}...{credentials.app_key[-4:]}",
+        app_secret_preview=f"{credentials.app_secret[:4]}...{credentials.app_secret[-4:]}"
+    )
+
+
+@router.delete("/kis-credentials")
+def delete_kis_credentials(
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """한국투자증권 API 인증정보 삭제"""
+    repo = UserRepository(db)
+    repo.delete_kis_credentials(current_user.id)
+    return {"message": "한국투자증권 API 인증정보가 삭제되었습니다."}
+
+
+@router.get("/kis-credentials/status", response_model=KISCredentialsStatus)
+def get_kis_credentials_status(
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """한국투자증권 API 인증정보 상태 조회"""
+    repo = UserRepository(db)
+    credentials = repo.get_kis_credentials(current_user.id)
+    if credentials:
+        app_key, app_secret = credentials
+        return KISCredentialsStatus(
+            has_credentials=True,
+            app_key_preview=f"{app_key[:4]}...{app_key[-4:]}",
+            app_secret_preview=f"{app_secret[:4]}...{app_secret[-4:]}"
+        )
+    return KISCredentialsStatus(has_credentials=False)

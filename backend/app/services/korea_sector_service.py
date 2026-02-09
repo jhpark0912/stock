@@ -243,14 +243,16 @@ async def get_korea_sector_data() -> Optional[List[Dict[str, Any]]]:
         return None
 
 
-async def get_korea_sector_holdings(symbol: str) -> Optional[Dict[str, Any]]:
+async def get_korea_sector_holdings(
+    symbol: str,
+    kis_credentials: Optional[tuple[str, str]] = None
+) -> Optional[Dict[str, Any]]:
     """
     한국 섹터 ETF 보유 종목 조회
     
-    정적 메타데이터를 반환 (Yahoo Finance는 한국 ETF 보유종목 API 미지원)
-    
     Args:
         symbol: 섹터 ETF 심볼 (예: 091160.KS)
+        kis_credentials: (app_key, app_secret) 튜플 (선택)
         
     Returns:
         보유 종목 정보 또는 None
@@ -260,9 +262,45 @@ async def get_korea_sector_holdings(symbol: str) -> Optional[Dict[str, Any]]:
         return None
     
     meta = KOREA_SECTOR_ETFS[symbol]
+    
+    # KIS API 사용 가능 시 실시간 조회
+    if kis_credentials:
+        try:
+            from app.services.kis_api_service import get_etf_holdings
+            
+            app_key, app_secret = kis_credentials
+            etf_code = symbol.replace(".KS", "")  # 091160.KS -> 091160
+            
+            logger.debug(f"[KIS] ETF {symbol} 구성종목 조회 시작")
+            
+            holdings_data = await get_etf_holdings(etf_code, app_key, app_secret)
+            
+            if holdings_data:
+                # KIS API 응답을 표준 형식으로 변환
+                holdings = []
+                for h in holdings_data:
+                    holdings.append({
+                        "symbol": h.symbol,
+                        "name": h.name,
+                        "weight": h.weight,
+                        "price": h.price,
+                        "change_1d": h.change_1d,
+                    })
+                
+                return {
+                    "sector_symbol": symbol,
+                    "sector_name": meta["name"],
+                    "holdings": holdings,
+                    "last_updated": datetime.now().isoformat(),
+                    "note": "한국투자증권 API로 조회된 실시간 데이터입니다."
+                }
+        except Exception as e:
+            logger.error(f"[KIS] ETF {symbol} 조회 실패: {e}")
+            # Fallback to static data
+    
+    # Fallback: 정적 메타데이터
     holdings_names = KOREA_SECTOR_HOLDINGS.get(symbol, [])
     
-    # 정적 데이터로 응답 생성 (가격/변화율은 없음)
     holdings = []
     for i, name in enumerate(holdings_names):
         # 비중은 추정값 (실제 데이터 없이 균등 분배)
@@ -280,5 +318,5 @@ async def get_korea_sector_holdings(symbol: str) -> Optional[Dict[str, Any]]:
         "sector_name": meta["name"],
         "holdings": holdings,
         "last_updated": datetime.now().isoformat(),
-        "note": "한국 ETF 보유 종목은 추정 데이터입니다."
+        "note": "추정 데이터입니다. 한국투자증권 API 키를 등록하면 실시간 데이터를 확인할 수 있습니다."
     }

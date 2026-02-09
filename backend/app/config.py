@@ -15,12 +15,16 @@ class Settings:
     def __init__(self):
         # Gemini API
         self.gemini_api_key = os.getenv("GEMINI_API_KEY", "")
-        
+
         # FRED API (경제 지표용)
         self.fred_api_key = os.getenv("FRED_API_KEY", "")
-        
+
         # ECOS API (한국은행 경제통계시스템)
         self.ecos_api_key = os.getenv("ECOS_API_KEY", "")
+
+        # 한국투자증권 API (Admin 전용 환경변수 키)
+        self.kis_app_key = os.getenv("KIS_APP_KEY", "")
+        self.kis_app_secret = os.getenv("KIS_APP_SECRET", "")
 
         # Environment
         self.environment = os.getenv("ENVIRONMENT", "development")
