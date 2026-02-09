@@ -189,7 +189,6 @@ export function EconomicChartView({
               <DetailChart
                 indicator={selectedIndicator}
                 compareIndicators={compareIndicators}
-                loading={refreshing}
               />
 
               {/* 하단 정보 영역 */}
