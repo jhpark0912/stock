@@ -26,6 +26,7 @@ interface EconomicIndicatorsProps {
 export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
   const { user } = useAuth();
   const [country, setCountry] = useState<Country>(null);
+  const [sectorCountry, setSectorCountry] = useState<Country>(null);  // 섹터 히트맵용 국가
   const [data, setData] = useState<EconomicData | null>(null);
   const [krData, setKrData] = useState<KoreaEconomicData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -145,9 +146,12 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
             섹터 히트맵
           </button>
         </div>
-        {/* 국가 선택 탭 (경제 지표 탭에서만 표시) */}
+        {/* 국가 선택 탭 */}
         {activeTab === 'indicators' && (
           <CountryTab selected={country} onChange={handleCountryChange} />
+        )}
+        {activeTab === 'sectors' && (
+          <CountryTab selected={sectorCountry} onChange={setSectorCountry} />
         )}
       </div>
     </div>
@@ -158,7 +162,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
     return (
       <div className={cn('h-full', className)}>
         <SubTabHeader />
-        <SectorHeatmap />
+        <SectorHeatmap country={sectorCountry} />
       </div>
     );
   }
@@ -177,17 +181,9 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
               <h3 className="text-xl font-semibold text-foreground mb-2">
                 경제 지표를 확인할 국가를 선택하세요
               </h3>
-              <p className="text-sm text-muted-foreground mb-6">
-                상단의 🇺🇸 미국, 🇰🇷 한국, 🌏 전체 탭을 클릭하여 경제 지표를 확인할 수 있습니다.
+              <p className="text-sm text-muted-foreground">
+                상단 우측의 국가 탭을 클릭하여 시작하세요.
               </p>
-              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                <span className="px-3 py-1.5 bg-muted rounded-md">🇺🇸 미국</span>
-                <span>금리, VIX, CPI, M2, 원자재</span>
-              </div>
-              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground mt-2">
-                <span className="px-3 py-1.5 bg-muted rounded-md">🇰🇷 한국</span>
-                <span>국고채, 기준금리, 신용스프레드, CPI, M2, 환율</span>
-              </div>
             </div>
           </div>
         </div>

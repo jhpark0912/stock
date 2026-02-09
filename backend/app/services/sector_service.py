@@ -310,9 +310,31 @@ def _calculate_change_percent(current: float, previous: float) -> float:
     return round(((current - previous) / previous) * 100, 2)
 
 
-async def get_sector_data() -> Optional[List[Dict[str, Any]]]:
+async def get_sector_data(country: str = 'us') -> Optional[List[Dict[str, Any]]]:
     """
-    11개 섹터 ETF 데이터 조회
+    섹터 ETF 데이터 조회
+    
+    Args:
+        country: 'us' (미국), 'kr' (한국), 'all' (전체)
+    
+    Returns:
+        섹터 데이터 리스트 또는 None
+    """
+    if country == 'kr':
+        from .korea_sector_service import get_korea_sector_data
+        return await get_korea_sector_data()
+    elif country == 'all':
+        us_data = await _get_us_sector_data()
+        from .korea_sector_service import get_korea_sector_data
+        kr_data = await get_korea_sector_data()
+        return (us_data or []) + (kr_data or [])
+    else:
+        return await _get_us_sector_data()
+
+
+async def _get_us_sector_data() -> Optional[List[Dict[str, Any]]]:
+    """
+    미국 11개 섹터 ETF 데이터 조회
     
     Returns:
         섹터 데이터 리스트 또는 None
@@ -404,6 +426,7 @@ async def get_sector_data() -> Optional[List[Dict[str, Any]]]:
                     "change_1m": change_1m,
                     "market_cap": market_cap,
                     "top_holdings": top_holdings,
+                    "country": "us",  # 국가 구분용
                 })
                 
             except Exception as e:

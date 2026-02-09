@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { SectorDetail } from './SectorDetail';
+import type { Country } from '@/types/economic';
 
 // 섹터 상세 설명 (툴팁용)
 const SECTOR_DETAIL: Record<string, string> = {
+  // 미국 섹터
   XLK: '기술 섹터는 하드웨어, 소프트웨어, 반도체, IT 서비스 기업으로 구성됩니다. 성장주 중심으로 금리에 민감합니다.',
   XLF: '금융 섹터는 은행, 보험사, 자산운용사, 투자은행으로 구성됩니다. 금리 상승 시 수혜를 받는 경향이 있습니다.',
   XLV: '헬스케어 섹터는 제약, 바이오테크, 의료기기, 헬스케어 서비스 기업으로 구성됩니다. 경기 방어적 성격이 있습니다.',
@@ -20,6 +22,17 @@ const SECTOR_DETAIL: Record<string, string> = {
   XLRE: '부동산 섹터는 리츠(REITs)와 부동산 개발/운영 기업으로 구성됩니다. 금리에 민감하며 배당 수익률이 높습니다.',
   XLU: '유틸리티 섹터는 전력, 가스, 수도 공급 기업으로 구성됩니다. 규제 산업으로 안정적이며 배당이 높습니다.',
   XLC: '커뮤니케이션 섹터는 미디어, 통신, 인터넷/소셜미디어 기업으로 구성됩니다. 광고 시장에 민감합니다.',
+  // 한국 섹터
+  '091160.KS': '반도체 섹터는 삼성전자, SK하이닉스 등 메모리 반도체 세계 1위 기업들로 구성됩니다. 글로벌 IT 수요에 민감합니다.',
+  '091170.KS': '은행 섹터는 KB금융, 신한지주, 하나금융 등 대형 금융그룹으로 구성됩니다. 금리와 부동산 시장에 영향받습니다.',
+  '266420.KS': '헬스케어 섹터는 삼성바이오, 셀트리온 등 바이오시밀러 강자들로 구성됩니다. 글로벌 제약시장 진출이 특징입니다.',
+  '117460.KS': '에너지화학 섹터는 LG화학, SK이노베이션 등으로 구성됩니다. 유가와 배터리 수요에 민감합니다.',
+  '266370.KS': 'IT 섹터는 네이버, 카카오 등 플랫폼 기업으로 구성됩니다. 광고 시장과 신사업 성장에 영향받습니다.',
+  '091180.KS': '자동차 섹터는 현대차, 기아 등 완성차와 부품사로 구성됩니다. 전기차 전환이 핵심 이슈입니다.',
+  '117700.KS': '건설 섹터는 삼성물산, 현대건설 등으로 구성됩니다. 부동산 경기와 해외수주에 영향받습니다.',
+  '140710.KS': '운송 섹터는 HMM, 대한항공 등으로 구성됩니다. 글로벌 물류 수요와 유가에 민감합니다.',
+  '102970.KS': '증권 섹터는 미래에셋, 한국투자 등으로 구성됩니다. 주식시장 거래대금과 금리에 영향받습니다.',
+  '266390.KS': '경기소비재 섹터는 호텔신라, 현대백화점 등으로 구성됩니다. 소비심리와 관광 수요에 민감합니다.',
 };
 
 type Period = '1D' | '1W' | '1M';
@@ -88,7 +101,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 // 커스텀 Treemap 셀
 const CustomTreemapContent = (props: any) => {
-  const { x, y, width, height, depth, symbol, korName, change, price, color, onSectorClick, data } = props;
+  const { x, y, width, height, depth, symbol, korName, change, price, color, onSectorClick, data, isKorea } = props;
 
   // root 노드는 렌더링하지 않음 (depth === 1이 실제 데이터)
   if (depth === 0 || !symbol) {
@@ -175,7 +188,7 @@ const CustomTreemapContent = (props: any) => {
                   style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
                   className="pointer-events-none select-none"
                 >
-                  ${price.toFixed(2)}
+                  {isKorea ? `₩${price.toLocaleString()}` : `$${price.toFixed(2)}`}
                 </text>
               )}
             </>
@@ -203,9 +216,13 @@ const CustomTreemapContent = (props: any) => {
   );
 };
 
-export function SectorHeatmap() {
+interface SectorHeatmapProps {
+  country: Country;
+}
+
+export function SectorHeatmap({ country }: SectorHeatmapProps) {
   const [period, setPeriod] = useState<Period>('1D');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sectors, setSectors] = useState<SectorData[]>([]);
@@ -213,9 +230,10 @@ export function SectorHeatmap() {
   const [selectedSector, setSelectedSector] = useState<SectorData | null>(null);
 
   const fetchData = useCallback(async () => {
+    if (country === null) return;
     try {
       setError(null);
-      const response = await api.get<SectorResponse>('/api/economic/sectors');
+      const response = await api.get<SectorResponse>(`/api/economic/sectors?country=${country}`);
 
       if (response.data.success && response.data.data) {
         setSectors(response.data.data);
@@ -226,16 +244,17 @@ export function SectorHeatmap() {
     } catch (err) {
       setError('섹터 데이터를 불러오는 중 오류가 발생했습니다.');
     }
-  }, []);
+  }, [country]);
 
   useEffect(() => {
+    if (country === null) return;
     const loadData = async () => {
       setLoading(true);
       await fetchData();
       setLoading(false);
     };
     loadData();
-  }, [fetchData]);
+  }, [fetchData, country]);
 
   // 기간에 따른 변화율
   const getChange = (sector: SectorData): number => {
@@ -249,6 +268,8 @@ export function SectorHeatmap() {
   // Treemap 데이터 생성
   const treemapData = sectors.map((sector) => {
     const change = getChange(sector);
+    // 한국 섹터인지 확인 (.KS 접미사)
+    const isKorea = sector.symbol.endsWith('.KS');
     return {
       name: sector.symbol,
       symbol: sector.symbol,
@@ -258,6 +279,7 @@ export function SectorHeatmap() {
       price: sector.price,
       color: getChangeColor(change),
       data: sector,
+      isKorea,
     };
   });
 
@@ -278,6 +300,27 @@ export function SectorHeatmap() {
   const handleStockClick = (symbol: string) => {
     window.open(`/stock/${symbol}`, '_blank');
   };
+
+  // 국가 선택 안내
+  if (country === null) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100%-80px)]">
+        <div className="text-center max-w-md px-6">
+          <div className="mb-6">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4">
+              <TrendingUp className="h-10 w-10 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold text-foreground mb-2">
+              섹터 정보를 확인할 국가를 선택하세요
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              상단 우측의 국가 탭을 클릭하여 시작하세요.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return <LoadingSpinner message="섹터 데이터 로딩 중..." />;
@@ -308,7 +351,11 @@ export function SectorHeatmap() {
           </div>
           <div>
             <h2 className="text-xl font-semibold text-foreground">섹터 로테이션</h2>
-            <p className="text-sm text-muted-foreground">GICS 11개 섹터 ETF (AUM 기준)</p>
+            <p className="text-sm text-muted-foreground">
+              {country === 'us' && 'GICS 11개 섹터 ETF (AUM 기준)'}
+              {country === 'kr' && 'KODEX 10개 섹터 ETF (AUM 기준)'}
+              {country === 'all' && '미국 11개 + 한국 10개 섹터 ETF'}
+            </p>
           </div>
         </div>
 

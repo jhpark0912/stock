@@ -124,7 +124,7 @@ class AllEconomicResponse(BaseModel):
 
 class SectorData(BaseModel):
     """개별 섹터 ETF 데이터"""
-    symbol: str          # ETF 심볼 (XLK)
+    symbol: str          # ETF 심볼 (XLK, 091160.KS)
     name: str            # 한글명 (기술)
     name_en: str         # 영문명 (Technology)
     description: str     # 짧은 설명 (반도체, 소프트웨어, IT서비스)
@@ -133,7 +133,8 @@ class SectorData(BaseModel):
     change_1w: float     # 주간 변화율 (%)
     change_1m: float     # 월간 변화율 (%)
     market_cap: float    # AUM/시가총액 (트리맵 크기용)
-    top_holdings: List[str] = []  # 상위 보유 종목 (DB 캐시에서 조회)
+    top_holdings: List[str] = []  # 상위 보유 종목
+    country: str = 'us'  # 국가 구분 (us, kr)  # 상위 보유 종목 (DB 캐시에서 조회)
 
 
 class SectorResponse(BaseModel):

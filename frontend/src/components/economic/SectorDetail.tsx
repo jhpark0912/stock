@@ -35,6 +35,7 @@ interface SectorDetailProps {
 
 // 섹터별 초보자 친화 설명 (경제지표의 metaphor 스타일)
 const SECTOR_INFO: Record<string, { metaphor: string; description: string }> = {
+  // 미국 섹터
   XLK: {
     metaphor: '💻 "미래를 만드는 기업들의 집합소"',
     description: '애플, 마이크로소프트, 엔비디아 등 IT 기업들이 모여있어요. 금리가 오르면 주가가 빠지는 경향이 있어요.',
@@ -78,6 +79,47 @@ const SECTOR_INFO: Record<string, { metaphor: string; description: string }> = {
   XLC: {
     metaphor: '📱 "소통과 콘텐츠의 세상"',
     description: '구글, 메타, 넷플릭스 같은 회사들이에요. 광고 시장과 함께 움직이는 경향이 있어요.',
+  },
+  // 한국 섹터
+  '091160.KS': {
+    metaphor: '🇰🇷 "세계 반도체 공장"',
+    description: '삼성전자, SK하이닉스 등 메모리 반도체 세계 1위 기업들이에요. AI와 IT 수요에 민감해요.',
+  },
+  '091170.KS': {
+    metaphor: '🏦 "한국의 금융 중심"',
+    description: 'KB금융, 신한지주 등 대형 금융그룹들이에요. 금리와 부동산 시장에 영향받아요.',
+  },
+  '266420.KS': {
+    metaphor: '🧬 "K-바이오의 힘"',
+    description: '삼성바이오, 셀트리온 등 바이오시밀러 강자들이에요. 글로벌 제약시장 진출이 특징이에요.',
+  },
+  '117460.KS': {
+    metaphor: '🔋 "에너지와 화학의 융합"',
+    description: 'LG화학, SK이노베이션 등이에요. 유가, 전기차 배터리 수요에 민감해요.',
+  },
+  '266370.KS': {
+    metaphor: '💻 "K-플랫폼의 시대"',
+    description: '네이버, 카카오 등 IT 플랫폼 기업들이에요. 광고 시장과 신사업 성장에 영향받아요.',
+  },
+  '091180.KS': {
+    metaphor: '🚗 "K-자동차의 질주"',
+    description: '현대차, 기아 등 완성차와 부품사들이에요. 전기차 전환이 핵심 이슈예요.',
+  },
+  '117700.KS': {
+    metaphor: '🏗️ "대한민국을 짓다"',
+    description: '삼성물산, 현대건설 등이에요. 부동산 경기와 해외수주에 영향받아요.',
+  },
+  '140710.KS': {
+    metaphor: '🚢 "세상을 연결하는 물류"',
+    description: 'HMM, 대한항공 등이에요. 글로벌 물류 수요와 유가에 민감해요.',
+  },
+  '102970.KS': {
+    metaphor: '📈 "주식시장과 함께"',
+    description: '미래에셋, 한국투자 등이에요. 거래대금과 금리에 영향받아요.',
+  },
+  '266390.KS': {
+    metaphor: '🛍️ "소비와 여행의 즐거움"',
+    description: '호텔신라, 현대백화점 등이에요. 소비심리와 관광 수요에 민감해요.',
   },
 };
 

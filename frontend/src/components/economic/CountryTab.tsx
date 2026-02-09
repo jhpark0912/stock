@@ -4,22 +4,30 @@
 
 import type { Country } from '@/types/economic';
 import { cn } from '@/lib/utils';
+import { Globe } from 'lucide-react';
 
 interface CountryTabProps {
   selected: Country;
   onChange: (country: Country) => void;
 }
 
-const COUNTRIES: { value: Country; label: string; flag: string }[] = [
-  { value: 'us', label: '미국', flag: '🇺🇸' },
-  { value: 'kr', label: '한국', flag: '🇰🇷' },
-  { value: 'all', label: '전체', flag: '🌏' },
+type CountryConfig = {
+  value: Country;
+  label: string;
+  flagCode?: string;  // flagcdn.com 국가 코드
+  isGlobe?: boolean;
+};
+
+const COUNTRIES: CountryConfig[] = [
+  { value: 'us', label: '미국', flagCode: 'us' },
+  { value: 'kr', label: '한국', flagCode: 'kr' },
+  { value: 'all', label: '전체', isGlobe: true },
 ];
 
 export function CountryTab({ selected, onChange }: CountryTabProps) {
   return (
     <div className="flex items-center bg-muted rounded-lg p-1">
-      {COUNTRIES.map(({ value, label, flag }) => (
+      {COUNTRIES.map(({ value, label, flagCode, isGlobe }) => (
         <button
           key={value}
           onClick={() => onChange(value)}
@@ -30,7 +38,16 @@ export function CountryTab({ selected, onChange }: CountryTabProps) {
               : 'text-muted-foreground hover:text-foreground'
           )}
         >
-          <span>{flag}</span>
+          {isGlobe ? (
+            <Globe className="w-4 h-4" />
+          ) : (
+            <img
+              src={`https://flagcdn.com/w40/${flagCode}.png`}
+              srcSet={`https://flagcdn.com/w80/${flagCode}.png 2x`}
+              alt={label}
+              className="w-5 h-3.5 rounded-sm object-cover"
+            />
+          )}
           <span>{label}</span>
         </button>
       ))}

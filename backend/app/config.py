@@ -18,6 +18,9 @@ class Settings:
         
         # FRED API (경제 지표용)
         self.fred_api_key = os.getenv("FRED_API_KEY", "")
+        
+        # ECOS API (한국은행 경제통계시스템)
+        self.ecos_api_key = os.getenv("ECOS_API_KEY", "")
 
         # Environment
         self.environment = os.getenv("ENVIRONMENT", "development")

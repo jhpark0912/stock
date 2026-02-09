@@ -262,23 +262,25 @@ async def get_economic_status():
 
 
 @router.get("/economic/sectors", response_model=SectorResponse)
-async def get_sector_performance():
+async def get_sector_performance(
+    country: str = Query('us', regex='^(us|kr|all)$', description="국가 선택: us, kr, all")
+):
     """
     섹터 ETF 성과 데이터 조회
     
-    GICS 11개 섹터 ETF의 가격 및 변화율 조회
-    - XLK (기술), XLF (금융), XLV (헬스케어), XLE (에너지)
-    - XLI (산업재), XLB (소재), XLY (경기소비재), XLP (필수소비재)
-    - XLRE (부동산), XLU (유틸리티), XLC (커뮤니케이션)
+    미국 GICS 11개 섹터 ETF 또는 한국 KODEX 섹터 ETF의 가격 및 변화율 조회
+    
+    Parameters:
+    - country: 'us' (미국 11개), 'kr' (한국 9개), 'all' (전체 20개)
     
     Returns:
-    - 성공 시: 11개 섹터 ETF 데이터 (현재가, 1D/1W/1M 변화율)
+    - 성공 시: 섹터 ETF 데이터 (현재가, 1D/1W/1M 변화율)
     - 실패 시: 에러 메시지
     """
     try:
-        logger.debug("섹터 ETF 데이터 조회 요청")
+        logger.debug(f"섹터 ETF 데이터 조회 요청 (country={country})")
         
-        sectors = await get_sector_data()
+        sectors = await get_sector_data(country)
         
         if not sectors:
             return SectorResponse(
@@ -288,7 +290,7 @@ async def get_sector_performance():
         
         sector_data = [SectorData(**s) for s in sectors]
         
-        logger.debug(f"섹터 ETF 조회 완료: {len(sector_data)}개")
+        logger.debug(f"섹터 ETF 조회 완료: {len(sector_data)}개 (country={country})")
         
         return SectorResponse(
             success=True,
@@ -309,19 +311,26 @@ async def get_sector_holdings_api(symbol: str):
     """
     섹터 ETF 보유 종목 조회
     
-    특정 섹터 ETF의 상위 10개 보유 종목을 조회합니다.
+    특정 섹터 ETF의 상위 보유 종목을 조회합니다.
     
     Parameters:
-    - symbol: 섹터 ETF 심볼 (예: XLK, XLF, XLV 등)
+    - symbol: 섹터 ETF 심볼
+      - 미국: XLK, XLF, XLV 등
+      - 한국: 091160.KS, 091170.KS 등
     
     Returns:
-    - 성공 시: 상위 10개 보유 종목 (심볼, 종목명, 비중, 현재가, 변화율)
+    - 성공 시: 상위 보유 종목 (심볼, 종목명, 비중, 현재가, 변화율)
     - 실패 시: 에러 메시지
     """
     try:
         logger.debug(f"섹터 보유 종목 조회 요청: {symbol}")
         
-        result = await get_sector_holdings(symbol)
+        # 한국 섹터인지 확인 (.KS 접미사)
+        if symbol.endswith('.KS'):
+            from app.services.korea_sector_service import get_korea_sector_holdings
+            result = await get_korea_sector_holdings(symbol)
+        else:
+            result = await get_sector_holdings(symbol)
         
         if not result:
             return SectorHoldingsResponse(
