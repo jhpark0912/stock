@@ -43,7 +43,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
     try {
       setError(null);
       const params = new URLSearchParams();
-      params.set('country', targetCountry);
+      if (targetCountry) params.set('country', targetCountry);
       if (includeHistory) params.set('include_history', 'true');
 
       if (targetCountry === 'us') {

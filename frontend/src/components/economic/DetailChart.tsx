@@ -20,7 +20,6 @@ import { cn } from '@/lib/utils';
 interface DetailChartProps {
   indicator: EconomicIndicator;
   compareIndicators?: EconomicIndicator[];
-  loading?: boolean;
 }
 
 type Period = '1W' | '1M' | '3M' | '6M' | '1Y' | 'ALL';
@@ -35,7 +34,7 @@ const CHART_COLORS = [
   '#06b6d4', // cyan
 ];
 
-export function DetailChart({ indicator, compareIndicators = [], loading = false }: DetailChartProps) {
+export function DetailChart({ indicator, compareIndicators = [] }: DetailChartProps) {
   // 데이터 주기 판별 함수 (월간 vs 일간)
   const isMonthlyData = (symbol: string): boolean => {
     // FRED: 미국 월간 데이터
