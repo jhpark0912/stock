@@ -367,7 +367,10 @@ class StockService:
 - 포트폴리오 내 비중: {user_weight}%
 
 - 가격 및 시장 데이터: {price_data_str}
-- 주요 재무 지표: {financial_data_str}
+- 주요 재무 지표 (⚠️ 단위 주의): {financial_data_str}
+  * 소수점 비율 (백분율 환산): roe, opm, dividend_yield, payout_ratio, revenue_growth, earnings_growth (예: 1.08=108%, 0.25=25%)
+  * 배수 (그대로 해석): trailing_pe, forward_pe, pbr, peg, current_ratio, quick_ratio (예: 28.5=28.5배)
+  * 백분율: debt_to_equity (예: 45.2=45.2%)
 - 기술적 지표: {tech_data_str}
 
 ### [Task Guidelines]
@@ -392,13 +395,16 @@ class StockService:
                 # 평단가 정보가 없으면 기존 프롬프트 사용
                 prompt = f"""
 ### [System Role]
-너는 20년 경력의 베테랑 주식 분석가이자 퀀트 투자 전문가야. 
+너는 20년 경력의 베테랑 주식 분석가이자 퀀트 투자 전문가야.
 제공된 데이터를 바탕으로 해당 종목에 대해 다각도의 심층 분석을 수행하고, 투자자가 의사결정을 내릴 수 있도록 객관적이고 통찰력 있는 보고서를 작성해줘.
 
 ### [Input Data]
 - Ticker: {stock_data.ticker}
 - 가격 및 시가총액: {price_data_str}
-- 주요 재무 지표: {financial_data_str}
+- 주요 재무 지표 (⚠️ 단위 주의): {financial_data_str}
+  * 소수점 비율 (백분율 환산): roe, opm, dividend_yield, payout_ratio, revenue_growth, earnings_growth (예: 1.08=108%, 0.25=25%)
+  * 배수 (그대로 해석): trailing_pe, forward_pe, pbr, peg, current_ratio, quick_ratio (예: 28.5=28.5배)
+  * 백분율: debt_to_equity (예: 45.2=45.2%)
 - 기술적 지표: {tech_data_str}
 
 ### [Task Guidelines]
