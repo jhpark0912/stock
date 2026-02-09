@@ -1,6 +1,6 @@
 # 프로젝트 구조
 
-> 최종 업데이트: 2026-02-08 (한국 경제 지표 차트 기능 완성 및 ECOS API 최적화)
+> 최종 업데이트: 2026-02-09 (한국투자증권 API 통합 및 사용자별 KIS 키 인증 시스템 구현)
 
 ## 전체 아키텍처
 
@@ -410,6 +410,105 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - **프로젝트 가이드**: `CLAUDE.md`
 
 ## 최근 변경 이력
+
+### 2026-02-09: 한국투자증권 API 통합 및 사용자별 KIS 키 인증 시스템 구현
+
+1. **KIS (Korea Investment & Securities) Open API 통합**
+   - `services/kis_api_service.py` 신규 생성
+     - OAuth2 토큰 발급 (24시간 유효)
+     - ETF 구성종목시세 API (TR_ID: FHKST121600C0)
+     - 한국 섹터 ETF 실시간 보유종목 조회
+     - 토큰 캐싱 (23시간 TTL, 자동 갱신)
+   - `services/crypto.py` 신규 생성
+     - Fernet 암호화 (symmetric encryption)
+     - API 키 암호화/복호화 함수
+     - SECRET_KEY 기반 암호화 키 생성
+   - 환경 변수 추가 (`config.py`, `.env.example`)
+     - `KIS_APP_KEY`: Admin용 한국투자증권 App Key
+     - `KIS_APP_SECRET`: Admin용 한국투자증권 App Secret
+
+2. **사용자별 KIS 인증정보 저장**
+   - `models/user.py` 수정
+     - `kis_app_key_encrypted` 필드 추가 (TEXT, NULL)
+     - `kis_app_secret_encrypted` 필드 추가 (TEXT, NULL)
+     - 사용자별 암호화된 KIS 키 저장
+   - `api/routes/auth.py` 수정
+     - `PUT /api/auth/kis-credentials`: KIS 키 저장 (암호화 후 DB 저장)
+     - `GET /api/auth/kis-credentials`: KIS 키 상태 조회 (app_key_preview 마스킹 제공)
+     - `DELETE /api/auth/kis-credentials`: KIS 키 삭제
+   - 인증 패턴
+     - Admin: 환경변수 키 사용 (KIS_APP_KEY, KIS_APP_SECRET)
+     - 일반 유저: DB 저장된 암호화 키 사용
+     - 키 없는 유저: 설정 페이지로 유도 (샘플 데이터 제거)
+
+3. **한국 섹터 ETF 보유종목 실시간 조회**
+   - `api/routes/economic.py` 수정
+     - `/api/economic/sectors/{symbol}/holdings` 엔드포인트 개선
+     - KIS 인증정보 확인 로직 추가
+     - 키 없는 경우 `requires_kis_key=True` 반환 (샘플 데이터 제거)
+     - 키 있는 경우 KIS API를 통한 실시간 데이터 조회
+   - `models/economic.py` 수정
+     - `SectorHoldingsResponse`에 `requires_kis_key` 필드 추가
+     - KIS API 필요 여부 클라이언트에 전달
+
+4. **Frontend - KIS 키 관리 UI**
+   - `components/settings/SettingsPage.tsx` 수정
+     - KIS 인증정보 카드 추가
+     - App Key + App Secret 입력 폼
+     - 비밀번호 토글 버튼 (Eye/EyeOff 아이콘)
+     - 저장/삭제 기능
+     - 마스킹된 키 프리뷰 표시 (`*****...abcd` 형식)
+     - Admin 안내 메시지 (환경변수 키 사용 가이드)
+   - `lib/authApi.ts` 수정
+     - `updateKISCredentials()`: KIS 키 저장 API
+     - `getKISCredentials()`: KIS 키 상태 조회 API
+     - `deleteKISCredentials()`: KIS 키 삭제 API
+   - `types/auth.ts` 수정
+     - `KISCredentialsUpdate`: 키 업데이트 타입
+     - `KISCredentialsStatus`: 키 상태 응답 타입
+
+5. **Frontend - KIS 키 체크 로직**
+   - `components/economic/SectorDetail.tsx` 수정
+     - 한국 섹터 클릭 시 KIS 키 체크
+     - `requires_kis_key=true` 수신 시 안내 UI 표시
+     - "한국 섹터 ETF 구성종목을 조회하려면 한국투자증권 API 키가 필요합니다" 메시지
+     - "설정에서 키 입력하기" 버튼 (Key 아이콘)
+     - 버튼 클릭 시 설정 페이지로 이동 (`window.location.href = '/settings'`)
+   - Navigation 버그 수정
+     - `useNavigate()` 제거 (router context 에러)
+     - `window.location.href` 사용으로 변경 (모달에서 페이지 이동)
+
+6. **UI/UX 개선 - 한국 섹터 표시 패턴**
+   - `components/economic/SectorHeatmap.tsx` 수정
+     - 한국 섹터: 종목명 (메인) → 심볼 (서브)
+     - 미국 섹터: 심볼 (메인) → 종목명 (서브)
+     - 예: "반도체" (큰 글씨) + "091160.KS" (작은 글씨)
+   - `components/economic/SectorDetail.tsx` 수정
+     - 트리맵, 툴팁, 보유종목 리스트에 동일 패턴 적용
+     - 보유종목 표시: 상위 10개 → 상위 5개로 변경
+     - 제목 변경: "상위 10개 종목" → "상위 5개 보유 종목"
+
+7. **Docker 빌드 수정**
+   - `components/economic/DetailChart.tsx` 수정
+     - `loading?: boolean` prop 추가 (TypeScript 컴파일 에러 해결)
+     - `EconomicChartView`에서 `loading={refreshing}` 전달 가능
+
+8. **보안 및 아키텍처**
+   - 암호화: Fernet 대칭키 암호화 (SECRET_KEY 기반)
+   - 토큰 관리: 메모리 캐싱 (23시간 TTL)
+   - 에러 처리: KIS API 오류 시 명확한 에러 메시지 반환
+   - 사용자 격리: 사용자별 독립된 KIS 인증정보
+
+9. **한국 섹터 ETF 목록** (KIS API 지원)
+   - 091160.KS: KODEX 반도체
+   - 091170.KS: KODEX 은행
+   - 266360.KS: KODEX 헬스케어
+   - 117460.KS: KODEX 에너지화학
+   - 091220.KS: KODEX 기계장비
+   - 091180.KS: KODEX 자동차
+   - 117680.KS: KODEX 건설
+   - 140710.KS: KODEX 운송
+   - 102970.KS: KODEX 증권
 
 ### 2026-02-08: 샘플 페이지 삭제 및 신용 스프레드 적용
 1. **샘플 페이지 삭제**
