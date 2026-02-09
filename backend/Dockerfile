@@ -12,7 +12,9 @@ RUN apt-get update && apt-get install -y \
 
 # requirements.txt 복사 및 의존성 설치
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# BuildKit 캐시 마운트로 pip 패키지 다운로드 재사용 (빌드 속도 향상)
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install -r requirements.txt
 
 # 애플리케이션 코드 복사
 COPY . .

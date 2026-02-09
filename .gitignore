@@ -450,3 +450,6 @@ pyrightconfig.json
 
 # End of https://www.toptal.com/developers/gitignore/api/python,flask,node
 docker-compose.override.yml
+
+# Claude Code local settings (contains sensitive auto-approval history)
+.claude/settings.local.json
