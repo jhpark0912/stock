@@ -31,3 +31,6 @@ bcrypt==4.0.1
 
 # Encryption (API Key 암호화)
 cryptography>=41.0.0
+
+# GCP Secret Manager (선택적)
+google-cloud-secret-manager>=2.16.0

@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.config import settings
-from app.api.routes import health, stock, portfolio, auth, admin, economic
+from app.api.routes import health, stock, portfolio, auth, admin, economic, secret_stats
 from app.database.connection import init_db, get_db
 from app.database.user_repository import UserRepository
 from app.services.auth_service import AuthService
@@ -121,6 +121,8 @@ app.include_router(portfolio.router, prefix="/api", tags=["Portfolio"])
 logger.debug("   ✅ Portfolio 라우터 등록 완료")
 app.include_router(economic.router, prefix="/api", tags=["Economic"])
 logger.debug("   ✅ Economic 라우터 등록 완료")
+app.include_router(secret_stats.router, prefix="/api", tags=["Secret Manager"])
+logger.debug("   ✅ Secret Stats 라우터 등록 완료")
 
 # 등록된 라우트 출력 (DEBUG 레벨)
 logger.debug("📋 등록된 전체 라우트:")

@@ -17,11 +17,17 @@ services:
       - FRED_API_KEY=${FRED_API_KEY:-}
       - DB_DIR=/app/data
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      # GCP Secret Manager 설정
+      - USE_SECRET_MANAGER=${USE_SECRET_MANAGER:-false}
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID:-}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-credentials.json
     env_file:
       - .env
     volumes:
       # 데이터베이스 영구 저장 (호스트 ./data 폴더)
       - ./data:/app/data
+      # GCP Service Account 키 (Secret Manager 사용 시)
+      - ./gcp-credentials.json:/app/gcp-credentials.json:ro
     restart: on-failure
     stop_grace_period: 300s
     deploy:
