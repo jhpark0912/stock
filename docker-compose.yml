@@ -13,21 +13,21 @@ services:
       - HOST=0.0.0.0
       - PORT=8000
       - ALLOWED_ORIGINS=http://localhost,http://localhost:80,http://frontend,http://localhost:5348,http://${SERVER_IP:-*},http://${SERVER_IP:-*}:5348
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      # 🟢 낮은 보안: .env에서 로드 (무료 API)
       - FRED_API_KEY=${FRED_API_KEY:-}
+      - ECOS_API_KEY=${ECOS_API_KEY:-}
       - DB_DIR=/app/data
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
-      # GCP Secret Manager 설정
+      # 🔐 GCP Secret Manager 설정 (높은 보안 키들은 여기서 가져옴)
       - USE_SECRET_MANAGER=${USE_SECRET_MANAGER:-false}
       - GCP_PROJECT_ID=${GCP_PROJECT_ID:-}
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-credentials.json
+      # GCP Cloud 환경에서는 자격증명 파일 불필요 (Workload Identity/Metadata Server 자동 사용)
     env_file:
       - .env
     volumes:
       # 데이터베이스 영구 저장 (호스트 ./data 폴더)
       - ./data:/app/data
-      # GCP Service Account 키 (Secret Manager 사용 시)
-      - ./gcp-credentials.json:/app/gcp-credentials.json:ro
+      # GCP Cloud 환경에서는 자격증명 파일 마운트 불필요
     restart: on-failure
     stop_grace_period: 300s
     deploy:

@@ -1,6 +1,6 @@
 # 프로젝트 구조
 
-> 최종 업데이트: 2026-02-09 (GCP Secret Manager 통합 및 API 키 보안 강화)
+> 최종 업데이트: 2026-02-10 (GCP Cloud 환경 Secret Manager 설정 개선)
 
 ## 전체 아키텍처
 
@@ -311,14 +311,23 @@ FRED_API_KEY=your-fred-api-key  # 미국 경제 지표용 (선택)
 ECOS_API_KEY=your-ecos-api-key  # 한국 경제 지표용 (선택)
 LOG_LEVEL=INFO
 
-# GCP Secret Manager (선택적, 보안 강화)
+# 🔐 GCP Secret Manager (선택적, 보안 강화)
 USE_SECRET_MANAGER=false  # true로 설정 시 Secret Manager 사용
 GCP_PROJECT_ID=your-gcp-project-id
+
+# 로컬 환경: USE_SECRET_MANAGER=false (기본값)
+# GCP Cloud 환경 (GCE/Cloud Run/GKE): USE_SECRET_MANAGER=true
+# GCP Cloud 환경에서는 자격증명 파일 불필요 (Workload Identity/Metadata Server 자동 사용)
 ```
 
 **보안 계층 구분** (2026-02-09 추가):
 - **🔴 높은 보안** (Secret Manager 권장): GEMINI_API_KEY, KIS_APP_KEY, KIS_APP_SECRET, JWT_SECRET_KEY, ENCRYPTION_KEY, ADMIN_PASSWORD
 - **🟢 낮은 보안** (.env 유지): FRED_API_KEY, ECOS_API_KEY (무료 API)
+
+**GCP 인증 방식** (2026-02-10 추가):
+- **로컬 환경**: `USE_SECRET_MANAGER=false` + `.env` 파일 사용
+- **GCP Cloud 환경**: `USE_SECRET_MANAGER=true` + Workload Identity 자동 인증
+- **자격증명 파일 불필요**: `docker-compose.yml`에서 `GOOGLE_APPLICATION_CREDENTIALS` 및 `gcp-credentials.json` 마운트 제거됨
 
 ## 개발 서버 실행
 
@@ -425,6 +434,34 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - **프로젝트 가이드**: `CLAUDE.md`
 
 ## 최근 변경 이력
+
+### 2026-02-10: GCP Cloud 환경 Secret Manager 설정 개선
+
+1. **Docker Compose 설정 수정**
+   - `docker-compose.yml` 수정
+     - `GOOGLE_APPLICATION_CREDENTIALS` 환경 변수 제거
+     - `gcp-credentials.json` 볼륨 마운트 제거
+     - GCP Cloud 환경 설명 주석 추가
+   - **문제**: Secret Manager 초기화 오류 (`[Errno 21] Is a directory: '/app/gcp-credentials.json'`)
+   - **원인**: 로컬에 `gcp-credentials.json` 파일이 없으면 Docker가 빈 디렉토리를 자동 생성, Google Cloud SDK가 이를 파일로 읽으려다 오류 발생
+   - **해결**: GCP Cloud 환경에서는 Workload Identity/Metadata Server를 통한 자동 인증 사용, 자격증명 파일 마운트 불필요
+
+2. **.env.example 업데이트**
+   - 로컬 vs GCP Cloud 환경 구분 설명 추가
+   - Secret Manager 사용법 명시
+     - 로컬: `USE_SECRET_MANAGER=false` (기본값)
+     - GCP Cloud (GCE/Cloud Run/GKE): `USE_SECRET_MANAGER=true`
+   - 자격증명 파일 불필요 안내 추가
+
+3. **GCP 인증 방식**
+   - **로컬 환경**: `.env` 파일 사용
+   - **GCP Cloud 환경**: Workload Identity (GKE) 또는 Metadata Server (GCE/Cloud Run) 자동 인증
+   - **Application Default Credentials (ADC)**: `google-cloud-secret-manager` 라이브러리가 자동으로 ADC 사용
+
+4. **장애 대응력 향상**
+   - Secret Manager 실패 시 자동으로 `.env` fallback
+   - 자격증명 파일 관련 오류 원천 차단
+   - 무중단 서비스 보장
 
 ### 2026-02-09: GCP Secret Manager 통합 및 API 키 보안 강화
 
