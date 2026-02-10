@@ -650,3 +650,198 @@ n8n IF 노드에서 success 체크:
 
 - **True 경로:** 데이터를 다음 노드로 전달
 - **False 경로:** 에러 알림 (Send Email, Slack 등)
+
+---
+
+## 🔐 보안 정책 (Security Policy)
+
+### ⛔ 절대 금지 사항
+
+Claude는 **어떠한 상황에서도** 다음 행위를 해서는 안 됩니다:
+
+| 금지 항목 | 설명 | 위반 예시 |
+|----------|------|----------|
+| **`.env` 파일 접근** | Read, Edit, Write 도구 사용 금지 | `Read .env`, `Edit .env`, `cat .env` |
+| **민감 정보 출력** | API 키, 비밀번호 등 평문 출력 금지 | `GEMINI_API_KEY=AIza...` 출력 |
+| **민감 정보 학습** | 대화 컨텍스트에 포함 금지 | `.env` 내용을 응답에 사용 |
+| **보안 파일 검색** | Glob, Grep으로 민감 파일 찾기 금지 | `Grep "API_KEY"` |
+| **키 값 추론** | 환경 변수 값 추측 또는 제안 금지 | "GEMINI_API_KEY는 아마도..." |
+
+### 📋 민감 파일 목록
+
+절대 접근하지 말아야 할 파일들:
+
+```
+❌ .env
+❌ .env.local
+❌ .env.development
+❌ .env.production
+❌ backend/.env
+❌ frontend/.env
+❌ gcp-credentials.json
+❌ *.pem
+❌ *.key
+❌ *_rsa
+❌ credentials.json
+❌ secrets.yaml
+❌ config/secrets.*
+```
+
+### ✅ 올바른 접근 방법
+
+민감한 설정이 필요한 경우 **텍스트 안내만** 제공:
+
+#### ❌ 잘못된 방법:
+```python
+# 절대 하지 말 것!
+Read(".env")  # 금지!
+Edit(".env", old_string="...", new_string="...")  # 금지!
+Bash("cat .env")  # 금지!
+```
+
+#### ✅ 올바른 방법:
+```markdown
+backend/.env 파일을 직접 메모장이나 VSCode로 여세요.
+
+다음 항목을 추가하세요:
+```
+USE_SECRET_MANAGER=true
+GCP_PROJECT_ID=your-project-id
+```
+
+파일을 저장 후 서버를 재시작하세요.
+```
+
+### 🔒 .env.example은 예외
+
+**`.env.example`** 파일만 읽기 가능합니다:
+
+```bash
+✅ Read(".env.example")  # 허용 - 템플릿 파일
+❌ Read(".env")          # 금지 - 실제 키 포함
+```
+
+**이유**: `.env.example`은 실제 값이 아닌 **플레이스홀더**만 포함하므로 안전합니다.
+
+### 🎯 마스킹 규칙
+
+불가피하게 민감 정보가 노출된 경우 **즉시 마스킹**:
+
+| 정보 유형 | 마스킹 방법 | 예시 |
+|----------|------------|------|
+| **API 키** | 앞 4-6자만 표시 | `AIzaSy...` (나머지 `********`) |
+| **비밀번호** | 완전 마스킹 | `********` |
+| **JWT Secret** | 완전 마스킹 | `********` |
+| **이메일** | 도메인만 표시 | `***@gmail.com` |
+| **토큰** | 앞 8자만 표시 | `eyJ0eXAi...` |
+
+### 📝 안전한 문서화
+
+환경 변수 설명 시 **값이 아닌 형식만** 안내:
+
+#### ❌ 잘못된 예시:
+```bash
+# 실제 키 노출 - 절대 금지!
+GEMINI_API_KEY=AIzaSyB431S8nQrpJfj8Q7n5lgfQTdcEc6h2lDc
+```
+
+#### ✅ 올바른 예시:
+```bash
+# 형식 안내만
+GEMINI_API_KEY=your_api_key_here
+
+# 발급 방법 안내
+# 1. https://aistudio.google.com/app/apikey 접속
+# 2. Create API Key 클릭
+# 3. 생성된 키를 복사하여 이 값에 입력
+```
+
+### 🚨 보안 위반 시 대응
+
+실수로 민감 정보를 읽거나 출력한 경우:
+
+1. **즉시 중단**: 추가 작업 중지
+2. **사과**: 명확하게 실수 인정
+3. **영향 평가**: 어떤 정보가 노출되었는지 설명
+4. **키 로테이션 권장**: 영향받은 키 재발급 안내
+5. **재발 방지**: 왜 발생했는지 분석 후 개선
+
+### 🔄 API 키 로테이션 가이드
+
+보안 사고 발생 시 즉시 실행:
+
+#### 1. Gemini API 키
+```
+https://aistudio.google.com/app/apikey
+→ 기존 키 삭제 → 새 키 생성
+```
+
+#### 2. JWT Secret 재생성
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+#### 3. Encryption Key 재생성
+```bash
+python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+```
+
+#### 4. KIS API 재발급
+```
+https://apiportal.koreainvestment.com
+→ APP 관리 → APP KEY 재발급
+```
+
+#### 5. Secret Manager 업데이트
+```bash
+# 새 키를 .env에 임시 입력 후
+export GCP_PROJECT_ID=your-project-id
+./update_secrets.sh
+
+# 즉시 .env에서 제거
+```
+
+### 💡 보안 체크리스트
+
+모든 작업 전 확인:
+
+- [ ] `.env` 파일 접근이 필요한가? → **No면 진행, Yes면 텍스트 안내로 대체**
+- [ ] 민감 정보가 출력될 가능성이 있는가? → **Yes면 마스킹 처리**
+- [ ] 사용자에게 직접 편집을 안내할 수 있는가? → **Yes면 안내, No면 재검토**
+- [ ] 보안 파일 목록에 포함되는가? → **Yes면 절대 접근 금지**
+
+### 🛡️ Anthropic 보안 정책
+
+참고: [Anthropic Privacy Policy](https://www.anthropic.com/legal/privacy)
+
+```
+✅ 대화 내용은 모델 학습에 사용되지 않음
+✅ 사용자 간 완전 격리
+✅ 대화 종료 후 일정 기간 후 삭제
+⚠️  API 요청 시 Anthropic 서버로 전송됨 (응답 생성용)
+```
+
+**중요**: 대화 컨텍스트에 민감 정보가 포함되면 세션 동안 Anthropic 서버에 존재합니다. 따라서 **절대 읽지 말아야** 합니다.
+
+---
+
+## 📌 요약
+
+### Claude가 해야 할 것:
+- ✅ `.env.example` 읽기 (템플릿 파일)
+- ✅ 환경 변수 **형식** 안내
+- ✅ API 키 **발급 방법** 안내
+- ✅ 텍스트로 **수동 편집** 안내
+- ✅ 보안 위반 시 **즉시 사과 및 로테이션 권장**
+
+### Claude가 하지 말아야 할 것:
+- ❌ `.env` 파일 Read/Edit/Write
+- ❌ API 키, 비밀번호 평문 출력
+- ❌ 민감 파일 Glob/Grep 검색
+- ❌ Bash로 민감 파일 접근 (`cat .env` 등)
+- ❌ 키 값 추론 또는 제안
+
+---
+
+**마지막 업데이트**: 2026-02-10
+**사유**: 보안 정책 위반 사례 발생, 재발 방지를 위한 명확한 규칙 추가

@@ -120,31 +120,38 @@ class SecretManagerClient:
         시크릿 가져오기 (캐싱 적용)
 
         Args:
-            secret_id: Secret Manager의 시크릿 ID
+            secret_id: 환경 변수 이름 (예: GEMINI_API_KEY)
             fallback_env_var: Secret Manager 실패 시 사용할 환경 변수명
 
         Returns:
             시크릿 값
+        
+        Note:
+            환경 변수 이름을 자동으로 Secret Manager 형식으로 변환:
+            GEMINI_API_KEY → gemini-api-key
         """
+        # 환경 변수 이름 → Secret Manager 이름 변환
+        # GEMINI_API_KEY → gemini-api-key
+        sm_secret_id = secret_id.lower().replace('_', '-')
         # Secret Manager 비활성화 시 즉시 .env 사용
         if not self.use_secret_manager:
             return self._get_from_env(fallback_env_var or secret_id)
 
-        # 1. 캐시 확인
-        cached_value = self.cache.get(secret_id)
+        # 1. 캐시 확인 (변환된 이름으로)
+        cached_value = self.cache.get(sm_secret_id)
         if cached_value is not None:
             return cached_value
 
-        # 2. Secret Manager 조회
+        # 2. Secret Manager 조회 (변환된 이름으로)
         try:
-            value = self._fetch_from_secret_manager(secret_id)
+            value = self._fetch_from_secret_manager(sm_secret_id)
 
-            # 3. 캐시 저장
-            self.cache.set(secret_id, value)
+            # 3. 캐시 저장 (변환된 이름으로)
+            self.cache.set(sm_secret_id, value)
             return value
 
         except Exception as e:
-            logger.error(f"Secret Manager 조회 실패 ({secret_id}): {e}")
+            logger.error(f"Secret Manager 조회 실패 ({sm_secret_id}): {e}")
 
             # Fallback: .env 사용
             if fallback_env_var:
@@ -154,7 +161,12 @@ class SecretManagerClient:
             raise
 
     def _fetch_from_secret_manager(self, secret_id: str) -> str:
-        """Secret Manager에서 실제 값 조회 (API 호출)"""
+        """
+        Secret Manager에서 실제 값 조회 (API 호출)
+        
+        Args:
+            secret_id: Secret Manager의 시크릿 ID (소문자-하이픈 형식, 예: gemini-api-key)
+        """
         if not self.client:
             raise RuntimeError("Secret Manager 클라이언트가 초기화되지 않았습니다")
 

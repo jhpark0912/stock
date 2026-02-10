@@ -71,7 +71,10 @@
       "mcp__plugin_serena_serena__think_about_whether_you_are_done",
       "Bash(python3:*)",
       "Bash(git commit:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "Bash(gcloud:*)",
+      "Bash(export:*)",
+      "Bash(bash:*)"
     ]
   }
 }

@@ -75,10 +75,12 @@ async def startup_event():
     db = next(get_db())
     user_repo = UserRepository(db)
 
-    # Admin 계정이 없으면 생성
+    # Admin 계정 생성 또는 업데이트
     admin_user = user_repo.get_by_username(settings.admin_username)
+    password_hash = AuthService.hash_password(settings.admin_password)
+    
     if not admin_user:
-        password_hash = AuthService.hash_password(settings.admin_password)
+        # 계정이 없으면 생성
         user_repo.create(
             username=settings.admin_username,
             password_hash=password_hash,
@@ -87,7 +89,13 @@ async def startup_event():
         )
         logger.info(f"👤 Admin 계정 생성됨: {settings.admin_username}")
     else:
-        logger.info(f"👤 Admin 계정 존재함: {settings.admin_username}")
+        # 계정이 있으면 비밀번호 업데이트 (Secret Manager 변경 반영)
+        if admin_user.password_hash != password_hash:
+            admin_user.password_hash = password_hash
+            db.commit()
+            logger.info(f"🔑 Admin 비밀번호 업데이트됨: {settings.admin_username}")
+        else:
+            logger.info(f"👤 Admin 계정 존재함: {settings.admin_username}")
 
     db.close()
 
