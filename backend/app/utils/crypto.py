@@ -23,7 +23,19 @@ class CryptoService:
     def _get_fernet(cls) -> Fernet:
         """Fernet 인스턴스 반환 (싱글톤)"""
         if cls._fernet is None:
-            encryption_key = os.getenv("ENCRYPTION_KEY")
+            # 🔐 Secret Manager 우선, 실패 시 환경변수 폴백
+            encryption_key = None
+            
+            try:
+                from app.utils.secret_manager import get_secret
+                encryption_key = get_secret("encryption-key", "ENCRYPTION_KEY")
+                logger.info("✅ ENCRYPTION_KEY를 Secret Manager에서 로드")
+            except Exception as e:
+                logger.warning(f"⚠️  Secret Manager에서 encryption-key 로드 실패: {e}")
+                encryption_key = os.getenv("ENCRYPTION_KEY")
+                if encryption_key:
+                    logger.info("✅ ENCRYPTION_KEY를 환경변수에서 로드 (폴백)")
+            
             if not encryption_key:
                 raise ValueError(
                     "ENCRYPTION_KEY 환경변수가 설정되지 않았습니다. "
