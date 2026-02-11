@@ -1,6 +1,6 @@
 # 프로젝트 구조
 
-> 최종 업데이트: 2026-02-10 (GCP Cloud 환경 Secret Manager 설정 개선)
+> 최종 업데이트: 2026-02-11 (Docker + SSL 프로덕션 환경 설정)
 
 ## 전체 아키텍처
 
@@ -8,6 +8,7 @@
 stock/
 ├── frontend/          # React + TypeScript + Vite
 ├── backend/           # FastAPI + Python
+├── nginx/             # Nginx Reverse Proxy + SSL 설정
 ├── docs/              # 문서
 ├── data/              # 데이터 파일
 └── .claude/           # Claude 설정 및 문서
@@ -46,6 +47,13 @@ stock/
 - **기타**:
   - pandas, numpy (데이터 처리)
   - pydantic (데이터 검증)
+
+### 배포 및 SSL
+- **컨테이너**: Docker + Docker Compose
+- **리버스 프록시**: Nginx Alpine
+- **SSL 인증서**: Let's Encrypt (Certbot)
+- **자동 갱신**: Certbot 컨테이너 (12시간마다 체크)
+- **환경 분리**: 개발(dev), 프로덕션(ssl)
 
 ## 디렉토리 구조
 
@@ -186,6 +194,86 @@ backend/
 - `services/stock_service.py` - yahooquery를 사용한 주식 데이터 조회
 - `services/technical_indicators.py` - RSI, MACD 등 기술적 지표 계산
 
+### Nginx
+
+```
+nginx/
+├── nginx.conf               # Nginx 설정 (리버스 프록시, SSL)
+├── certbot-init.sh          # SSL 인증서 초기 발급 스크립트
+├── README.md                # SSL 설정 가이드
+└── certs/                   # 자체 서명 인증서 (개발용, Git 제외)
+    ├── server.crt
+    └── server.key
+```
+
+**주요 기능**:
+- **리버스 프록시**: Frontend(80) + Backend(8000) → 단일 도메인 통합
+- **SSL Termination**: HTTPS 복호화를 Nginx에서 처리, 내부는 HTTP 통신
+- **HTTP → HTTPS 리디렉션**: 모든 HTTP 요청을 HTTPS로 자동 리디렉션
+- **Let's Encrypt 통합**: ACME Challenge 처리 (/.well-known/acme-challenge/)
+- **보안 헤더**: HSTS, X-Frame-Options, X-Content-Type-Options 등
+- **Rate Limiting**: API 10req/s, 일반 30req/s로 DDoS 방지
+- **Gzip 압축**: 텍스트 기반 리소스 압축으로 대역폭 절약
+
+### Docker Compose
+
+프로젝트는 3가지 Docker Compose 파일로 환경을 분리합니다:
+
+```
+docker-compose.yml          # 기본 프로덕션 설정
+docker-compose.dev.yml      # 개발 환경 override (Hot Reload)
+docker-compose.ssl.yml      # SSL 환경 override (Nginx + Certbot)
+```
+
+#### 개발 환경 실행
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+```
+
+**특징**:
+- Hot Reload 활성화 (소스 코드 마운트)
+- Frontend: Vite Dev Server (5173 포트)
+- Backend: Uvicorn --reload (8000 포트)
+- 환경: `ENVIRONMENT=development`
+
+#### 프로덕션 환경 실행
+
+```bash
+docker-compose up -d
+```
+
+**특징**:
+- 프로덕션 빌드 (최적화된 정적 파일)
+- Frontend: Nginx 정적 서빙 (5348 포트)
+- Backend: Uvicorn (8000 포트)
+- 환경: `ENVIRONMENT=production`
+- 헬스체크 포함
+
+#### SSL 프로덕션 환경 실행
+
+```bash
+docker-compose -f docker-compose.yml -f docker-compose.ssl.yml up -d
+```
+
+**특징**:
+- Nginx 리버스 프록시 (80, 443 포트)
+- Let's Encrypt SSL 인증서 자동 발급/갱신
+- Backend/Frontend 외부 노출 포트 제거 (Nginx 통해서만 접근)
+- Certbot 자동 갱신 컨테이너 (12시간마다 체크)
+- HTTPS Only (HTTP는 HTTPS로 리디렉션)
+
+**컨테이너 목록**:
+- `stock-backend`: FastAPI (8000, 내부만)
+- `stock-frontend`: Nginx 정적 파일 (80, 내부만)
+- `stock-nginx`: 리버스 프록시 (80, 443, 외부 노출)
+- `stock-certbot`: SSL 인증서 관리
+
+**Docker 볼륨**:
+- `certbot-etc`: Let's Encrypt 인증서
+- `certbot-var`: Certbot 데이터
+- `certbot-www`: ACME Challenge 응답
+
 ## 데이터 흐름
 
 ### 주식 데이터 조회 플로우
@@ -320,6 +408,25 @@ GCP_PROJECT_ID=your-gcp-project-id
 # GCP Cloud 환경에서는 자격증명 파일 불필요 (Workload Identity/Metadata Server 자동 사용)
 ```
 
+### SSL 프로덕션 환경 (.env)
+
+`.env.ssl.example` 참조:
+
+```bash
+# 도메인 설정 (필수)
+DOMAIN=example.com
+SSL_EMAIL=admin@example.com
+
+# 서버 설정
+SERVER_IP=0.0.0.0
+ENVIRONMENT=production
+
+# 무료 도메인 발급:
+#   - Freenom: https://www.freenom.com (.tk, .ml, .ga, .cf, .gq)
+#   - DuckDNS: https://www.duckdns.org (서브도메인)
+#   - No-IP: https://www.noip.com (Dynamic DNS)
+```
+
 **보안 계층 구분** (2026-02-09 추가):
 - **🔴 높은 보안** (Secret Manager 권장): GEMINI_API_KEY, KIS_APP_KEY, KIS_APP_SECRET, JWT_SECRET_KEY, ENCRYPTION_KEY, ADMIN_PASSWORD
 - **🟢 낮은 보안** (.env 유지): FRED_API_KEY, ECOS_API_KEY (무료 API)
@@ -434,6 +541,89 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - **프로젝트 가이드**: `CLAUDE.md`
 
 ## 최근 변경 이력
+
+### 2026-02-11: Docker + SSL 프로덕션 환경 설정
+
+1. **Docker Compose SSL Override 추가**
+   - `docker-compose.ssl.yml` 신규 생성
+     - Nginx 리버스 프록시 컨테이너 추가
+     - Certbot 자동 갱신 컨테이너 추가
+     - Backend/Frontend 외부 포트 제거 (Nginx 통해서만 접근)
+     - Docker 볼륨으로 SSL 인증서 관리
+
+2. **Nginx 설정 파일 생성**
+   - `nginx/nginx.conf` 신규 생성
+     - HTTP → HTTPS 리디렉션
+     - Let's Encrypt ACME Challenge 처리
+     - SSL Termination (TLS 1.2/1.3)
+     - 보안 헤더 (HSTS, X-Frame-Options 등)
+     - Rate Limiting (API 10req/s, 일반 30req/s)
+     - Gzip 압축 활성화
+     - Backend(/api), Frontend(/) 프록시 설정
+
+3. **SSL 인증서 자동 발급 스크립트**
+   - `nginx/certbot-init.sh` 신규 생성
+     - DNS 확인 → Nginx 시작 → 인증서 발급 → 설정 업데이트 → 재시작
+     - 사용자 친화적 컬러 출력 및 에러 처리
+     - nginx.conf에서 SSL 경로 자동 주석 해제
+
+4. **환경 변수 템플릿**
+   - `.env.ssl.example` 신규 생성
+     - DOMAIN, SSL_EMAIL 설정 (Let's Encrypt 필수)
+     - 무료 도메인 발급 사이트 안내 (Freenom, DuckDNS, No-IP)
+     - API 키 보안 계층 구분 (Secret Manager vs .env)
+
+5. **문서화**
+   - `nginx/README.md` 신규 생성 (25페이지)
+     - 사전 준비, 도메인 설정, SSL 인증서 발급 가이드
+     - 문제 해결 가이드, 인증서 갱신 방법
+   - `SETUP_SSL.md` 신규 생성 (40페이지)
+     - 클라우드 서버 준비 (Oracle Cloud, GCP, AWS 등)
+     - 무료 도메인 발급 (Freenom, DuckDNS, No-IP)
+     - DNS A 레코드 설정
+     - 프로젝트 배포 및 SSL 인증서 발급
+     - 서비스 실행 및 모니터링
+     - 문제 해결 및 유용한 명령어
+
+6. **.gitignore 업데이트**
+   - SSL 인증서 파일 제외 (*.crt, *.key, *.pem, nginx/certs/)
+   - Nginx 백업 파일 제외 (*.backup, *.bak)
+
+7. **프로젝트 구조 문서 업데이트**
+   - `.claude/PROJECT_STRUCTURE.md` 수정
+     - nginx 디렉토리 추가
+     - "배포 및 SSL" 기술 스택 추가
+     - Docker Compose 환경 분리 설명 (dev, prod, ssl)
+     - SSL 환경 변수 섹션 추가
+
+8. **아키텍처 특징**
+   - **환경 분리**:
+     - 개발: docker-compose.dev.yml (Hot Reload)
+     - 프로덕션: docker-compose.yml (최적화 빌드)
+     - SSL 프로덕션: docker-compose.ssl.yml (Nginx + Let's Encrypt)
+   - **자동 SSL 갱신**:
+     - Certbot 컨테이너가 12시간마다 인증서 만료 체크
+     - 만료 30일 이내 시 자동 갱신
+     - Nginx 자동 재로드
+   - **보안 강화**:
+     - TLS 1.2/1.3만 허용
+     - 안전한 암호화 스위트 (Mozilla Intermediate 기준)
+     - HSTS, OCSP Stapling 지원
+   - **클라우드 친화적**:
+     - 환경 변수로 도메인 설정 (하드코딩 없음)
+     - Docker 볼륨으로 인증서 영속성 보장
+     - GCP, AWS, Oracle Cloud 등 다양한 클라우드 지원
+
+9. **무료 도메인 옵션**
+   - **Freenom**: .tk, .ml, .ga, .cf, .gq (12개월 무료)
+   - **DuckDNS**: 서브도메인 무료 (예: mystock.duckdns.org)
+   - **No-IP**: Dynamic DNS 무료
+
+10. **비용 분석**
+    - SSL 인증서: $0 (Let's Encrypt 무료)
+    - 도메인: $0 (무료 도메인 사용 시)
+    - 클라우드: $0 (Oracle Cloud Always Free 또는 크레딧 사용)
+    - **총 비용: $0 (완전 무료 운영 가능)** ✅
 
 ### 2026-02-10: GCP Cloud 환경 Secret Manager 설정 개선
 

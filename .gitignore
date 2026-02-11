@@ -455,3 +455,16 @@ docker-compose.override.yml
 
 # Claude Code local settings (contains sensitive auto-approval history)
 .claude/settings.local.json
+
+# SSL/TLS Certificates (보안 - 절대 커밋 금지!)
+nginx/certs/
+*.crt
+*.key
+*.pem
+*.p12
+*.pfx
+*.cer
+
+# Nginx 백업 파일
+nginx/*.backup
+nginx/*.bak
