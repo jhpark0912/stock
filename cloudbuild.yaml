@@ -7,12 +7,15 @@ steps:
   # ========================================
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-frontend'
+    env:
+      - 'DOCKER_BUILDKIT=1'  # BuildKit 활성화 (--mount 옵션 지원)
     args:
       - 'build'
       - '-t'
       - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/stock-frontend:latest'
-      - '--cache-from'
-      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/stock-frontend:latest'
+      # 최초 빌드 시 캐시 옵션 제거 (이미지 생성 후 주석 해제)
+      # - '--cache-from'
+      # - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/stock-frontend:latest'
       - '--build-arg'
       - 'BUILDKIT_INLINE_CACHE=1'
       - '-f'
@@ -25,12 +28,15 @@ steps:
   # ========================================
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-backend'
+    env:
+      - 'DOCKER_BUILDKIT=1'  # BuildKit 활성화 (--mount 옵션 지원)
     args:
       - 'build'
       - '-t'
       - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/stock-backend:latest'
-      - '--cache-from'
-      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/stock-backend:latest'
+      # 최초 빌드 시 캐시 옵션 제거 (이미지 생성 후 주석 해제)
+      # - '--cache-from'
+      # - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/stock-backend:latest'
       - '--build-arg'
       - 'BUILDKIT_INLINE_CACHE=1'
       - '-f'
