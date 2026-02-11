@@ -76,8 +76,8 @@ nslookup example.com
 프로젝트 루트의 `.env` 파일에 도메인 설정:
 
 ```bash
-# .env.ssl.example을 복사
-cp .env.ssl.example .env
+# .env.production.example을 복사
+cp .env.production.example .env
 
 # 도메인과 이메일 수정
 DOMAIN=example.com

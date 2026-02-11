@@ -180,7 +180,7 @@ scp -r /path/to/stock ubuntu@YOUR_SERVER_IP:/home/ubuntu/
 
 ```bash
 # .env 파일 생성
-cp .env.ssl.example .env
+cp .env.production.example .env
 
 # 편집 (nano/vi 사용)
 nano .env
