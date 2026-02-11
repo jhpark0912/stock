@@ -58,12 +58,12 @@ echo ""
 
 # 기존 컨테이너 중지
 echo -e "${YELLOW}🛑 기존 컨테이너 중지 중...${NC}"
-docker compose -f docker-compose.yml -f docker-compose.ssl.yml down || true
+docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.ssl.yml down || true
 echo ""
 
 # Nginx + Certbot 시작 (SSL 인증서 없이)
 echo -e "${YELLOW}🚀 Nginx 시작 중 (HTTP Only)...${NC}"
-docker compose -f docker-compose.yml -f docker-compose.ssl.yml up -d nginx
+docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.ssl.yml up -d nginx
 sleep 5
 echo ""
 
@@ -72,7 +72,7 @@ echo -e "${YELLOW}🔐 Let's Encrypt 인증서 발급 중...${NC}"
 echo -e "${YELLOW}(최초 발급 시 1-2분 소요될 수 있습니다)${NC}"
 echo ""
 
-docker compose -f docker-compose.yml -f docker-compose.ssl.yml run --rm certbot certonly \
+docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.ssl.yml run --rm certbot certonly \
     --webroot \
     --webroot-path=/var/www/certbot \
     --email ${SSL_EMAIL} \
@@ -113,8 +113,8 @@ echo ""
 
 # 전체 스택 재시작
 echo -e "${YELLOW}🔄 전체 스택 재시작 중...${NC}"
-docker compose -f docker-compose.yml -f docker-compose.ssl.yml down
-docker compose -f docker-compose.yml -f docker-compose.ssl.yml up -d
+docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.ssl.yml down
+docker compose -f docker-compose.yml -f docker-compose.override.yml -f docker-compose.ssl.yml up -d
 
 echo ""
 echo -e "${GREEN}========================================${NC}"
