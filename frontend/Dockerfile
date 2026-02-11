@@ -17,6 +17,12 @@ RUN --mount=type=cache,target=/root/.npm \
 # 소스 코드 복사
 COPY . .
 
+# 디버깅: 파일 구조 확인
+RUN echo "=== Checking directory structure ===" && \
+    ls -la src/lib/ && \
+    echo "=== vite.config.ts ===" && \
+    cat vite.config.ts
+
 # 환경 변수 설정 (빌드 시점)
 ARG VITE_API_URL=http://localhost:8000
 ENV VITE_API_URL=$VITE_API_URL
