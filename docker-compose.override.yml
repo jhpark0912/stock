@@ -1,12 +1,9 @@
-# GCP VM 환경용 Docker Compose Override
-# 이 파일은 docker compose up 시 자동으로 적용됨
-# Artifact Registry 이미지 + SSL 설정 포함
+# SSL/HTTPS 프로덕션 환경 설정
+# 이 파일은 docker compose up 시 자동으로 적용됨 (override 패턴)
 
 services:
   # Backend API
   backend:
-    # Artifact Registry 이미지 사용
-    image: ${REGION:-us-central1}-docker.pkg.dev/${GCP_PROJECT_ID}/stock-app/stock-backend:latest
     environment:
       # HTTPS Origin 추가 (SSL 사용 시)
       - ALLOWED_ORIGINS=https://${DOMAIN:-localhost},https://www.${DOMAIN:-localhost},http://${DOMAIN:-localhost},http://localhost,http://localhost:80,http://frontend,http://${SERVER_IP:-*}
@@ -17,8 +14,6 @@ services:
 
   # Frontend Web
   frontend:
-    # Artifact Registry 이미지 사용
-    image: ${REGION:-us-central1}-docker.pkg.dev/${GCP_PROJECT_ID}/stock-app/stock-frontend:latest
     # SSL 사용 시 외부 노출 제거 (Nginx를 통해서만 접근)
     ports: []
     expose:

@@ -1,6 +1,6 @@
 # Docker Compose 구조 가이드
 
-> GCP VM 환경에서의 Docker Compose 파일 구조 및 사용법
+> Docker Compose 파일 구조 및 Override 패턴 사용법
 
 ---
 
@@ -9,7 +9,7 @@
 ```
 프로젝트 루트:
 ├── docker-compose.yml          (기본 설정)
-├── docker-compose.override.yml (GCP VM - 자동 적용) ✅
+├── docker-compose.override.yml (프로덕션 SSL - 자동 적용) ✅
 └── docker-compose.dev.yml      (로컬 개발 - Hot Reload)
 ```
 
@@ -34,15 +34,11 @@
 
 ---
 
-### 2. `docker-compose.override.yml` ✅ (GCP VM 자동 적용)
+### 2. `docker-compose.override.yml` ✅ (프로덕션 자동 적용)
 
-**역할**: GCP VM 프로덕션 환경 (Artifact Registry + SSL)
+**역할**: 프로덕션 환경 (SSL/HTTPS)
 
 **내용**:
-- ✅ Artifact Registry 이미지 오버라이드
-  ```yaml
-  image: us-central1-docker.pkg.dev/.../stock-backend:latest
-  ```
 - ✅ SSL/HTTPS 설정
   - Nginx 리버스 프록시 추가
   - Certbot 자동 인증서 발급/갱신
@@ -51,12 +47,12 @@
   - Backend/Frontend 외부 포트 제거
   - Nginx를 통해서만 접근 (80, 443)
 
-**사용**: GCP VM에서 `docker compose up -d` 실행 시 **자동 적용**
+**사용**: `docker compose up -d` 실행 시 **자동 적용**
 
 **특징**:
 - Docker Compose가 자동으로 `override.yml`을 읽어서 적용
 - 별도 `-f` 옵션 불필요
-- 기본 설정을 **오버라이드**하여 GCP VM 환경으로 변환
+- 기본 설정을 **오버라이드**하여 SSL/HTTPS 환경으로 변환
 
 ---
 
@@ -86,15 +82,9 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 ## 🚀 사용 방법
 
-### GCP VM 프로덕션 배포 (권장) ✅
+### 프로덕션 배포 (SSL 포함) ✅
 
 **명령어**:
-```bash
-./deploy.sh
-```
-
-또는
-
 ```bash
 docker compose up -d
 ```
@@ -104,7 +94,7 @@ docker compose up -d
 2. `docker-compose.override.yml` (자동 오버라이드)
 
 **결과**:
-- ✅ Artifact Registry 이미지 사용
+- ✅ 로컬 빌드 사용
 - ✅ SSL/HTTPS 활성화 (Nginx + Certbot)
 - ✅ HTTP → HTTPS 리디렉션
 - ✅ 포트: 80 (HTTP), 443 (HTTPS)
@@ -134,7 +124,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 
 ## 📊 Override 동작 방식
 
-### GCP VM에서 자동 적용
+### 프로덕션 환경 자동 적용
 
 ```
 docker compose up -d
@@ -144,14 +134,14 @@ docker compose up -d
     - build: ./backend, ./frontend
     ↓
 2. docker-compose.override.yml 자동 병합 (오버라이드)
-    - services: backend (image 오버라이드)
-    - services: frontend (image 오버라이드)
+    - services: backend (ports 오버라이드)
+    - services: frontend (ports 오버라이드)
     - services: nginx (추가)
     - services: certbot (추가)
     ↓
 최종 결과:
-    - backend: Artifact Registry 이미지 사용
-    - frontend: Artifact Registry 이미지 사용
+    - backend: 로컬 빌드 사용, Nginx 뒤에 숨김
+    - frontend: 로컬 빌드 사용, Nginx 뒤에 숨김
     - nginx: SSL 리버스 프록시
     - certbot: 자동 인증서 갱신
 ```
@@ -173,21 +163,16 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 ### 필수 (.env)
 
 ```bash
-# GCP 설정 (override.yml 사용 시 필수)
-GCP_PROJECT_ID=your-project-id
-REGION=us-central1
-REPOSITORY=stock-app
-
 # 서버 설정
 SERVER_IP=YOUR-VM-EXTERNAL-IP
 ENVIRONMENT=production
 
-# SSL 설정 (선택 - SSL 사용 시)
+# SSL 설정 (override.yml 사용 시 필수)
 DOMAIN=example.com
 SSL_EMAIL=admin@example.com
 
-# Secret Manager
-USE_SECRET_MANAGER=true
+# API 키
+GEMINI_API_KEY=your-api-key
 ```
 
 ---
@@ -235,7 +220,7 @@ docker compose ps
 
 ## 📋 시나리오별 가이드
 
-### 1. GCP VM 최초 배포 (SSL 포함)
+### 1. 프로덕션 최초 배포 (SSL 포함)
 
 ```bash
 # 1. 프로젝트 클론
@@ -244,18 +229,14 @@ cd stock
 
 # 2. 환경 변수 설정
 cp .env.production.example .env
-nano .env  # GCP_PROJECT_ID, REGION, DOMAIN 입력
+nano .env  # DOMAIN, SSL_EMAIL 등 입력
 
-# 3. Docker 인증
-gcloud auth configure-docker us-central1-docker.pkg.dev
-
-# 4. SSL 인증서 발급 (최초 1회)
+# 3. SSL 인증서 발급 (최초 1회)
 chmod +x nginx/certbot-init.sh
 ./nginx/certbot-init.sh
 
-# 5. 배포
-chmod +x deploy.sh
-./deploy.sh
+# 4. 배포
+docker compose up -d --build
 ```
 
 **적용**: `docker-compose.yml` + `docker-compose.override.yml` (자동)
@@ -294,7 +275,7 @@ docker compose -f docker-compose.yml up -d
 
 | 시나리오 | 명령어 | 적용 파일 | SSL | 이미지 |
 |---------|--------|----------|-----|--------|
-| **GCP VM** | `./deploy.sh` | yml + override.yml | ✅ | Artifact Registry |
+| **프로덕션** | `docker compose up -d` | yml + override.yml | ✅ | 로컬 빌드 |
 | **로컬 개발** | `-f yml -f dev.yml` | yml + dev.yml | ❌ | 로컬 빌드 |
 | **기본 테스트** | `-f yml` | yml만 | ❌ | 로컬 빌드 |
 
@@ -308,23 +289,23 @@ docker compose -f docker-compose.yml up -d
 
 - ✅ `docker compose up` 실행 시 **자동 병합**
 - ✅ 기본 설정을 **덮어씀** (override)
-- ✅ GCP VM 환경을 위한 **표준 설정**
+- ✅ 프로덕션 환경을 위한 **표준 설정** (SSL/HTTPS)
 - ✅ `-f` 옵션으로 다른 파일 지정 시 **무시됨**
 
 ### 왜 3개 파일만?
 
 1. **`docker-compose.yml`** - 공통 기본 설정
-2. **`docker-compose.override.yml`** - GCP VM 자동 적용 (SSL + Artifact Registry)
+2. **`docker-compose.override.yml`** - 프로덕션 자동 적용 (SSL/HTTPS)
 3. **`docker-compose.dev.yml`** - 로컬 개발 환경
 
 **삭제된 파일**:
 - ❌ `docker-compose.prod.yml` - override.yml로 대체
 - ❌ `docker-compose.ssl.yml` - override.yml에 통합
 
-**이유**: 명확성과 단순성. override.yml이 GCP VM의 모든 설정을 담당.
+**이유**: 명확성과 단순성. override.yml이 프로덕션 SSL 설정을 담당.
 
 ---
 
-**최종 업데이트**: 2026-02-11
-**권장**: `./deploy.sh` (override.yml 자동 적용)
+**최종 업데이트**: 2026-02-12
+**권장**: `docker compose up -d` (override.yml 자동 적용)
 **구조**: 3개 파일만 유지 (기본 + override + dev)

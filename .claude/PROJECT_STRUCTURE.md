@@ -1,6 +1,6 @@
 # 프로젝트 구조
 
-> 최종 업데이트: 2026-02-11 (GCP Cloud Build 통합)
+> 최종 업데이트: 2026-02-12 (GCP Cloud Build 롤백)
 
 ## 전체 아키텍처
 
@@ -221,7 +221,7 @@ nginx/
 
 ```
 docker-compose.yml          # 기본 설정
-docker-compose.override.yml # GCP VM 환경 (Artifact Registry + SSL) - 자동 적용
+docker-compose.override.yml # 프로덕션 환경 (SSL) - 자동 적용
 docker-compose.dev.yml      # 로컬 개발 환경 (Hot Reload)
 ```
 
@@ -237,15 +237,15 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
 - Backend: Uvicorn --reload (8000 포트)
 - 환경: `ENVIRONMENT=development`
 
-#### GCP VM 프로덕션 환경 실행
+#### 프로덕션 환경 실행
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
 
 **특징**:
 - `docker-compose.override.yml` 자동 적용 (명시적 지정 불필요)
-- Artifact Registry 이미지 사용 (로컬 빌드 없음)
+- 로컬 빌드 사용
 - Nginx 리버스 프록시 (80, 443 포트)
 - Let's Encrypt SSL 인증서 자동 발급/갱신
 - Backend/Frontend 외부 노출 포트 제거 (Nginx 통해서만 접근)
@@ -531,89 +531,11 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ## 최근 변경 이력
 
-### 2026-02-11: GCP Cloud Build 통합
-
-1. **Cloud Build 설정 파일**
-   - `cloudbuild.yaml` 신규 생성
-     - Frontend + Backend 병렬 빌드 (E2_HIGHCPU_8 머신)
-     - Artifact Registry 이미지 푸시 (latest, $SHORT_SHA 태그)
-     - 빌드 캐시 활용 (BuildKit Inline Cache)
-     - 빌드 타임아웃 20분, 디스크 50GB
-   - 빌드 시간: 최초 3-5분, 이후 1-2분 (캐시 활용)
-
-2. **GCP 프로덕션 Docker Compose**
-   - `docker-compose.override.yml` 신규 생성 (자동 적용)
-     - Artifact Registry 이미지 사용 (빌드 제거)
-     - 환경 변수로 이미지 경로 지정 (GCP_PROJECT_ID, REGION, REPOSITORY)
-     - Nginx 리버스 프록시 + Let's Encrypt SSL 통합
-     - Certbot 자동 갱신 컨테이너 추가
-
-3. **배포 스크립트**
-   - `deploy.sh` 신규 생성 (Linux/macOS)
-     - 환경 변수 로드 (.env.gcp)
-     - Docker 인증 확인
-     - 이미지 pull
-     - 컨테이너 재시작
-     - 헬스체크 (Backend 최대 30초 대기)
-     - 컬러 출력 및 에러 처리
-
-4. **환경 변수 템플릿**
-   - `.env.gcp.example` 신규 생성
-     - GCP_PROJECT_ID, REGION, REPOSITORY
-     - SERVER_IP, ENVIRONMENT
-     - USE_SECRET_MANAGER=true (기본값)
-     - FRED_API_KEY, ECOS_API_KEY (선택)
-
-5. **문서화**
-   - `docs/GCP_CLOUD_BUILD_SETUP.md` 신규 생성 (75페이지)
-     - 아키텍처 다이어그램
-     - GCP 설정 (API 활성화, Artifact Registry, 서비스 계정)
-     - 로컬 설정 (gcloud CLI, 인증)
-     - 빌드 및 배포 (수동, 자동)
-     - GitHub 연동 (트리거 설정)
-     - 문제 해결 (빌드/배포 실패)
-     - 성능 비교 (VM 빌드 vs Cloud Build)
-     - 유용한 명령어
-   - `QUICKSTART_GCP_BUILD.md` 신규 생성 (5분 빠른 시작)
-     - GCP 초기 설정 (2분)
-     - 빌드 실행 (1-2분)
-     - VM 배포 (1분)
-     - 자동화 (GitHub 연동)
-     - 문제 해결
-   - `README.md` 수정
-     - 설치 가이드 테이블에 "GCP Cloud Build" 항목 추가
-
-6. **.gitignore 업데이트**
-   - `.env.gcp` 제외 (GCP 환경 변수)
-
-7. **성능 개선 효과**
-   - **빌드 시간**: 15-20분 → 1-2분 (10배 향상)
-   - **VM CPU 사용**: 100% (먹통) → 0% (VM 무관)
-   - **VM 메모리 사용**: 1GB+ → 0 (VM 무관)
-   - **배포 속도**: 즉시 (이미지 pull만)
-   - **비용**: $0 (무료 tier)
-
-8. **무료 tier 한도**
-   - Cloud Build: 하루 120분 빌드 시간
-   - Artifact Registry: 0.5GB 스토리지
-   - 예상 사용량: 한 달 30회 빌드 → 30-60분
-   - **월 비용: $0** ✅
-
-9. **워크플로우**
-   ```
-   로컬/GitHub → Cloud Build (빌드) → Artifact Registry (이미지 저장) → GCP VM (배포)
-   ```
-
-10. **자동화 옵션**
-    - **수동**: `gcloud builds submit` 명령어
-    - **GitHub 트리거**: Push 시 자동 빌드
-    - **VM 배포**: `./deploy.sh` 스크립트
-
 ### 2026-02-11: Docker Compose 구조 통합 (override.yml 패턴)
 
 1. **Docker Compose 파일 통합**
    - `docker-compose.override.yml` 신규 생성
-     - Artifact Registry 이미지 + SSL 설정 통합
+     - SSL 설정
      - Nginx 리버스 프록시 컨테이너 추가
      - Certbot 자동 갱신 컨테이너 추가
      - Backend/Frontend 외부 포트 제거 (Nginx 통해서만 접근)
@@ -638,36 +560,29 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
      - 사용자 친화적 컬러 출력 및 에러 처리
      - nginx.conf에서 SSL 경로 자동 주석 해제
 
-4. **배포 스크립트 수정**
-   - `deploy.sh` 수정
-     - `docker-compose` → `docker compose` 명령어 변경
-     - `-f docker-compose.prod.yml` 옵션 제거 (override.yml 자동 적용)
-     - Nginx 헬스체크 추가
-
-5. **환경 변수 템플릿**
+4. **환경 변수 템플릿**
    - `.env.production.example` 신규 생성
      - DOMAIN, SSL_EMAIL 설정 (Let's Encrypt 필수)
-     - GCP_PROJECT_ID, REGION, REPOSITORY 추가
      - 무료 도메인 발급 사이트 안내 (Freenom, DuckDNS, No-IP)
      - API 키 보안 계층 구분 (Secret Manager vs .env)
 
-6. **문서화**
+5. **문서화**
    - `nginx/README.md` 신규 생성 (25페이지)
    - `SETUP_SSL.md` 신규 생성 (40페이지)
    - `DOCKER_STRUCTURE.md` 신규 생성 (35페이지)
      - 3개 파일 구조 설명 (yml, override.yml, dev.yml)
      - override.yml 자동 적용 메커니즘 설명
-     - 시나리오별 사용법 (GCP VM, 로컬 개발, 기본 테스트)
+     - 시나리오별 사용법 (프로덕션, 로컬 개발, 기본 테스트)
 
-7. **.gitignore 업데이트**
+6. **.gitignore 업데이트**
    - SSL 인증서 파일 제외 (*.crt, *.key, *.pem, nginx/certs/)
    - Nginx 백업 파일 제외 (*.backup, *.bak)
    - `docker-compose.override.yml` 추적 (이전 제외 규칙 제거)
 
-8. **아키텍처 특징**
+7. **아키텍처 특징**
    - **환경 분리**:
      - 로컬 개발: docker-compose.dev.yml (명시적 지정 필요, Hot Reload)
-     - GCP VM: docker-compose.override.yml (자동 적용, Artifact Registry + SSL)
+     - 프로덕션: docker-compose.override.yml (자동 적용, SSL)
    - **자동 SSL 갱신**:
      - Certbot 컨테이너가 12시간마다 인증서 만료 체크
      - 만료 30일 이내 시 자동 갱신
@@ -681,12 +596,12 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
      - Docker 볼륨으로 인증서 영속성 보장
      - GCP, AWS, Oracle Cloud 등 다양한 클라우드 지원
 
-9. **무료 도메인 옵션**
+8. **무료 도메인 옵션**
    - **Freenom**: .tk, .ml, .ga, .cf, .gq (12개월 무료)
    - **DuckDNS**: 서브도메인 무료 (예: mystock.duckdns.org)
    - **No-IP**: Dynamic DNS 무료
 
-10. **비용 분석**
+9. **비용 분석**
     - SSL 인증서: $0 (Let's Encrypt 무료)
     - 도메인: $0 (무료 도메인 사용 시)
     - 클라우드: $0 (Oracle Cloud Always Free 또는 크레딧 사용)

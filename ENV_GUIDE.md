@@ -45,45 +45,7 @@ nano .env
 
 ---
 
-### 2️⃣ GCP Cloud Build 배포
-
-**파일**: `.env.production.example` → `.env`
-
-```bash
-# VM에서 실행
-cd /path/to/project
-
-# 1. 템플릿 복사
-cp .env.production.example .env
-
-# 2. GCP 설정 입력
-nano .env
-```
-
-**필수 설정**:
-```bash
-# GCP 프로젝트
-GCP_PROJECT_ID=your-gcp-project-id
-REGION=us-central1
-REPOSITORY=stock-app
-
-# 서버
-SERVER_IP=YOUR-VM-EXTERNAL-IP
-ENVIRONMENT=production
-
-# Secret Manager
-USE_SECRET_MANAGER=true  # 권장
-```
-
-**배포 명령어**:
-```bash
-# 이미지 pull + 배포
-./deploy.sh
-```
-
----
-
-### 3️⃣ SSL/HTTPS 프로덕션
+### 2️⃣ 프로덕션 배포 (SSL)
 
 **파일**: `.env.production.example` → `.env`
 
@@ -111,13 +73,13 @@ USE_SECRET_MANAGER=true  # 권장
 
 **배포 명령어**:
 ```bash
-# SSL 환경으로 실행
-docker-compose -f docker-compose.yml -f docker-compose.ssl.yml up -d
+# override.yml이 자동 적용되어 SSL 환경으로 실행됨
+docker compose up -d --build
 ```
 
 ---
 
-### 4️⃣ 일반 프로덕션 (SSL 없음)
+### 3️⃣ 일반 프로덕션 (SSL 없음)
 
 **파일**: `.env.production.example` → `.env`
 
@@ -143,8 +105,8 @@ GEMINI_API_KEY=your_key_here
 
 **배포 명령어**:
 ```bash
-# 기본 프로덕션 환경
-docker-compose up -d
+# override.yml을 무시하고 기본 환경만 사용
+docker compose -f docker-compose.yml up -d --build
 ```
 
 ---
@@ -176,15 +138,14 @@ USE_SECRET_MANAGER=true
 
 ## 📊 환경별 비교
 
-| 항목 | 개발 | 프로덕션 (GCP) | 프로덕션 (SSL) |
-|------|------|---------------|---------------|
+| 항목 | 개발 | 프로덕션 (SSL) | 프로덕션 (일반) |
+|------|------|---------------|----------------|
 | **파일** | `.env.example` | `.env.production.example` | `.env.production.example` |
 | **환경** | `development` | `production` | `production` |
 | **로그** | `DEBUG` | `INFO` | `INFO` |
 | **Secret Manager** | ❌ | ✅ 권장 | ✅ 권장 |
-| **GCP 설정** | ❌ | ✅ 필수 | ❌ |
-| **SSL 설정** | ❌ | ❌ | ✅ 필수 |
-| **CORS** | `localhost:5173` | `VM IP` | `DOMAIN` |
+| **SSL 설정** | ❌ | ✅ 필수 | ❌ |
+| **CORS** | `localhost:5173` | `DOMAIN` | `VM IP` |
 
 ---
 
@@ -199,17 +160,7 @@ USE_SECRET_MANAGER=true
 - [ ] `ENVIRONMENT=development` 확인
 - [ ] `USE_SECRET_MANAGER=false` 확인
 
-### GCP Cloud Build
-
-- [ ] `.env.production.example`을 `.env`로 복사
-- [ ] `GCP_PROJECT_ID` 입력
-- [ ] `REGION`, `REPOSITORY` 입력
-- [ ] `SERVER_IP` 입력 (VM 외부 IP)
-- [ ] `USE_SECRET_MANAGER=true` 설정
-- [ ] Secret Manager에 키 등록 완료
-- [ ] `./deploy.sh` 실행
-
-### SSL/HTTPS
+### 프로덕션 (SSL)
 
 - [ ] `.env.production.example`을 `.env`로 복사
 - [ ] `DOMAIN` 입력 (실제 도메인)
@@ -217,7 +168,7 @@ USE_SECRET_MANAGER=true
 - [ ] `SERVER_IP=0.0.0.0` 확인
 - [ ] `USE_SECRET_MANAGER=true` 설정
 - [ ] `nginx/certbot-init.sh` 실행
-- [ ] `docker-compose.ssl.yml` 사용
+- [ ] `docker compose up -d --build` 실행
 
 ---
 
@@ -258,11 +209,11 @@ gcloud secrets versions access latest --secret="gemini-api-key"
 ## 📚 참고 문서
 
 - **개발 환경**: [docs/QUICK_START.md](docs/QUICK_START.md)
-- **GCP Cloud Build**: [QUICKSTART_GCP_BUILD.md](QUICKSTART_GCP_BUILD.md)
 - **SSL 설정**: [SETUP_SSL.md](SETUP_SSL.md)
 - **Secret Manager**: [docs/SECRET_MANAGER_SETUP.md](docs/SECRET_MANAGER_SETUP.md)
+- **Docker 구조**: [DOCKER_STRUCTURE.md](DOCKER_STRUCTURE.md)
 
 ---
 
-**최종 업데이트**: 2026-02-11
+**최종 업데이트**: 2026-02-12
 **요약**: 환경별로 올바른 `.env` 템플릿을 사용하세요!

@@ -61,7 +61,6 @@ stock/
 | 🎯 **간편 실행** | [빠른 시작 가이드](docs/QUICK_START.md) | 이미 Python/Node.js가 설치된 앙코용 (5분) |
 | 📖 **상세 설치** | [앙코도 이해가능한 설치 가이드](docs/INSTALLATION_WITHOUT_DOCKER.md) | 처음부터 모든 것을 설치하는 방법 (앙코용) |
 | 🐳 **Docker** | [Docker로 실행하기](#docker로-실행하기) | Docker Compose 사용 (아래 참조) |
-| ☁️ **GCP Cloud Build** | [GCP 빠른 시작](QUICKSTART_GCP_BUILD.md) | GCP Free Tier VM에 고속 배포 (5분) ⚡ |
 | ⚙️ **환경 변수** | [환경 변수 가이드](ENV_GUIDE.md) | 개발/프로덕션 환경별 `.env` 설정 📋 |
 
 ---
