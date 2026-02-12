@@ -644,14 +644,15 @@ def generate_ai_comment(
             'HARM_CATEGORY_DANGEROUS_CONTENT': 'BLOCK_NONE',
         }
 
-        # Gemini 호출
+        # Gemini 호출 (타임아웃 60초)
         response = model.generate_content(
             user_prompt,
             generation_config=genai.GenerationConfig(
                 temperature=0.7,
                 max_output_tokens=2000,  # 500 → 2000 증가
             ),
-            safety_settings=safety_settings
+            safety_settings=safety_settings,
+            request_options={'timeout': 60}  # 1분 타임아웃
         )
 
         # 응답 확인

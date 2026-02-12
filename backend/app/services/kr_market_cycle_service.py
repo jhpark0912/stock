@@ -654,14 +654,15 @@ recommendation에 반드시 "과열 경계" 또는 "수익 실현" 관련 멘트
             'HARM_CATEGORY_DANGEROUS_CONTENT': 'BLOCK_NONE',
         }
 
-        # Gemini 호출
+        # Gemini 호출 (타임아웃 60초)
         response = model.generate_content(
             user_prompt,
             generation_config=genai.GenerationConfig(
                 temperature=0.7,
                 max_output_tokens=2000,
             ),
-            safety_settings=safety_settings
+            safety_settings=safety_settings,
+            request_options={'timeout': 60}  # 1분 타임아웃
         )
 
         # 응답 확인

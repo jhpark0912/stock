@@ -483,12 +483,12 @@ async def get_market_cycle_with_ai(
     - Admin 권한 필요 (향후 추가)
     """
     try:
-        import os
+        from app.config import settings
 
         logger.debug(f"시장 사이클 AI 분석 조회 요청 (country={country})")
 
-        # Gemini API 키 확인
-        api_key = os.getenv("GEMINI_API_KEY")
+        # Gemini API 키 확인 (Secret Manager 또는 .env)
+        api_key = settings.gemini_api_key
 
         if country == "us":
             from app.services.market_cycle_service import get_real_market_cycle, generate_ai_comment

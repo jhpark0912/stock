@@ -432,12 +432,18 @@ class StockService:
                     logger.error(f"[Gemini] Traceback: {traceback.format_exc()}")
                     raise
             
-            # 타임아웃 없이 완료될 때까지 대기
-            logger.debug("[Gemini] asyncio.to_thread 시작 (타임아웃: 없음)")
+            # 타임아웃 60초 설정
+            logger.debug("[Gemini] asyncio.to_thread 시작 (타임아웃: 60초)")
             try:
-                response = await asyncio.to_thread(_generate)
+                response = await asyncio.wait_for(
+                    asyncio.to_thread(_generate),
+                    timeout=60.0  # 1분 타임아웃
+                )
                 logger.debug(f"[Gemini] 응답 받음, 길이: {len(response.text) if response.text else 0}")
                 return AIAnalysis(report=response.text)
+            except asyncio.TimeoutError:
+                logger.error("[Gemini] 타임아웃: 60초 내에 응답을 받지 못했습니다")
+                raise ValueError("Gemini AI 분석 시간이 초과되었습니다 (60초). 잠시 후 다시 시도해주세요.")
             except Exception as e:
                 logger.error(f"[Gemini] asyncio 에러: {type(e).__name__}: {str(e)}")
                 logger.error(f"[Gemini] Traceback: {traceback.format_exc()}")
