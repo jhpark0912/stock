@@ -252,3 +252,92 @@ class KrMarketCycleResponse(BaseModel):
     success: bool
     data: Optional[KrMarketCycleData] = None
     error: Optional[str] = None
+
+
+# ============================================
+# 증시 마감 리뷰 관련 모델
+# ============================================
+
+class MarketIndexData(BaseModel):
+    """지수 데이터"""
+    symbol: str           # ^KS11, ^KQ11, ^GSPC, ^IXIC, ^DJI
+    name: str             # KOSPI, KOSDAQ, S&P 500, NASDAQ, DOW
+    close: float          # 종가
+    change: float         # 등락폭
+    change_percent: float # 등락률 (%)
+    open: Optional[float] = None    # 시가
+    high: Optional[float] = None    # 고가
+    low: Optional[float] = None     # 저가
+    volume: Optional[int] = None    # 거래량
+    prev_close: Optional[float] = None  # 전일 종가
+
+
+class StockMoverData(BaseModel):
+    """급등/급락 종목 데이터"""
+    rank: int             # 순위
+    symbol: str           # 종목 코드
+    name: str             # 종목명
+    price: float          # 현재가
+    change_percent: float # 등락률 (%)
+    volume: Optional[int] = None  # 거래량
+
+
+class MajorStockData(BaseModel):
+    """주요 종목 (시가총액 Top) 데이터"""
+    rank: int             # 시가총액 순위
+    symbol: str           # 종목 코드
+    name: str             # 종목명
+    price: float          # 현재가
+    change_percent: float # 등락률 (%)
+    market_cap: float     # 시가총액 (억원 또는 백만달러)
+
+
+class SectorPerformanceData(BaseModel):
+    """섹터 등락 데이터"""
+    sector: str           # 섹터명
+    change_percent: float # 등락률 (%)
+    top_stock: Optional[str] = None  # 대표 종목
+
+
+class MarketReviewAI(BaseModel):
+    """AI 분석 결과"""
+    summary: str                     # 오늘의 포인트 (1-3문장)
+    sector_insight: Optional[str] = None   # 섹터 인사이트
+    tomorrow_outlook: Optional[str] = None # 내일 전망
+    generated_at: str                # 생성 시간
+
+
+class MarketReviewData(BaseModel):
+    """마감 리뷰 전체 데이터"""
+    country: str  # "kr" | "us"
+    date: str     # YYYY-MM-DD
+    market_close_time: str  # "15:30 KST" 또는 "16:00 EST"
+    is_market_closed: bool
+
+    indices: List[MarketIndexData]
+    top_gainers: List[StockMoverData]   # 급등주 Top 5
+    top_losers: List[StockMoverData]    # 급락주 Top 5
+    sector_performance: List[SectorPerformanceData]
+
+    # 주요 종목 (시가총액 Top 5)
+    major_stocks_kospi: Optional[List[MajorStockData]] = None   # 한국 KOSPI
+    major_stocks_kosdaq: Optional[List[MajorStockData]] = None  # 한국 KOSDAQ
+    major_stocks: Optional[List[MajorStockData]] = None         # 미국 S&P 500
+
+    ai_analysis: Optional[MarketReviewAI] = None
+
+
+class MarketReviewResponse(BaseModel):
+    """마감 리뷰 API 응답 형식"""
+    success: bool
+    data: Optional[MarketReviewData] = None
+    cached: bool = False
+    cache_expires_at: Optional[str] = None
+    error: Optional[str] = None
+
+
+class MarketReviewAIResponse(BaseModel):
+    """AI 분석 API 응답"""
+    success: bool
+    data: Optional[MarketReviewAI] = None
+    error: Optional[str] = None

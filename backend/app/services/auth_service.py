@@ -111,3 +111,34 @@ def get_current_admin(current_user: UserDB = Depends(get_current_user)) -> UserD
             detail="관리자 권한이 필요합니다"
         )
     return current_user
+
+
+# Optional 보안 스키마 (토큰 없어도 OK)
+optional_security = HTTPBearer(auto_error=False)
+
+
+def get_current_user_optional(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security),
+    db: Session = Depends(get_db)
+) -> Optional[UserDB]:
+    """현재 로그인한 사용자 조회 (선택적 인증)
+    
+    토큰이 없거나 유효하지 않으면 None 반환.
+    토큰이 유효하면 사용자 정보 반환.
+    """
+    if credentials is None:
+        return None
+    
+    try:
+        token = credentials.credentials
+        token_data = AuthService.decode_token(token)
+        
+        user_repo = UserRepository(db)
+        user = user_repo.get_by_id(token_data.user_id)
+        
+        if user is None or not user.is_active or not user.is_approved:
+            return None
+        
+        return user
+    except HTTPException:
+        return None

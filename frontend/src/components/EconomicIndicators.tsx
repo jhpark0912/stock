@@ -7,7 +7,7 @@ import { RefreshCw, TrendingUp, BarChart3, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IndicatorCard } from './IndicatorCard';
 import { LoadingSpinner } from './LoadingSpinner';
-import { EconomicChartView, SectorHeatmap, MarketCycleSection, CountryTab } from './economic';
+import { EconomicChartView, SectorHeatmap, MarketCycleSection, CountryTab, MarketReviewSection } from './economic';
 import { api } from '@/lib/api';
 import type {
   EconomicData, EconomicViewMode, EconomicResponse,
@@ -17,7 +17,7 @@ import type {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 
-type EconomicTab = 'indicators' | 'sectors';
+type EconomicTab = 'indicators' | 'sectors' | 'review';
 
 interface EconomicIndicatorsProps {
   className?: string;
@@ -145,6 +145,17 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
           >
             섹터 히트맵
           </button>
+          <button
+            onClick={() => setActiveTab('review')}
+            className={cn(
+              'px-4 py-2 text-sm font-medium rounded-md transition-colors',
+              activeTab === 'review'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            마감 리뷰
+          </button>
         </div>
         {/* 국가 선택 탭 */}
         {activeTab === 'indicators' && (
@@ -163,6 +174,18 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
       <div className={cn('h-full', className)}>
         <SubTabHeader />
         <SectorHeatmap country={sectorCountry} />
+      </div>
+    );
+  }
+
+  // 마감 리뷰 탭
+  if (activeTab === 'review') {
+    return (
+      <div className={cn('h-full flex flex-col overflow-hidden', className)}>
+        <SubTabHeader />
+        <div className="flex-1 overflow-auto">
+          <MarketReviewSection />
+        </div>
       </div>
     );
   }

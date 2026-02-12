@@ -6,8 +6,9 @@ pydantic>=2.0.0,<3.0.0
 # Stock Data
 yahooquery==2.4.1
 requests==2.31.0
-numpy==2.1.0
+numpy>=1.26.0,<3.0.0
 pandas==2.2.3
+pykrx>=1.0.35
 
 # Translation
 deep-translator==1.11.4
