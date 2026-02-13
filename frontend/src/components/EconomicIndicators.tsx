@@ -184,8 +184,8 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
 
   // 마감 리뷰 탭
   if (activeTab === 'review') {
-    // 국가 미선택 시 안내
-    if (reviewCountry === null) {
+    // 국가 미선택 또는 'all' 선택 시 안내 (마감 리뷰는 개별 국가만 지원)
+    if (reviewCountry === null || reviewCountry === 'all') {
       return (
         <div className={cn('h-full', className)}>
           <SubTabHeader />

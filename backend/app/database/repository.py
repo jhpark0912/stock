@@ -4,7 +4,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
-from app.database.models import PortfolioDB
+from app.database.models import PortfolioDB, StockAnalysisDB
 from app.models.portfolio import PortfolioCreate, PortfolioUpdate
 
 
@@ -62,10 +62,16 @@ class PortfolioRepository:
 
     @staticmethod
     def delete(db: Session, user_id: int, ticker: str) -> bool:
-        """삭제 (유저별)"""
+        """삭제 (유저별) - 분석 이력도 함께 삭제"""
         db_portfolio = PortfolioRepository.get_by_ticker(db, user_id, ticker)
         if not db_portfolio:
             return False
+
+        # 분석 이력도 삭제 (CASCADE와 별개로 명시적 삭제)
+        db.query(StockAnalysisDB).filter(
+            StockAnalysisDB.user_id == user_id,
+            StockAnalysisDB.ticker == ticker.upper()
+        ).delete()
 
         db.delete(db_portfolio)
         db.commit()

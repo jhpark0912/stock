@@ -25,16 +25,6 @@ function formatPercent(value: number): string {
   return `${prefix}${value.toFixed(2)}%`;
 }
 
-function formatVolume(volume: number): string {
-  if (volume >= 1000000) {
-    return (volume / 1000000).toFixed(1) + 'M';
-  }
-  if (volume >= 1000) {
-    return (volume / 1000).toFixed(0) + 'K';
-  }
-  return volume.toString();
-}
-
 export function TopMoversCard({ title, type, stocks, country }: TopMoversCardProps) {
   const isGainers = type === 'gainers';
   const Icon = isGainers ? TrendingUp : TrendingDown;

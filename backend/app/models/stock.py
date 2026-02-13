@@ -3,7 +3,7 @@
 """
 from __future__ import annotations
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List, Literal
 from datetime import datetime
 
 
@@ -151,6 +151,66 @@ class AnalysisResponse(BaseModel):
     """AI 분석 API 응답 모델"""
     success: bool
     data: Optional[AIAnalysis] = None
+    error: Optional[str] = None
+
+
+# ============ AI 분석 요약 저장 관련 스키마 ============
+
+class AnalysisSummary(BaseModel):
+    """AI 분석 요약 (3줄 요약 + 전략)"""
+    summary: str  # 3줄 요약 (줄바꿈으로 구분)
+    strategy: Literal['buy', 'hold', 'sell']  # 투자 전략
+
+
+class SummaryRequest(BaseModel):
+    """요약 생성 요청"""
+    full_report: str  # 전체 마크다운 보고서
+
+
+class SummaryResponse(BaseModel):
+    """요약 생성 응답"""
+    success: bool
+    data: Optional[AnalysisSummary] = None
+    error: Optional[str] = None
+
+
+class StockAnalysisCreate(BaseModel):
+    """분석 저장 요청"""
+    summary: str
+    strategy: Literal['buy', 'hold', 'sell']
+    current_price: Optional[float] = None
+    user_avg_price: Optional[float] = None
+    profit_loss_ratio: Optional[float] = None
+    full_report: Optional[str] = None
+
+
+class StockAnalysisResponse(BaseModel):
+    """단일 분석 조회 응답"""
+    id: int
+    ticker: str
+    summary: str
+    strategy: str
+    current_price: Optional[float] = None
+    user_avg_price: Optional[float] = None
+    profit_loss_ratio: Optional[float] = None
+    full_report: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class StockAnalysisListResponse(BaseModel):
+    """분석 목록 조회 응답"""
+    success: bool
+    data: Optional[List[StockAnalysisResponse]] = None
+    error: Optional[str] = None
+
+
+class SaveAnalysisResponse(BaseModel):
+    """분석 저장 응답"""
+    success: bool
+    data: Optional[StockAnalysisResponse] = None
     error: Optional[str] = None
 
 

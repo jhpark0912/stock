@@ -4,15 +4,20 @@
 import logging
 from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy.orm import Session
+from typing import List, Optional
 from app.models.stock import (
     StockResponse, StockData, NewsResponse, NewsItem, 
-    AnalysisResponse, AIAnalysis, ChartResponse
+    AnalysisResponse, AIAnalysis, ChartResponse,
+    SummaryRequest, SummaryResponse, AnalysisSummary,
+    StockAnalysisCreate, StockAnalysisResponse, 
+    StockAnalysisListResponse, SaveAnalysisResponse
 )
 from app.services.stock_service import StockService
 from app.services.auth_service import get_current_user
 from app.database.connection import get_db
 from app.database.user_repository import UserRepository
 from app.database.repository import PortfolioRepository
+from app.database.analysis_repository import AnalysisRepository
 from app.database.models import UserDB
 
 logger = logging.getLogger(__name__)
@@ -242,3 +247,307 @@ async def get_stock_analysis(
     except Exception as e:
         logger.error(f"   ❌ Exception: {str(e)}")
         raise HTTPException(status_code=500, detail=f"서버 내부 오류: {str(e)}")
+
+
+# ============ AI 분석 요약 저장 관련 API ============
+
+@router.post("/stock/{ticker}/analysis/summary", response_model=SummaryResponse)
+async def generate_summary(
+    ticker: str,
+    request: SummaryRequest,
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> SummaryResponse:
+    """
+    전체 보고서에서 3줄 요약 + 투자 전략 생성 (Gemini 호출)
+    
+    Args:
+        ticker: 종목 티커
+        request: 전체 보고서가 포함된 요청
+        current_user: 현재 로그인한 사용자
+        db: DB 세션
+        
+    Returns:
+        SummaryResponse: 3줄 요약 + 투자 전략
+    """
+    logger.debug(f"📝 요약 생성 요청: {ticker}")
+    
+    try:
+        # 유저의 Gemini API 키 조회
+        user_repo = UserRepository(db)
+        gemini_key = user_repo.get_gemini_key(current_user.id)
+        
+        if not gemini_key:
+            if current_user.role == "admin":
+                from app.config import settings
+                gemini_key = settings.gemini_api_key
+            
+            if not gemini_key:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Gemini API 키가 등록되지 않았습니다."
+                )
+        
+        summary = await stock_service.generate_analysis_summary(
+            ticker=ticker,
+            full_report=request.full_report,
+            user_api_key=gemini_key
+        )
+        
+        return SummaryResponse(
+            success=True,
+            data=summary,
+            error=None
+        )
+    except ValueError as e:
+        logger.error(f"요약 생성 실패: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"요약 생성 에러: {e}")
+        raise HTTPException(status_code=500, detail=f"서버 내부 오류: {str(e)}")
+
+
+@router.post("/stock/{ticker}/analysis/save", response_model=SaveAnalysisResponse)
+async def save_analysis(
+    ticker: str,
+    request: StockAnalysisCreate,
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> SaveAnalysisResponse:
+    """
+    분석 결과 DB 저장
+    
+    Args:
+        ticker: 종목 티커
+        request: 저장할 분석 데이터
+        current_user: 현재 로그인한 사용자
+        db: DB 세션
+        
+    Returns:
+        SaveAnalysisResponse: 저장된 분석 데이터
+    """
+    logger.debug(f"💾 분석 저장 요청: {ticker}, 사용자: {current_user.username}")
+    
+    try:
+        saved = AnalysisRepository.create(
+            db=db,
+            user_id=current_user.id,
+            ticker=ticker,
+            data=request
+        )
+        
+        return SaveAnalysisResponse(
+            success=True,
+            data=StockAnalysisResponse(
+                id=saved.id,
+                ticker=saved.ticker,
+                summary=saved.summary,
+                strategy=saved.strategy,
+                current_price=float(saved.current_price) if saved.current_price else None,
+                user_avg_price=float(saved.user_avg_price) if saved.user_avg_price else None,
+                profit_loss_ratio=float(saved.profit_loss_ratio) if saved.profit_loss_ratio else None,
+                full_report=saved.full_report,
+                created_at=saved.created_at
+            ),
+            error=None
+        )
+    except Exception as e:
+        logger.error(f"분석 저장 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"저장 실패: {str(e)}")
+
+
+@router.get("/stock/{ticker}/analysis/history", response_model=StockAnalysisListResponse)
+async def get_analysis_history(
+    ticker: str,
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> StockAnalysisListResponse:
+    """
+    티커별 분석 이력 조회
+    
+    Args:
+        ticker: 종목 티커
+        current_user: 현재 로그인한 사용자
+        db: DB 세션
+        
+    Returns:
+        StockAnalysisListResponse: 분석 이력 목록
+    """
+    logger.debug(f"📋 분석 이력 조회: {ticker}")
+    
+    try:
+        analyses = AnalysisRepository.get_by_ticker(db, current_user.id, ticker)
+        
+        return StockAnalysisListResponse(
+            success=True,
+            data=[
+                StockAnalysisResponse(
+                    id=a.id,
+                    ticker=a.ticker,
+                    summary=a.summary,
+                    strategy=a.strategy,
+                    current_price=float(a.current_price) if a.current_price else None,
+                    user_avg_price=float(a.user_avg_price) if a.user_avg_price else None,
+                    profit_loss_ratio=float(a.profit_loss_ratio) if a.profit_loss_ratio else None,
+                    full_report=a.full_report,
+                    created_at=a.created_at
+                )
+                for a in analyses
+            ],
+            error=None
+        )
+    except Exception as e:
+        logger.error(f"분석 이력 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"조회 실패: {str(e)}")
+
+
+@router.get("/stock/{ticker}/analysis/latest", response_model=SaveAnalysisResponse)
+async def get_latest_analysis(
+    ticker: str,
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> SaveAnalysisResponse:
+    """
+    티커별 최신 분석 조회
+    
+    Args:
+        ticker: 종목 티커
+        current_user: 현재 로그인한 사용자
+        db: DB 세션
+        
+    Returns:
+        SaveAnalysisResponse: 최신 분석 데이터 또는 null
+    """
+    logger.debug(f"📌 최신 분석 조회: {ticker}")
+    
+    try:
+        latest = AnalysisRepository.get_latest_by_ticker(db, current_user.id, ticker)
+        
+        if not latest:
+            return SaveAnalysisResponse(
+                success=True,
+                data=None,
+                error=None
+            )
+        
+        return SaveAnalysisResponse(
+            success=True,
+            data=StockAnalysisResponse(
+                id=latest.id,
+                ticker=latest.ticker,
+                summary=latest.summary,
+                strategy=latest.strategy,
+                current_price=float(latest.current_price) if latest.current_price else None,
+                user_avg_price=float(latest.user_avg_price) if latest.user_avg_price else None,
+                profit_loss_ratio=float(latest.profit_loss_ratio) if latest.profit_loss_ratio else None,
+                full_report=latest.full_report,
+                created_at=latest.created_at
+            ),
+            error=None
+        )
+    except Exception as e:
+        logger.error(f"최신 분석 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"조회 실패: {str(e)}")
+
+
+@router.get("/stock/analysis/all", response_model=StockAnalysisListResponse)
+async def get_all_analyses(
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+) -> StockAnalysisListResponse:
+    """
+    사용자의 모든 분석 조회
+    
+    Args:
+        current_user: 현재 로그인한 사용자
+        db: DB 세션
+        
+    Returns:
+        StockAnalysisListResponse: 전체 분석 목록
+    """
+    logger.debug(f"📋 전체 분석 조회: {current_user.username}")
+    
+    try:
+        analyses = AnalysisRepository.get_all_by_user(db, current_user.id)
+        
+        return StockAnalysisListResponse(
+            success=True,
+            data=[
+                StockAnalysisResponse(
+                    id=a.id,
+                    ticker=a.ticker,
+                    summary=a.summary,
+                    strategy=a.strategy,
+                    current_price=float(a.current_price) if a.current_price else None,
+                    user_avg_price=float(a.user_avg_price) if a.user_avg_price else None,
+                    profit_loss_ratio=float(a.profit_loss_ratio) if a.profit_loss_ratio else None,
+                    full_report=a.full_report,
+                    created_at=a.created_at
+                )
+                for a in analyses
+            ],
+            error=None
+        )
+    except Exception as e:
+        logger.error(f"전체 분석 조회 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"조회 실패: {str(e)}")
+
+
+@router.delete("/stock/{ticker}/analysis")
+async def delete_ticker_analyses(
+    ticker: str,
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    티커별 분석 전체 삭제
+    
+    Args:
+        ticker: 종목 티커
+        current_user: 현재 로그인한 사용자
+        db: DB 세션
+        
+    Returns:
+        삭제 결과
+    """
+    logger.debug(f"🗑️ 티커별 분석 삭제: {ticker}")
+    
+    try:
+        count = AnalysisRepository.delete_by_ticker(db, current_user.id, ticker)
+        return {"success": True, "deleted_count": count}
+    except Exception as e:
+        logger.error(f"분석 삭제 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"삭제 실패: {str(e)}")
+
+
+@router.delete("/stock/analysis/{analysis_id}")
+async def delete_single_analysis(
+    analysis_id: int,
+    current_user: UserDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    단일 분석 삭제
+    
+    Args:
+        analysis_id: 분석 ID
+        current_user: 현재 로그인한 사용자
+        db: DB 세션
+        
+    Returns:
+        삭제 결과
+    """
+    logger.debug(f"🗑️ 단일 분석 삭제: {analysis_id}")
+    
+    try:
+        deleted = AnalysisRepository.delete_by_id(db, current_user.id, analysis_id)
+        
+        if not deleted:
+            raise HTTPException(status_code=404, detail="분석을 찾을 수 없습니다.")
+        
+        return {"success": True, "deleted_id": analysis_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"분석 삭제 실패: {e}")
+        raise HTTPException(status_code=500, detail=f"삭제 실패: {str(e)}")

@@ -1,7 +1,7 @@
 """
 SQLAlchemy ORM 모델
 """
-from sqlalchemy import Column, Integer, String, Numeric, Date, Text, DateTime, Boolean, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Numeric, Date, Text, DateTime, Boolean, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -73,3 +73,35 @@ class SectorHoldingsCacheDB(Base):
     symbol = Column(String(10), nullable=False, unique=True, index=True)  # XLK, XLF 등
     top_holdings = Column(Text, nullable=False)  # JSON: ["AAPL", "MSFT", "NVDA"]
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+
+class StockAnalysisDB(Base):
+    """AI 분석 요약 저장 테이블"""
+    __tablename__ = "stock_analysis"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
+    ticker = Column(String(10), nullable=False, index=True)
+
+    # 요약 데이터 (핵심)
+    summary = Column(Text, nullable=False)  # 3줄 요약
+    strategy = Column(String(20), nullable=False)  # buy, hold, sell
+
+    # 분석 시점 스냅샷
+    current_price = Column(Numeric(10, 2), nullable=True)
+    user_avg_price = Column(Numeric(10, 2), nullable=True)  # 평단가 (맞춤형 분석 시)
+    profit_loss_ratio = Column(Numeric(10, 2), nullable=True)  # 수익률
+
+    # 전체 보고서 (선택적 저장)
+    full_report = Column(Text, nullable=True)  # 마크다운 전체 보고서
+
+    # 타임스탬프
+    created_at = Column(DateTime, server_default=func.now())
+
+    # 관계
+    user = relationship("UserDB", backref="stock_analyses")
+
+    # 인덱스: 사용자별 티커 조회 최적화
+    __table_args__ = (
+        Index('ix_stock_analysis_user_ticker', 'user_id', 'ticker'),
+    )

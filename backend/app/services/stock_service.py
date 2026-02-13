@@ -10,8 +10,10 @@ import asyncio
 from app.models.stock import (
     StockData, PriceInfo, FinancialsInfo, CompanyInfo, TechnicalIndicators,
     SMAInfo, EMAInfo, RSIInfo, MACDInfo, BollingerBandsInfo,
-    NewsItem, AIAnalysis
+    NewsItem, AIAnalysis, AnalysisSummary
 )
+import json
+import re
 import google.generativeai as genai
 from app.config import settings
 from app.services.mock_data import get_mock_stock_data
@@ -466,3 +468,92 @@ class StockService:
                 raise ValueError(f"Gemini API 인증 오류: API 키가 유효하지 않습니다. {error_msg}")
             
             raise ValueError(f"Gemini AI 분석 중 오류 발생: {error_msg}")
+
+    async def generate_analysis_summary(
+        self,
+        ticker: str,
+        full_report: str,
+        user_api_key: str
+    ) -> AnalysisSummary:
+        """
+        전체 보고서에서 3줄 요약 + 투자 전략 추출 (Gemini 추가 호출)
+        
+        Args:
+            ticker: 종목 티커
+            full_report: 전체 마크다운 보고서
+            user_api_key: 유저의 Gemini API 키
+            
+        Returns:
+            AnalysisSummary: 3줄 요약과 투자 전략
+        """
+        import logging
+        import traceback
+        logger = logging.getLogger(__name__)
+        
+        logger.debug(f"[Gemini Summary] 요약 생성 시작: {ticker}")
+        
+        if not user_api_key:
+            raise ValueError("Gemini API 키가 필요합니다.")
+        
+        try:
+            genai.configure(api_key=user_api_key)
+            model = genai.GenerativeModel('models/gemini-flash-latest')
+            
+            prompt = f"""
+다음 {ticker} 주식 분석 보고서를 읽고 아래 형식에 맞춰 응답해주세요.
+
+### 보고서
+{full_report}
+
+### 지시사항
+1. 핵심 내용을 3줄로 요약해주세요. 각 줄은 50자 이내로 작성하세요.
+2. 투자 전략을 반드시 buy, hold, sell 중 하나로 선택해주세요.
+   - buy: 적극 매수 추천 또는 긍정적 전망
+   - hold: 보유 유지 또는 관망 추천
+   - sell: 매도 또는 비중 축소 추천
+
+### 응답 형식 (반드시 JSON만 출력)
+{{"summary": "첫번째 요약 줄\\n두번째 요약 줄\\n세번째 요약 줄", "strategy": "buy|hold|sell"}}
+"""
+            
+            def _generate():
+                return model.generate_content(prompt)
+            
+            response = await asyncio.wait_for(
+                asyncio.to_thread(_generate),
+                timeout=30.0  # 요약은 30초 타임아웃
+            )
+            
+            # JSON 파싱 (응답에서 JSON 추출)
+            response_text = response.text.strip()
+            
+            # 마크다운 코드 블록 제거
+            if response_text.startswith("```"):
+                response_text = re.sub(r'^```(?:json)?\s*', '', response_text)
+                response_text = re.sub(r'\s*```$', '', response_text)
+            
+            result = json.loads(response_text)
+            
+            # 전략 유효성 검사
+            strategy = result.get('strategy', 'hold').lower()
+            if strategy not in ['buy', 'hold', 'sell']:
+                strategy = 'hold'
+            
+            logger.debug(f"[Gemini Summary] 요약 생성 완료: {ticker}, 전략: {strategy}")
+            
+            return AnalysisSummary(
+                summary=result.get('summary', ''),
+                strategy=strategy
+            )
+            
+        except json.JSONDecodeError as e:
+            logger.error(f"[Gemini Summary] JSON 파싱 실패: {e}, 응답: {response_text}")
+            raise ValueError("요약 생성 결과 파싱에 실패했습니다. 다시 시도해주세요.")
+        except asyncio.TimeoutError:
+            logger.error("[Gemini Summary] 타임아웃: 30초 내에 응답을 받지 못했습니다")
+            raise ValueError("요약 생성 시간이 초과되었습니다 (30초). 잠시 후 다시 시도해주세요.")
+        except Exception as e:
+            error_msg = str(e)
+            logger.error(f"[Gemini Summary] 에러: {type(e).__name__}: {error_msg}")
+            logger.error(f"[Gemini Summary] Traceback: {traceback.format_exc()}")
+            raise ValueError(f"요약 생성 중 오류 발생: {error_msg}")

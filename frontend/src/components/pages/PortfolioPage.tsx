@@ -3,8 +3,6 @@
  * 데이터 로직은 usePortfolio 훅으로 분리됨
  */
 
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { Sidebar } from '../Sidebar';
 import { HeroSection } from '../HeroSection';
 import { MainTabs } from '../MainTabs';
@@ -12,9 +10,8 @@ import { CategoryMetrics } from '../CategoryMetrics';
 import { StockChart } from '../StockChart';
 import { GaugeBar } from '../GaugeBar';
 import { LoadingSpinner } from '../LoadingSpinner';
+import { AIAnalysisTab } from '../AIAnalysisTab';
 import { usePortfolio } from '@/hooks/usePortfolio';
-import { Key, Play, AlertCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 interface PortfolioPageProps {
   /** 설정 페이지로 이동하는 콜백 */
@@ -121,135 +118,15 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
                       return <LoadingSpinner message="AI is analyzing..." />;
                     }
                     return (
-                      <div className="p-6 space-y-4">
-                        <div className="bg-card border border-border rounded-lg p-6">
-                          <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-semibold text-foreground">
-                              AI 분석 (Gemini)
-                            </h2>
-                            {aiAnalysis && stockData && (user?.has_gemini_key || user?.role === 'admin') && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={handleAnalyzeAI}
-                                className="gap-2"
-                              >
-                                <RefreshCw className="h-4 w-4" />
-                                재분석
-                              </Button>
-                            )}
-                          </div>
-
-                          {!user?.has_gemini_key && user?.role !== 'admin' ? (
-                            <div className="text-center py-12 space-y-4">
-                              <div className="flex justify-center">
-                                <div className="h-16 w-16 rounded-full bg-warning/10 flex items-center justify-center">
-                                  <Key className="h-8 w-8 text-warning" />
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <h3 className="text-lg font-semibold text-foreground">
-                                  Gemini API 키가 필요합니다
-                                </h3>
-                                <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                                  AI 주식 분석 기능을 사용하려면 Google Gemini API 키를 설정해주세요.
-                                  설정 페이지에서 API 키를 등록할 수 있습니다.
-                                </p>
-                              </div>
-                              <Button
-                                onClick={onNavigateToSettings}
-                                className="gap-2"
-                              >
-                                <Key className="h-4 w-4" />
-                                설정에서 API 키 등록하기
-                              </Button>
-                            </div>
-                          ) : aiError ? (
-                            <div className="text-center py-12 space-y-4">
-                              <div className="flex justify-center">
-                                <div className={`h-16 w-16 rounded-full flex items-center justify-center ${
-                                  aiError.type === 'no_key' ? 'bg-warning/10' : 'bg-destructive/10'
-                                }`}>
-                                  {aiError.type === 'no_key' ? (
-                                    <Key className="h-8 w-8 text-warning" />
-                                  ) : (
-                                    <AlertCircle className="h-8 w-8 text-destructive" />
-                                  )}
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <h3 className="text-lg font-semibold text-foreground">
-                                  {aiError.type === 'no_key' ? 'API 키 오류' : 'AI 분석 실패'}
-                                </h3>
-                                <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                                  {aiError.message}
-                                </p>
-                              </div>
-                              {aiError.type === 'no_key' ? (
-                                <Button
-                                  onClick={onNavigateToSettings}
-                                  className="gap-2"
-                                >
-                                  <Key className="h-4 w-4" />
-                                  설정에서 API 키 확인하기
-                                </Button>
-                              ) : (
-                                <Button
-                                  onClick={handleAnalyzeAI}
-                                  variant="outline"
-                                  className="gap-2"
-                                >
-                                  <RefreshCw className="h-4 w-4" />
-                                  다시 시도
-                                </Button>
-                              )}
-                            </div>
-                          ) : aiAnalysis ? (
-                            <div className="markdown-content">
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {aiAnalysis.report}
-                              </ReactMarkdown>
-                            </div>
-                          ) : stockData ? (
-                            <div className="text-center py-12 space-y-4">
-                              <div className="flex justify-center">
-                                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-                                  <Play className="h-8 w-8 text-primary" />
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <h3 className="text-lg font-semibold text-foreground">
-                                  AI 분석 준비 완료
-                                </h3>
-                                <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                                  <span className="font-medium text-foreground">{stockData.ticker}</span>에 대한
-                                  AI 기반 투자 분석을 시작하려면 아래 버튼을 클릭하세요.
-                                </p>
-                              </div>
-                              <Button
-                                onClick={handleAnalyzeAI}
-                                className="gap-2"
-                              >
-                                <Play className="h-4 w-4" />
-                                AI 분석 시작
-                              </Button>
-                            </div>
-                          ) : (
-                            <div className="text-center py-6">
-                              <p className="text-sm text-muted-foreground mb-1">
-                                {userSettings.tickers.length === 0
-                                  ? 'No tickers added yet.'
-                                  : 'No data loaded.'}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {userSettings.tickers.length === 0
-                                  ? 'Add a ticker from the sidebar to get started.'
-                                  : 'Click a ticker from the sidebar to load data.'}
-                              </p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+                      <AIAnalysisTab
+                        stockData={stockData}
+                        aiAnalysis={aiAnalysis}
+                        aiError={aiError}
+                        user={user}
+                        onAnalyzeAI={handleAnalyzeAI}
+                        onNavigateToSettings={onNavigateToSettings}
+                        tickerCount={userSettings.tickers.length}
+                      />
                     );
 
                   case 'chart':

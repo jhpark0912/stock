@@ -1,6 +1,6 @@
 # 프로젝트 구조
 
-> 최종 업데이트: 2026-02-13 (증시 마감 리뷰 버그 수정 및 개선)
+> 최종 업데이트: 2026-02-13 (AI 분석 요약 저장 기능 추가)
 
 ## 전체 아키텍처
 
@@ -150,6 +150,8 @@ App.tsx
   - `economic/SectorDetail.tsx` - 섹터 상세 모달 (보유종목 트리맵, 초보자 설명)
 - **주식 컴포넌트**:
   - `MainTabs.tsx` - 주식별 탭 (5개: Overview, AI, Chart, Technical, News)
+  - `AIAnalysisTab.tsx` - AI 분석 탭 (요약 생성/저장, 이력 보기)
+  - `AnalysisHistory.tsx` - AI 분석 이력 모달
   - `StockChart.tsx` - 주식 차트 (Recharts 사용)
   - `CategoryMetrics.tsx` - 카테고리별 메트릭
   - `Sidebar.tsx` - 티커 목록 사이드바 (Portfolio 페이지에서 사용)
@@ -169,11 +171,15 @@ backend/
 │   │       ├── economic.py  # 경제 지표 API
 │   │       └── secret_stats.py  # Secret Manager 캐시 통계 API
 │   ├── database/            # 데이터베이스 설정
-│   ├── models/              # SQLAlchemy 모델
-│   │   ├── user.py          # 사용자 모델
-│   │   ├── stock.py         # 주식 모델
-│   │   ├── portfolio.py     # 포트폴리오 모델
-│   │   └── economic.py      # 경제 지표 모델
+│   │   ├── models.py        # SQLAlchemy ORM 모델 (UserDB, PortfolioDB, StockAnalysisDB)
+│   │   ├── repository.py    # 포트폴리오 Repository
+│   │   ├── analysis_repository.py  # AI 분석 저장소 (신규)
+│   │   └── connection.py    # DB 연결
+│   ├── models/              # Pydantic 모델
+│   │   ├── user.py          # 사용자 스키마
+│   │   ├── stock.py         # 주식 스키마 (AnalysisSummary, StockAnalysisCreate 포함)
+│   │   ├── portfolio.py     # 포트폴리오 스키마
+│   │   └── economic.py      # 경제 지표 스키마
 │   ├── services/            # 비즈니스 로직
 │   │   ├── auth_service.py  # 인증 서비스
 │   │   ├── stock_service.py # 주식 데이터 서비스
@@ -459,7 +465,14 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ### 주식
 - `GET /api/stock/{ticker}` - 주식 데이터 조회
-- `GET /api/stock/{ticker}/analysis` - AI 분석
+- `POST /api/stock/{ticker}/analysis` - AI 분석 (전체 보고서 생성)
+- `POST /api/stock/{ticker}/analysis/summary` - 요약 생성 (3줄 요약 + 투자 전략)
+- `POST /api/stock/{ticker}/analysis/save` - 분석 저장 (DB)
+- `GET /api/stock/{ticker}/analysis/history` - 티커별 분석 이력 조회
+- `GET /api/stock/{ticker}/analysis/latest` - 티커별 최신 분석 조회
+- `GET /api/stock/analysis/all` - 사용자의 모든 분석 조회
+- `DELETE /api/stock/{ticker}/analysis` - 티커별 분석 전체 삭제
+- `DELETE /api/stock/analysis/{analysis_id}` - 단일 분석 삭제
 
 ### 포트폴리오
 - `GET /api/portfolio` - 포트폴리오 목록
@@ -521,6 +534,19 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - created_at (DATETIME, DEFAULT CURRENT_TIMESTAMP)
 - updated_at (DATETIME, DEFAULT CURRENT_TIMESTAMP)
 - UNIQUE (user_id, ticker) - 사용자당 티커 중복 방지
+
+### StockAnalysis (AI 분석 요약) - 2026-02-13 추가
+- id (PK, AUTOINCREMENT)
+- user_id (FK → User, NOT NULL, ondelete='CASCADE')
+- ticker (VARCHAR(10), NOT NULL, INDEX)
+- summary (TEXT, NOT NULL) - 3줄 요약
+- strategy (VARCHAR(20), NOT NULL) - 'buy' | 'hold' | 'sell'
+- current_price (NUMERIC(10, 2)) - 분석 시점 가격
+- user_avg_price (NUMERIC(10, 2)) - 사용자 평단가
+- profit_loss_ratio (NUMERIC(10, 2)) - 수익률
+- full_report (TEXT) - 전체 마크다운 보고서 (선택)
+- created_at (DATETIME, DEFAULT CURRENT_TIMESTAMP)
+- INDEX (user_id, ticker) - 복합 인덱스
 
 ## 디자인 시스템
 

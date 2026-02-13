@@ -14,7 +14,7 @@ import { SectorSummary } from './SectorSummary';
 import { AIInsightCard } from './AIInsightCard';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { api } from '@/lib/api';
-import type { MarketReviewData, MarketReviewAI, MarketReviewResponse, MarketReviewAIResponse } from '@/types/marketReview';
+import type { MarketReviewData, MarketReviewResponse, MarketReviewAIResponse } from '@/types/marketReview';
 
 // Mock 데이터 (Fallback)
 import { mockKrMarketReview, mockUsMarketReview, mockKrAIAnalysis, mockUsAIAnalysis } from '@/mocks/marketReviewMock';
@@ -44,7 +44,7 @@ export function MarketReviewSection({ country, className }: MarketReviewSectionP
   const [error, setError] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [useMock, setUseMock] = useState(false); // false: 실제 API 사용, true: Mock 데이터
+  const [useMock] = useState(false); // false: 실제 API 사용, true: Mock 데이터
   
   // 중복 호출 방지용 ref
   const loadingRef = useRef(false);
@@ -109,7 +109,7 @@ export function MarketReviewSection({ country, className }: MarketReviewSectionP
         // 실제 AI API 호출
         const response = await api.post<MarketReviewAIResponse>(`/api/economic/market-review/${country}/ai`);
         if (response.data.success && response.data.data) {
-          setData(prev => prev ? { ...prev, ai_analysis: response.data.data } : null);
+          setData(prev => prev ? { ...prev, ai_analysis: response.data.data ?? undefined } : null);
         } else {
           // AI 실패 시 에러 메시지 표시
           const errorMsg = response.data.error || 'AI 분석 생성에 실패했습니다.';
