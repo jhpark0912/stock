@@ -1,7 +1,7 @@
 /**
  * AI 분석 요약 저장 API 함수들
  */
-import { api, type ApiResponse } from './api';
+import { api } from './api';
 import type {
   AnalysisSummary,
   SummaryResponse,

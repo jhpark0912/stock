@@ -22,14 +22,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { AnalysisHistory } from './AnalysisHistory';
 import type { StockData, AIAnalysis, AnalysisSummary, InvestmentStrategy } from '@/types/stock';
-import type { User } from '@/types/auth';
+import type { UserResponse } from '@/types/auth';
 import { generateSummary, saveAnalysis } from '@/lib/analysisApi';
 
 interface AIAnalysisTabProps {
   stockData: StockData | null;
   aiAnalysis: AIAnalysis | null;
   aiError: { type: 'no_key' | 'api_error'; message: string } | null;
-  user: User | null;
+  user: UserResponse | null;
   onAnalyzeAI: () => void;
   onNavigateToSettings?: () => void;
   tickerCount: number;
