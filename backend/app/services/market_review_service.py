@@ -185,83 +185,63 @@ async def get_kr_top_movers(
     kis_app_secret: Optional[str] = None
 ) -> tuple[List[StockMoverData], List[StockMoverData]]:
     """
-    한국 급등/급락 종목 Top 5 조회
-
-    우선순위:
-    1. KIS Open API (kis_app_key, kis_app_secret 제공 시)
-    2. pykrx (KIS 키 없을 때)
+    한국 급등/급락 종목 Top 5 조회 (KIS Open API)
+    
+    Args:
+        kis_app_key: KIS App Key
+        kis_app_secret: KIS App Secret
+        
+    Returns:
+        (급등 Top 5, 급락 Top 5)
+        KIS 키 없으면 빈 배열 반환
     """
-    # 1. KIS API 사용 시도
-    if kis_app_key and kis_app_secret:
-        try:
-            from app.services.kis_api_service import get_fluctuation_ranking, KISAPIError
-
-            logger.debug("[MarketReview] KIS API로 등락률 순위 조회")
-            kis_gainers, kis_losers = await get_fluctuation_ranking(
-                app_key=kis_app_key,
-                app_secret=kis_app_secret,
-                market="ALL",
-                limit=5
-            )
-
-            # KIS 데이터를 StockMoverData로 변환
-            gainers = [
-                StockMoverData(
-                    rank=g.rank if g.rank > 0 else idx + 1,
-                    symbol=g.symbol,
-                    name=g.name,
-                    price=g.price,
-                    change_percent=g.change_percent,
-                    volume=g.volume if g.volume > 0 else None,
-                )
-                for idx, g in enumerate(kis_gainers)
-            ]
-
-            losers = [
-                StockMoverData(
-                    rank=l.rank if l.rank > 0 else idx + 1,
-                    symbol=l.symbol,
-                    name=l.name,
-                    price=l.price,
-                    change_percent=l.change_percent,
-                    volume=l.volume if l.volume > 0 else None,
-                )
-                for idx, l in enumerate(kis_losers)
-            ]
-
-            if gainers or losers:
-                logger.info(f"[MarketReview] KIS API 조회 성공: 상승 {len(gainers)}개, 하락 {len(losers)}개")
-                return gainers, losers
-
-        except Exception as e:
-            logger.warning(f"[MarketReview] KIS API 조회 실패, pykrx로 fallback: {e}")
-
-    # 2. pykrx fallback
+    # KIS API 자격 증명이 없으면 빈 배열 반환
+    if not kis_app_key or not kis_app_secret:
+        logger.debug("KIS API 자격 증명 없음 - 급등/급락 Top 5 조회 불가")
+        return [], []
+    
     try:
-        from pykrx import stock
+        from app.services.kis_api_service import get_fluctuation_ranking
 
-        today = datetime.now(KST).strftime("%Y%m%d")
+        logger.debug("[MarketReview] KIS API로 등락률 순위 조회")
+        kis_gainers, kis_losers = await get_fluctuation_ranking(
+            app_key=kis_app_key,
+            app_secret=kis_app_secret,
+            market="ALL",
+            limit=5
+        )
 
-        # 오늘 데이터가 없으면 가장 최근 거래일 사용
-        try:
-            df = stock.get_market_ohlcv_by_ticker(today, market="ALL")
-            if df.empty:
-                # 최근 5일 중 데이터가 있는 날 찾기
-                for i in range(1, 6):
-                    prev_date = (datetime.now(KST) - timedelta(days=i)).strftime("%Y%m%d")
-                    df = stock.get_market_ohlcv_by_ticker(prev_date, market="ALL")
-                    if not df.empty:
-                        today = prev_date
-                        break
-        except Exception:
-            # 오류 시 어제 날짜로 시도
-            yesterday = (datetime.now(KST) - timedelta(days=1)).strftime("%Y%m%d")
-            df = stock.get_market_ohlcv_by_ticker(yesterday, market="ALL")
-            today = yesterday
+        # KIS 데이터를 StockMoverData로 변환
+        gainers = [
+            StockMoverData(
+                rank=g.rank if g.rank > 0 else idx + 1,
+                symbol=g.symbol,
+                name=g.name,
+                price=g.price,
+                change_percent=g.change_percent,
+                volume=g.volume if g.volume > 0 else None,
+            )
+            for idx, g in enumerate(kis_gainers)
+        ]
 
-        if df.empty:
-            logger.warning("한국 주식 데이터 없음")
-            return [], []
+        losers = [
+            StockMoverData(
+                rank=l.rank if l.rank > 0 else idx + 1,
+                symbol=l.symbol,
+                name=l.name,
+                price=l.price,
+                change_percent=l.change_percent,
+                volume=l.volume if l.volume > 0 else None,
+            )
+            for idx, l in enumerate(kis_losers)
+        ]
+
+        logger.debug(f"[MarketReview] KIS API 조회 성공: 상승 {len(gainers)}개, 하락 {len(losers)}개")
+        return gainers, losers
+
+    except Exception as e:
+        logger.error(f"한국 급등/급락 종목 조회 실패: {e}")
+        return [], []
 
         # 등락률 계산 (이미 포함되어 있지 않은 경우)
         if "등락률" not in df.columns:
@@ -313,60 +293,50 @@ async def get_kr_top_movers(
 async def get_us_top_movers() -> tuple[List[StockMoverData], List[StockMoverData]]:
     """
     미국 급등/급락 종목 Top 5 조회
-    Yahoo Finance 스크리너 사용
+    Yahoo Finance Screener API 사용
     """
     try:
-        # Yahoo Finance 데이 게이너/루저 심볼 리스트
-        gainer_symbols = ["NVDA", "AMD", "TSLA", "META", "AMZN", "AAPL", "GOOGL", "MSFT"]
-        loser_symbols = ["PFE", "BA", "DIS", "XOM", "CVX", "JNJ", "VZ", "T"]
+        from yahooquery import Screener
         
-        all_symbols = list(set(gainer_symbols + loser_symbols))
-        ticker = Ticker(all_symbols)
-        data = ticker.price
+        s = Screener()
         
-        # 등락률로 정렬
-        stocks = []
-        for symbol in all_symbols:
-            if symbol in data and isinstance(data[symbol], dict):
-                info = data[symbol]
-                change_pct = info.get("regularMarketChangePercent", 0) * 100
-                stocks.append({
-                    "symbol": symbol,
-                    "name": info.get("shortName", symbol),
-                    "price": info.get("regularMarketPrice", 0),
-                    "change_percent": change_pct,
-                    "volume": info.get("regularMarketVolume"),
-                })
-        
-        # 정렬
-        stocks.sort(key=lambda x: x["change_percent"], reverse=True)
-        
-        # 급등주 Top 5
+        # 급등주 조회
         gainers = []
-        for rank, stock in enumerate(stocks[:5], 1):
-            gainers.append(StockMoverData(
-                rank=rank,
-                symbol=stock["symbol"],
-                name=stock["name"],
-                price=stock["price"],
-                change_percent=stock["change_percent"],
-                volume=stock["volume"],
-            ))
+        try:
+            gainers_result = s.get_screeners('day_gainers', count=5)
+            if 'day_gainers' in gainers_result and 'quotes' in gainers_result['day_gainers']:
+                for rank, stock in enumerate(gainers_result['day_gainers']['quotes'][:5], 1):
+                    gainers.append(StockMoverData(
+                        rank=rank,
+                        symbol=stock.get('symbol', ''),
+                        name=stock.get('shortName', stock.get('symbol', '')),
+                        price=stock.get('regularMarketPrice', 0),
+                        change_percent=stock.get('regularMarketChangePercent', 0),
+                        volume=stock.get('regularMarketVolume'),
+                    ))
+        except Exception as e:
+            logger.warning(f"미국 급등주 조회 실패: {e}")
         
-        # 급락주 Top 5
-        stocks.sort(key=lambda x: x["change_percent"])
+        # 급락주 조회
         losers = []
-        for rank, stock in enumerate(stocks[:5], 1):
-            losers.append(StockMoverData(
-                rank=rank,
-                symbol=stock["symbol"],
-                name=stock["name"],
-                price=stock["price"],
-                change_percent=stock["change_percent"],
-                volume=stock["volume"],
-            ))
+        try:
+            losers_result = s.get_screeners('day_losers', count=5)
+            if 'day_losers' in losers_result and 'quotes' in losers_result['day_losers']:
+                for rank, stock in enumerate(losers_result['day_losers']['quotes'][:5], 1):
+                    losers.append(StockMoverData(
+                        rank=rank,
+                        symbol=stock.get('symbol', ''),
+                        name=stock.get('shortName', stock.get('symbol', '')),
+                        price=stock.get('regularMarketPrice', 0),
+                        change_percent=stock.get('regularMarketChangePercent', 0),
+                        volume=stock.get('regularMarketVolume'),
+                    ))
+        except Exception as e:
+            logger.warning(f"미국 급락주 조회 실패: {e}")
         
+        logger.debug(f"미국 급등/급락 종목 조회 완료: 상승 {len(gainers)}개, 하락 {len(losers)}개")
         return gainers, losers
+        
     except Exception as e:
         logger.error(f"미국 급등/급락 종목 조회 실패: {e}")
         return [], []
@@ -389,7 +359,7 @@ async def get_kr_major_stocks(
     """
     # KIS API 자격 증명이 없으면 빈 배열 반환
     if not kis_app_key or not kis_app_secret:
-        logger.warning("KIS API 자격 증명 없음 - 시총 Top 5 조회 불가")
+        logger.debug("KIS API 자격 증명 없음 - 시총 Top 5 조회 불가")
         return [], []
     
     try:
@@ -685,7 +655,7 @@ async def generate_market_review_ai(
         import google.generativeai as genai
         
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("models/gemini-flash-latest")
         
         # 프롬프트 구성
         country_name = "한국" if data.country == "kr" else "미국"
@@ -710,36 +680,26 @@ async def generate_market_review_ai(
             for s in data.sector_performance[:5]
         ])
         
-        prompt = f"""당신은 20년 경력의 증권사 리서치센터장입니다.
-오늘 {country_name} 증시 마감 데이터를 분석하여 투자자에게 핵심 포인트를 전달해주세요.
+        prompt = f"""
+        당신은 20년 경력의 증권사 리서치센터장입니다. 
+        탑다운 분석의 대가이며, 데이터를 단순 나열하지 않고 그 이면의 시장 흐름과 수급의 맥락을 읽어내는 데 탁월합니다. 
+        오늘 제공된 {country_name} 증시 마감 데이터를 바탕으로, 개인 투자자가 시장의 핵심을 직관적으로 이해할 수 있도록 브리핑 리포트를 작성해주세요.
 
-## 오늘의 지수
-{indices_text}
+        데이터 영역: 지수: {indices_text} 급등주 Top 3: {gainers_text} 급락주 Top 3: {losers_text} 주요 섹터 등락: {sectors_text}
 
-## 급등주 Top 3
-{gainers_text}
+        작성 지침:
 
-## 급락주 Top 3
-{losers_text}
+        데이터를 그대로 나열하지 마세요.
 
-## 섹터 등락 Top 5
-{sectors_text}
+        지수, 급등락 종목, 섹터 간의 연관성을 찾아 하나의 스토리로 엮어주세요.
 
----
+        총 300자 내외로, 다음 3가지 항목을 반드시 포함하여 한국어로 작성하세요.
 
-다음 형식으로 간결하게 분석해주세요 (총 300자 내외):
-
-**오늘의 포인트**
-(1-2문장으로 오늘 시장의 핵심 흐름 요약)
-
-**섹터 인사이트**
-(1문장으로 주목할 섹터와 이유)
-
-**내일 전망**
-(1문장으로 내일 주시할 요소)
-
-반드시 한국어로 작성하세요.
-"""
+        출력 형식: 
+        오늘의 포인트 (지수 흐름과 급등락주의 공통점을 엮어서 오늘 시장의 성격을 1에서 2문장으로 정의)
+        섹터 인사이트 (가장 눈에 띄는 섹터의 상승 또는 하락 배경과 이것이 의미하는 바를 1문장으로 요약)
+        내일 전망 (오늘의 흐름을 바탕으로 내일 장에서 투자자가 집중해야 할 핵심 변수 1문장 제시)
+        """
         
         response = model.generate_content(prompt)
         text = response.text

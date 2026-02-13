@@ -1,6 +1,6 @@
 # 프로젝트 구조
 
-> 최종 업데이트: 2026-02-12 (GCP Cloud Build 롤백)
+> 최종 업데이트: 2026-02-13 (증시 마감 리뷰 버그 수정 및 개선)
 
 ## 전체 아키텍처
 
@@ -72,7 +72,14 @@ frontend/
 │   │   │   ├── StatusGauge.tsx          # 판단 기준 게이지
 │   │   │   ├── CompareSelector.tsx      # 비교 지표 선택
 │   │   │   ├── SectorHeatmap.tsx        # 섹터 히트맵 (GICS 11개 섹터)
-│   │   │   └── SectorDetail.tsx         # 섹터 상세 모달 (보유종목 트리맵)
+│   │   │   ├── SectorDetail.tsx         # 섹터 상세 모달 (보유종목 트리맵)
+│   │   │   └── MarketReview/            # 증시 마감 리뷰 (신규)
+│   │   │       ├── MarketReviewSection.tsx  # 메인 컨테이너
+│   │   │       ├── IndexSummary.tsx         # 지수 마감 카드
+│   │   │       ├── TopMoversCard.tsx        # 급등/급락 종목
+│   │   │       ├── MajorStocksCard.tsx      # 시총 Top 5
+│   │   │       ├── SectorSummary.tsx        # 섹터 등락 요약
+│   │   │       └── AIInsightCard.tsx        # AI 분석 카드
 │   │   ├── layout/          # 레이아웃 컴포넌트
 │   │   │   ├── TopNav.tsx       # 상단 네비게이션 (ThemeToggle 포함)
 │   │   │   ├── PageHeader.tsx   # 공통 페이지 헤더
@@ -530,6 +537,47 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - **프로젝트 가이드**: `CLAUDE.md`
 
 ## 최근 변경 이력
+
+### 2026-02-13: 증시 마감 리뷰 버그 수정 및 개선
+
+1. **pykrx fallback 코드 제거**
+   - `services/market_review_service.py` 수정
+     - 한국 급등/급락 조회: pykrx fallback 코드 완전 제거
+     - KIS Open API만 사용 (자격 증명 없으면 빈 배열 반환)
+     - 로그 레벨 변경: WARNING → DEBUG (자격 증명 없음 로그)
+
+2. **Admin Fallback 패턴 적용**
+   - `api/routes/economic.py` 수정
+     - Admin 사용자: 환경변수 KIS 키 사용 (heatmap 패턴과 동일)
+     - 일반 사용자: DB에 저장된 개인 KIS 키 사용
+     - Gemini 분석도 Admin 설정 값 사용
+
+3. **미국 급등/급락 데이터 개선**
+   - `services/market_review_service.py` 수정
+     - 기존: 하드코딩된 16개 심볼에서 정렬 (부정확)
+     - 변경: Yahoo Finance Screener API 사용 (`day_gainers`, `day_losers`)
+     - 실제 당일 급등/급락 Top 5 조회
+
+4. **Gemini 모델명 수정**
+   - `services/market_review_service.py` 수정
+     - 기존: `"gemini-1.5-flash"` (404 에러 발생)
+     - 변경: `"models/gemini-flash-latest"` (stock_service.py와 통일)
+
+5. **마감 리뷰 탭 UI 통일**
+   - `EconomicIndicators.tsx` 수정
+     - `reviewCountry` 상태 추가
+     - SubTabHeader에 국가 선택 탭 추가 (경제 지표/섹터 히트맵과 동일)
+     - 국가 미선택 시 안내 화면 표시
+   - `MarketReviewSection.tsx` 수정
+     - props로 `country` 받도록 변경 (내부 상태 제거)
+     - 새로고침 버튼 헤더로 이동
+
+6. **AI 분석 에러 처리 개선**
+   - `AIInsightCard.tsx` 수정
+     - AI 분석 실패 시 샘플 데이터 대신 에러 표시
+     - API 키 없는 경우: Key 아이콘 + "Gemini API 키가 필요합니다" + 설정 안내
+     - 일반 에러: AlertCircle 아이콘 + "AI 분석 실패" + 재시도 버튼
+     - PortfolioPage AI 에러 디자인과 통일
 
 ### 2026-02-11: Docker Compose 구조 통합 (override.yml 패턴)
 

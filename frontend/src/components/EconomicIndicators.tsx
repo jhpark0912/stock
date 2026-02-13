@@ -27,6 +27,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
   const { user } = useAuth();
   const [country, setCountry] = useState<Country>(null);
   const [sectorCountry, setSectorCountry] = useState<Country>(null);  // 섹터 히트맵용 국가
+  const [reviewCountry, setReviewCountry] = useState<Country>(null);  // 마감 리뷰용 국가
   const [data, setData] = useState<EconomicData | null>(null);
   const [krData, setKrData] = useState<KoreaEconomicData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -164,6 +165,9 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
         {activeTab === 'sectors' && (
           <CountryTab selected={sectorCountry} onChange={setSectorCountry} />
         )}
+        {activeTab === 'review' && (
+          <CountryTab selected={reviewCountry} onChange={setReviewCountry} />
+        )}
       </div>
     </div>
   );
@@ -180,11 +184,35 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
 
   // 마감 리뷰 탭
   if (activeTab === 'review') {
+    // 국가 미선택 시 안내
+    if (reviewCountry === null) {
+      return (
+        <div className={cn('h-full', className)}>
+          <SubTabHeader />
+          <div className="flex items-center justify-center h-[calc(100%-80px)]">
+            <div className="text-center max-w-md px-6">
+              <div className="mb-6">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4">
+                  <TrendingUp className="h-10 w-10 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold text-foreground mb-2">
+                  마감 리뷰를 확인할 국가를 선택하세요
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  상단 우측의 국가 탭을 클릭하여 시작하세요.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className={cn('h-full flex flex-col overflow-hidden', className)}>
         <SubTabHeader />
         <div className="flex-1 overflow-auto">
-          <MarketReviewSection />
+          <MarketReviewSection country={reviewCountry} />
         </div>
       </div>
     );

@@ -587,7 +587,7 @@ async def get_market_review_api(
     try:
         logger.debug(f"증시 마감 리뷰 조회 요청 (country={country})")
 
-        # KIS API 자격 증명 (한국 급등/급락 조회용)
+        # KIS API 자격 증명 (한국 급등/급락, 시총 조회용)
         kis_app_key = None
         kis_app_secret = None
 
@@ -599,7 +599,17 @@ async def get_market_review_api(
                 kis_app_key, kis_app_secret = kis_credentials
                 logger.debug(f"사용자 KIS 자격 증명 사용 (user_id={current_user.id})")
             else:
-                logger.debug(f"사용자 KIS 자격 증명 없음 (user_id={current_user.id})")
+                # Admin인 경우 환경변수 키 사용 (fallback)
+                if current_user.role == "admin":
+                    from app.config import settings
+                    if settings.kis_app_key and settings.kis_app_secret:
+                        kis_app_key = settings.kis_app_key
+                        kis_app_secret = settings.kis_app_secret
+                        logger.debug("Admin 사용자 - 환경변수 KIS 키 사용")
+                    else:
+                        logger.debug("환경변수에 KIS 키 없음")
+                else:
+                    logger.debug(f"사용자 KIS 자격 증명 없음 (user_id={current_user.id})")
 
         review_data = await get_market_review(
             country,
@@ -654,7 +664,7 @@ async def generate_market_review_ai_api(
 
         # Gemini API 키 조회
         user_repo = UserRepository(db)
-        api_key = user_repo.get_gemini_api_key(current_user.id)
+        api_key = user_repo.get_gemini_key(current_user.id)
 
         if not api_key:
             # Admin인 경우 환경변수 키 사용

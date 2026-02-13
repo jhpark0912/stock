@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { Bot, Sparkles, Loader2, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Bot, Sparkles, Loader2, AlertCircle, ChevronDown, ChevronUp, Key, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { MarketReviewAI } from '@/types/marketReview';
@@ -16,6 +16,7 @@ interface AIInsightCardProps {
   country: 'kr' | 'us';
   disabled?: boolean;
   disabledReason?: string;
+  error?: string | null;
 }
 
 export function AIInsightCard({
@@ -25,6 +26,7 @@ export function AIInsightCard({
   country,
   disabled = false,
   disabledReason,
+  error,
 }: AIInsightCardProps) {
   const [expanded, setExpanded] = useState(true);
 
@@ -56,28 +58,95 @@ export function AIInsightCard({
       {/* 콘텐츠 */}
       {expanded && (
         <div className="p-4">
-          {/* 분석이 없을 때: 생성 버튼 */}
+          {/* 분석이 없을 때: 생성 버튼 또는 에러 */}
           {!analysis && !loading && (
-            <div className="flex flex-col items-center justify-center py-6 gap-4">
-              <div className="p-4 rounded-full bg-indigo-100 dark:bg-indigo-900/30">
-                <Sparkles className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
-              </div>
-              <p className="text-sm text-muted-foreground text-center">
-                AI가 오늘의 시장을 분석하여<br />핵심 포인트를 요약해 드립니다.
-              </p>
-              <Button
-                onClick={onGenerate}
-                disabled={disabled || loading}
-                className="gap-2"
-              >
-                <Bot className="h-4 w-4" />
-                AI 분석 생성
-              </Button>
-              {disabled && disabledReason && (
-                <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>{disabledReason}</span>
-                </div>
+            <div className="text-center py-8 space-y-4">
+              {/* 에러 상태 */}
+              {error ? (
+                <>
+                  {/* API 키 관련 에러 */}
+                  {(error.includes('API 키') || error.includes('Gemini')) ? (
+                    <>
+                      <div className="flex justify-center">
+                        <div className="h-16 w-16 rounded-full bg-warning/10 flex items-center justify-center">
+                          <Key className="h-8 w-8 text-warning" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          Gemini API 키가 필요합니다
+                        </h3>
+                        <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                          AI 마감 리뷰 분석 기능을 사용하려면 Google Gemini API 키를 설정해주세요.
+                          설정 페이지에서 API 키를 등록할 수 있습니다.
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => window.location.href = '/settings'}
+                        className="gap-2"
+                      >
+                        <Key className="h-4 w-4" />
+                        설정에서 API 키 등록하기
+                      </Button>
+                    </>
+                  ) : (
+                    /* 일반 에러 */
+                    <>
+                      <div className="flex justify-center">
+                        <div className="h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center">
+                          <AlertCircle className="h-8 w-8 text-destructive" />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          AI 분석 실패
+                        </h3>
+                        <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                          {error}
+                        </p>
+                      </div>
+                      <Button
+                        onClick={onGenerate}
+                        variant="outline"
+                        className="gap-2"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                        다시 시도
+                      </Button>
+                    </>
+                  )}
+                </>
+              ) : (
+                /* 정상 상태: 생성 버튼 */
+                <>
+                  <div className="flex justify-center">
+                    <div className="h-16 w-16 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center">
+                      <Sparkles className="h-8 w-8 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-foreground">
+                      AI 마감 리뷰 분석
+                    </h3>
+                    <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                      AI가 오늘의 시장을 분석하여 핵심 포인트를 요약해 드립니다.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={onGenerate}
+                    disabled={disabled || loading}
+                    className="gap-2"
+                  >
+                    <Bot className="h-4 w-4" />
+                    AI 분석 생성
+                  </Button>
+                  {disabled && disabledReason && (
+                    <div className="flex items-center justify-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                      <AlertCircle className="h-4 w-4" />
+                      <span>{disabledReason}</span>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}

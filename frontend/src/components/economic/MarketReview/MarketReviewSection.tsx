@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { RefreshCw, Calendar, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { RefreshCw, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { IndexSummary } from './IndexSummary';
@@ -15,13 +15,14 @@ import { AIInsightCard } from './AIInsightCard';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { api } from '@/lib/api';
 import type { MarketReviewData, MarketReviewAI, MarketReviewResponse, MarketReviewAIResponse } from '@/types/marketReview';
-import type { Country } from '@/types/economic';
-import { CountryTab } from '../CountryTab';
 
 // Mock 데이터 (Fallback)
 import { mockKrMarketReview, mockUsMarketReview, mockKrAIAnalysis, mockUsAIAnalysis } from '@/mocks/marketReviewMock';
 
+type ReviewCountry = 'kr' | 'us';
+
 interface MarketReviewSectionProps {
+  country: ReviewCountry;
   className?: string;
 }
 
@@ -37,14 +38,12 @@ function formatDate(dateStr: string): string {
   return `${year}년 ${month}월 ${day}일 (${weekday})`;
 }
 
-type ReviewCountry = 'kr' | 'us';
-
-export function MarketReviewSection({ className }: MarketReviewSectionProps) {
-  const [country, setCountry] = useState<ReviewCountry>('kr');
+export function MarketReviewSection({ country, className }: MarketReviewSectionProps) {
   const [data, setData] = useState<MarketReviewData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
   const [useMock, setUseMock] = useState(false); // false: 실제 API 사용, true: Mock 데이터
   
   // 중복 호출 방지용 ref
@@ -98,6 +97,8 @@ export function MarketReviewSection({ className }: MarketReviewSectionProps) {
     if (!data) return;
     
     setAiLoading(true);
+    setAiError(null);
+    
     try {
       if (useMock) {
         // Mock AI 분석
@@ -110,15 +111,15 @@ export function MarketReviewSection({ className }: MarketReviewSectionProps) {
         if (response.data.success && response.data.data) {
           setData(prev => prev ? { ...prev, ai_analysis: response.data.data } : null);
         } else {
-          // AI 실패 시 Mock 데이터로 Fallback
-          const mockAI = country === 'kr' ? mockKrAIAnalysis : mockUsAIAnalysis;
-          setData(prev => prev ? { ...prev, ai_analysis: mockAI } : null);
+          // AI 실패 시 에러 메시지 표시
+          const errorMsg = response.data.error || 'AI 분석 생성에 실패했습니다.';
+          setAiError(errorMsg);
         }
       }
-    } catch (err) {
-      // AI 오류 시 Mock 데이터로 Fallback
-      const mockAI = country === 'kr' ? mockKrAIAnalysis : mockUsAIAnalysis;
-      setData(prev => prev ? { ...prev, ai_analysis: mockAI } : null);
+    } catch (err: any) {
+      // AI 오류 시 에러 메시지 표시
+      const errorMsg = err?.response?.data?.error || err?.message || 'AI 분석 중 오류가 발생했습니다.';
+      setAiError(errorMsg);
     } finally {
       setAiLoading(false);
     }
@@ -126,18 +127,13 @@ export function MarketReviewSection({ className }: MarketReviewSectionProps) {
 
   // 국가 변경 시 데이터 로드
   useEffect(() => {
+    // 국가가 변경되면 캐시 초기화 후 새로 로드
+    loadedCountryRef.current = null;
     loadData(country);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [country]); // loadData를 의존성에서 제외하여 중복 호출 방지
 
-  // 국가 변경 핸들러 (타입 변환)
-  const handleCountryChange = (newCountry: Country) => {
-    if (newCountry === 'kr' || newCountry === 'us') {
-      // 국가 변경 시 캐시된 데이터 초기화
-      loadedCountryRef.current = null;
-      setCountry(newCountry);
-    }
-  };
+
 
   // 새로고침 핸들러
   const handleRefresh = () => {
@@ -165,14 +161,6 @@ export function MarketReviewSection({ className }: MarketReviewSectionProps) {
   if (error) {
     return (
       <div className={cn('', className)}>
-        {/* 국가 선택 탭 */}
-        <div className="px-6 py-4 border-b">
-          <CountryTab
-            selected={country}
-            onChange={handleCountryChange}
-          />
-        </div>
-
         <div className="flex items-center justify-center p-6">
           <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-6 text-center max-w-md">
             <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-3" />
@@ -192,14 +180,6 @@ export function MarketReviewSection({ className }: MarketReviewSectionProps) {
   if (!data) {
     return (
       <div className={cn('', className)}>
-        {/* 국가 선택 탭 */}
-        <div className="px-6 py-4 border-b">
-          <CountryTab
-            selected={country}
-            onChange={handleCountryChange}
-          />
-        </div>
-
         <div className="flex items-center justify-center p-6">
           <div className="text-center text-muted-foreground">
             데이터가 없습니다.
@@ -211,26 +191,6 @@ export function MarketReviewSection({ className }: MarketReviewSectionProps) {
 
   return (
     <div className={cn('', className)}>
-      {/* 국가 선택 탭 */}
-      <div className="px-6 py-4 border-b flex items-center justify-between">
-        <CountryTab
-          selected={country}
-          onChange={handleCountryChange}
-        />
-
-        {/* 새로고침 버튼 */}
-        <Button
-          onClick={handleRefresh}
-          variant="outline"
-          size="sm"
-          disabled={loading}
-          className="gap-2"
-        >
-          <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
-          새로고침
-        </Button>
-      </div>
-
       {/* 마감 리뷰 헤더 */}
       <div className="px-6 py-4 bg-muted/30 border-b">
         <div className="flex items-center justify-between">
@@ -254,6 +214,18 @@ export function MarketReviewSection({ className }: MarketReviewSectionProps) {
               </div>
             </div>
           </div>
+
+          {/* 새로고침 버튼 */}
+          <Button
+            onClick={handleRefresh}
+            variant="outline"
+            size="sm"
+            disabled={loading}
+            className="gap-2"
+          >
+            <RefreshCw className={cn('h-4 w-4', loading && 'animate-spin')} />
+            새로고침
+          </Button>
         </div>
       </div>
 
@@ -315,6 +287,7 @@ export function MarketReviewSection({ className }: MarketReviewSectionProps) {
           onGenerate={handleGenerateAI}
           loading={aiLoading}
           country={country}
+          error={aiError}
         />
       </div>
     </div>

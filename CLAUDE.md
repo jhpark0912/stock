@@ -57,6 +57,12 @@ Claude는 다음 작업 후 **반드시** `.claude/PROJECT_STRUCTURE.md`를 업�
 
 ---
 
+## ⚠️ 탐색 규칙
+
+- plan 모드에서 병렬 에이전트 탐색 금지
+- 코드 탐색 전 반드시 `.claude/PROJECT_STRUCTURE.md`의 구조 정보를 먼저 활용할 것
+- 추가 탐색이 필요하면 최소한의 파일만 열 것
+
 ## Git Commit 워크플로우
 
 **필수 참조**: `.claude/COMMIT_CONVENTION.md`
