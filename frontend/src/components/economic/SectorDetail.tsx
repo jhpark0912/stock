@@ -152,10 +152,12 @@ const CustomTooltip = ({ active, payload }: any) => {
         {data.isKorea ? data.symbol : data.name}
       </p>
       <div className="space-y-1 text-xs">
-        <div className="flex justify-between">
-          <span className="text-muted-foreground">비중</span>
-          <span className="font-medium">{data.weight.toFixed(2)}%</span>
-        </div>
+        {data.weight !== null && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">비중</span>
+            <span className="font-medium">{data.weight.toFixed(2)}%</span>
+          </div>
+        )}
         {data.price !== null && (
           <div className="flex justify-between">
             <span className="text-muted-foreground">가격</span>
@@ -227,20 +229,22 @@ const CustomTreemapContent = (props: any) => {
 
           {showFullInfo && (
             <>
-              {/* 비중 */}
-              <text
-                x={x + width / 2}
-                y={y + height / 2 + 6}
-                textAnchor="middle"
-                fill="#ffffff"
-                stroke="none"
-                fontSize={13}
-                fontWeight="500"
-                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
-                className="pointer-events-none select-none"
-              >
-                {weight.toFixed(1)}%
-              </text>
+              {/* 비중 (weight가 있을 때만) */}
+              {weight !== null && (
+                <text
+                  x={x + width / 2}
+                  y={y + height / 2 + 6}
+                  textAnchor="middle"
+                  fill="#ffffff"
+                  stroke="none"
+                  fontSize={13}
+                  fontWeight="500"
+                  style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+                  className="pointer-events-none select-none"
+                >
+                  {weight.toFixed(1)}%
+                </text>
+              )}
 
               {/* 변화율 */}
               {change !== null && (
@@ -302,9 +306,10 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
 
         if (response.data.success && response.data.holdings) {
           setHoldings(response.data.holdings);
-        } else if (response.data.requires_kis_key) {
-          setRequiresKisKey(true);
-          setError(response.data.error || '한국투자증권 API 키가 필요합니다.');
+          // pykrx fallback인 경우 KIS 키 안내 배너 표시
+          if (response.data.requires_kis_key) {
+            setRequiresKisKey(true);
+          }
         } else {
           setError(response.data.error || '보유 종목을 불러올 수 없습니다.');
         }
@@ -385,42 +390,37 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-16 text-center px-6">
-              {requiresKisKey ? (
-                <>
-                  {/* KIS 키 필요 안내 */}
-                  <Key className="h-12 w-12 text-primary mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">한국투자증권 API 키 필요</h3>
-                  <p className="text-sm text-muted-foreground mb-6 max-w-md">
-                    한국 섹터 ETF의 실시간 구성종목 정보를 조회하려면 한국투자증권 API 키가 필요합니다.
-                    설정 페이지에서 App Key와 App Secret을 입력해주세요.
-                  </p>
-                  <div className="space-y-3">
-                    <Button
-                      onClick={() => {
-                        onClose();
-                        window.location.href = '/settings';
-                      }}
-                      className="w-full"
-                    >
-                      <Key className="h-4 w-4 mr-2" />
-                      설정에서 키 입력하기
-                    </Button>
-                    <p className="text-xs text-muted-foreground">
-                      한국투자증권 API 포털에서 무료로 키를 발급받을 수 있습니다
-                    </p>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* 일반 에러 */}
-                  <AlertCircle className="h-10 w-10 text-destructive mb-3" />
-                  <p className="text-destructive font-medium mb-1">오류 발생</p>
-                  <p className="text-sm text-muted-foreground">{error}</p>
-                </>
-              )}
+              <AlertCircle className="h-10 w-10 text-destructive mb-3" />
+              <p className="text-destructive font-medium mb-1">오류 발생</p>
+              <p className="text-sm text-muted-foreground">{error}</p>
             </div>
           ) : (
             <div className="space-y-4">
+              {/* KIS API 키 안내 배너 (pykrx fallback 시) */}
+              {requiresKisKey && (
+                <div className="flex items-start gap-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                  <Key className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-foreground font-medium">
+                      마감 데이터로 표시 중
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      한국투자증권 API 키를 설정하면 실시간 상세 정보(비중 포함)를 확인할 수 있습니다.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-shrink-0 h-7 text-xs"
+                    onClick={() => {
+                      onClose();
+                      window.location.href = '/settings';
+                    }}
+                  >
+                    설정
+                  </Button>
+                </div>
+              )}
               {/* 트리맵 */}
               <div className="h-[300px] w-full rounded-lg overflow-hidden border bg-gray-900">
                 <ResponsiveContainer width="100%" height="100%">
@@ -493,10 +493,12 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
                         </div>
                       </div>
                       <div className="flex items-center gap-4 text-right">
-                        <div>
-                          <div className="text-sm font-medium">{holding.weight.toFixed(2)}%</div>
-                          <div className="text-xs text-muted-foreground">비중</div>
-                        </div>
+                        {holding.weight !== null && (
+                          <div>
+                            <div className="text-sm font-medium">{holding.weight.toFixed(2)}%</div>
+                            <div className="text-xs text-muted-foreground">비중</div>
+                          </div>
+                        )}
                         {holding.change_1d !== null && (
                           <div className={cn(
                             'text-sm font-medium min-w-[60px] text-right',

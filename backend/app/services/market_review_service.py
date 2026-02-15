@@ -186,108 +186,104 @@ async def get_kr_top_movers(
     kis_app_secret: Optional[str] = None
 ) -> tuple[List[StockMoverData], List[StockMoverData]]:
     """
-    한국 급등/급락 종목 Top 5 조회 (KIS Open API)
+    한국 급등/급락 종목 Top 5 조회
     
+    우선순위:
+    1. KIS Open API (실시간)
+    2. pykrx (마감 후 확정 데이터) - fallback
+        
     Args:
         kis_app_key: KIS App Key
         kis_app_secret: KIS App Secret
         
     Returns:
         (급등 Top 5, 급락 Top 5)
-        KIS 키 없으면 빈 배열 반환
     """
-    # KIS API 자격 증명이 없으면 빈 배열 반환
-    if not kis_app_key or not kis_app_secret:
-        logger.debug("KIS API 자격 증명 없음 - 급등/급락 Top 5 조회 불가")
-        return [], []
+    # 1. KIS API 시도
+    if kis_app_key and kis_app_secret:
+        try:
+            from app.services.kis_api_service import get_fluctuation_ranking as kis_get_fluctuation
+
+            logger.debug("[MarketReview] KIS API로 등락률 순위 조회")
+            kis_gainers, kis_losers = await kis_get_fluctuation(
+                app_key=kis_app_key,
+                app_secret=kis_app_secret,
+                market="ALL",
+                limit=5
+            )
+
+            if kis_gainers or kis_losers:
+                # KIS 데이터를 StockMoverData로 변환
+                gainers = [
+                    StockMoverData(
+                        rank=g.rank if g.rank > 0 else idx + 1,
+                        symbol=g.symbol,
+                        name=g.name,
+                        price=g.price,
+                        change_percent=g.change_percent,
+                        volume=g.volume if g.volume > 0 else None,
+                    )
+                    for idx, g in enumerate(kis_gainers)
+                ]
+
+                losers = [
+                    StockMoverData(
+                        rank=l.rank if l.rank > 0 else idx + 1,
+                        symbol=l.symbol,
+                        name=l.name,
+                        price=l.price,
+                        change_percent=l.change_percent,
+                        volume=l.volume if l.volume > 0 else None,
+                    )
+                    for idx, l in enumerate(kis_losers)
+                ]
+
+                logger.debug(f"[MarketReview] KIS API 조회 성공: 상승 {len(gainers)}개, 하락 {len(losers)}개")
+                return gainers, losers
+
+        except Exception as e:
+            logger.warning(f"[MarketReview] KIS API 등락률 조회 실패, pykrx로 fallback: {e}")
     
+    # 2. pykrx fallback
     try:
-        from app.services.kis_api_service import get_fluctuation_ranking
-
-        logger.debug("[MarketReview] KIS API로 등락률 순위 조회")
-        kis_gainers, kis_losers = await get_fluctuation_ranking(
-            app_key=kis_app_key,
-            app_secret=kis_app_secret,
-            market="ALL",
-            limit=5
-        )
-
-        # KIS 데이터를 StockMoverData로 변환
+        from app.services.pykrx_service import get_fluctuation_ranking as pykrx_get_fluctuation, is_pykrx_available
+        
+        if not is_pykrx_available():
+            logger.warning("[MarketReview] pykrx가 설치되지 않음 - 급등/급락 조회 불가")
+            return [], []
+        
+        logger.debug("[MarketReview] pykrx로 등락률 순위 조회 (fallback)")
+        pykrx_gainers, pykrx_losers = await pykrx_get_fluctuation(market="ALL", limit=5)
+        
         gainers = [
             StockMoverData(
-                rank=g.rank if g.rank > 0 else idx + 1,
+                rank=g.rank,
                 symbol=g.symbol,
                 name=g.name,
                 price=g.price,
                 change_percent=g.change_percent,
                 volume=g.volume if g.volume > 0 else None,
             )
-            for idx, g in enumerate(kis_gainers)
+            for g in pykrx_gainers
         ]
-
+        
         losers = [
             StockMoverData(
-                rank=l.rank if l.rank > 0 else idx + 1,
+                rank=l.rank,
                 symbol=l.symbol,
                 name=l.name,
                 price=l.price,
                 change_percent=l.change_percent,
                 volume=l.volume if l.volume > 0 else None,
             )
-            for idx, l in enumerate(kis_losers)
+            for l in pykrx_losers
         ]
-
-        logger.debug(f"[MarketReview] KIS API 조회 성공: 상승 {len(gainers)}개, 하락 {len(losers)}개")
+        
+        logger.debug(f"[MarketReview] pykrx 조회 성공: 상승 {len(gainers)}개, 하락 {len(losers)}개")
         return gainers, losers
-
+        
     except Exception as e:
-        logger.error(f"한국 급등/급락 종목 조회 실패: {e}")
-        return [], []
-
-        # 등락률 계산 (이미 포함되어 있지 않은 경우)
-        if "등락률" not in df.columns:
-            df["등락률"] = ((df["종가"] - df["시가"]) / df["시가"] * 100).round(2)
-
-        # 급등주 Top 5
-        gainers_df = df.nlargest(5, "등락률")
-        gainers = []
-        for rank, (ticker, row) in enumerate(gainers_df.iterrows(), 1):
-            try:
-                name = stock.get_market_ticker_name(ticker)
-            except Exception:
-                name = ticker
-            gainers.append(StockMoverData(
-                rank=rank,
-                symbol=ticker,
-                name=name,
-                price=row["종가"],
-                change_percent=row["등락률"],
-                volume=int(row["거래량"]) if "거래량" in row else None,
-            ))
-
-        # 급락주 Top 5
-        losers_df = df.nsmallest(5, "등락률")
-        losers = []
-        for rank, (ticker, row) in enumerate(losers_df.iterrows(), 1):
-            try:
-                name = stock.get_market_ticker_name(ticker)
-            except Exception:
-                name = ticker
-            losers.append(StockMoverData(
-                rank=rank,
-                symbol=ticker,
-                name=name,
-                price=row["종가"],
-                change_percent=row["등락률"],
-                volume=int(row["거래량"]) if "거래량" in row else None,
-            ))
-
-        return gainers, losers
-    except ImportError:
-        logger.warning("pykrx 라이브러리가 설치되지 않음")
-        return [], []
-    except Exception as e:
-        logger.error(f"한국 급등/급락 종목 조회 실패: {e}")
+        logger.error(f"[MarketReview] pykrx 등락률 조회 실패: {e}")
         return [], []
 
 
@@ -349,7 +345,9 @@ async def get_kr_major_stocks(
 ) -> tuple[List[MajorStockData], List[MajorStockData]]:
     """한국 시가총액 Top 5 종목 조회 (KOSPI, KOSDAQ 각각)
     
-    KIS Open API 사용
+    우선순위:
+    1. KIS Open API (실시간)
+    2. pykrx (마감 후 확정 데이터) - fallback
     
     Args:
         kis_app_key: KIS App Key
@@ -358,22 +356,66 @@ async def get_kr_major_stocks(
     Returns:
         (KOSPI Top 5, KOSDAQ Top 5)
     """
-    # KIS API 자격 증명이 없으면 빈 배열 반환
-    if not kis_app_key or not kis_app_secret:
-        logger.debug("KIS API 자격 증명 없음 - 시총 Top 5 조회 불가")
-        return [], []
+    # 1. KIS API 시도
+    if kis_app_key and kis_app_secret:
+        try:
+            from app.services.kis_api_service import get_market_cap_ranking as kis_get_market_cap
+            
+            # KOSPI, KOSDAQ 병렬 조회
+            kospi_task = kis_get_market_cap(kis_app_key, kis_app_secret, "KOSPI", 5)
+            kosdaq_task = kis_get_market_cap(kis_app_key, kis_app_secret, "KOSDAQ", 5)
+            
+            kospi_result, kosdaq_result = await asyncio.gather(kospi_task, kosdaq_task)
+            
+            if kospi_result or kosdaq_result:
+                # KISMarketCapStock -> MajorStockData 변환
+                kospi_stocks = [
+                    MajorStockData(
+                        rank=stock.rank,
+                        symbol=stock.symbol,
+                        name=stock.name,
+                        price=stock.price,
+                        change_percent=stock.change_percent,
+                        market_cap=stock.market_cap,
+                    )
+                    for stock in kospi_result
+                ]
+                
+                kosdaq_stocks = [
+                    MajorStockData(
+                        rank=stock.rank,
+                        symbol=stock.symbol,
+                        name=stock.name,
+                        price=stock.price,
+                        change_percent=stock.change_percent,
+                        market_cap=stock.market_cap,
+                    )
+                    for stock in kosdaq_result
+                ]
+                
+                logger.debug(f"[MarketReview] KIS API 시총 조회 성공: KOSPI {len(kospi_stocks)}개, KOSDAQ {len(kosdaq_stocks)}개")
+                return kospi_stocks, kosdaq_stocks
+            
+        except Exception as e:
+            logger.warning(f"[MarketReview] KIS API 시총 조회 실패, pykrx로 fallback: {e}")
     
+    # 2. pykrx fallback
     try:
-        from app.services.kis_api_service import get_market_cap_ranking
+        from app.services.pykrx_service import get_market_cap_ranking as pykrx_get_market_cap, is_pykrx_available
+        
+        if not is_pykrx_available():
+            logger.warning("[MarketReview] pykrx가 설치되지 않음 - 시총 Top 5 조회 불가")
+            return [], []
+        
+        logger.debug("[MarketReview] pykrx로 시가총액 순위 조회 (fallback)")
         
         # KOSPI, KOSDAQ 병렬 조회
-        import asyncio
-        kospi_task = get_market_cap_ranking(kis_app_key, kis_app_secret, "KOSPI", 5)
-        kosdaq_task = get_market_cap_ranking(kis_app_key, kis_app_secret, "KOSDAQ", 5)
+        kospi_task = pykrx_get_market_cap(market="KOSPI", limit=5)
+        kosdaq_task = pykrx_get_market_cap(market="KOSDAQ", limit=5)
         
         kospi_result, kosdaq_result = await asyncio.gather(kospi_task, kosdaq_task)
         
-        # KISMarketCapStock -> MajorStockData 변환
+        # PykrxStock -> MajorStockData 변환
         kospi_stocks = [
             MajorStockData(
                 rank=stock.rank,
@@ -398,11 +440,11 @@ async def get_kr_major_stocks(
             for stock in kosdaq_result
         ]
         
-        logger.debug(f"한국 시총 Top 5 조회 완료: KOSPI {len(kospi_stocks)}개, KOSDAQ {len(kosdaq_stocks)}개")
+        logger.debug(f"[MarketReview] pykrx 시총 조회 성공: KOSPI {len(kospi_stocks)}개, KOSDAQ {len(kosdaq_stocks)}개")
         return kospi_stocks, kosdaq_stocks
         
     except Exception as e:
-        logger.error(f"한국 시총 상위 종목 조회 실패: {e}")
+        logger.error(f"[MarketReview] pykrx 시총 조회 실패: {e}")
         return [], []
 
 
@@ -455,29 +497,24 @@ async def get_us_major_stocks() -> List[MajorStockData]:
 async def get_kr_sector_performance() -> List[SectorPerformanceData]:
     """한국 섹터 등락률 조회 (섹터 ETF 기반)"""
     try:
-        # 한국 섹터 ETF
-        sector_etfs = {
-            "091160.KS": ("반도체", "SK하이닉스"),
-            "091170.KS": ("자동차", "현대차"),
-            "091180.KS": ("건설", "대우건설"),
-            "091220.KS": ("화학", "LG화학"),
-            "091230.KS": ("철강", "포스코"),
-            "244580.KS": ("헬스케어", "삼성바이오"),
-            "091210.KS": ("금융", "KB금융"),
-            "091200.KS": ("에너지", "SK이노베이션"),
-        }
+        # korea_sector_service의 KOREA_SECTOR_ETFS 사용 (일관성 유지)
+        from app.services.korea_sector_service import KOREA_SECTOR_ETFS, KOREA_SECTOR_HOLDINGS
         
-        symbols = list(sector_etfs.keys())
+        symbols = list(KOREA_SECTOR_ETFS.keys())
         ticker = Ticker(symbols)
         data = ticker.price
         
         sectors = []
-        for symbol, (sector_name, top_stock) in sector_etfs.items():
+        for symbol, meta in KOREA_SECTOR_ETFS.items():
             if symbol in data and isinstance(data[symbol], dict):
                 info = data[symbol]
                 change_pct = info.get("regularMarketChangePercent", 0) * 100
+                # 상위 보유 종목 (첫 번째 종목)
+                holdings = KOREA_SECTOR_HOLDINGS.get(symbol, [])
+                top_stock = holdings[0] if holdings else ""
+                
                 sectors.append(SectorPerformanceData(
-                    sector=sector_name,
+                    sector=meta["name"],
                     change_percent=round(change_pct, 2),
                     top_stock=top_stock,
                 ))
@@ -493,34 +530,22 @@ async def get_kr_sector_performance() -> List[SectorPerformanceData]:
 async def get_us_sector_performance() -> List[SectorPerformanceData]:
     """미국 섹터 등락률 조회 (섹터 ETF 기반)"""
     try:
-        # 미국 섹터 ETF (SPDR)
-        sector_etfs = {
-            "XLK": ("Technology", "MSFT"),
-            "XLV": ("Healthcare", "UNH"),
-            "XLF": ("Financials", "JPM"),
-            "XLE": ("Energy", "XOM"),
-            "XLI": ("Industrials", "BA"),
-            "XLY": ("Consumer Discretionary", "TSLA"),
-            "XLP": ("Consumer Staples", "PG"),
-            "XLU": ("Utilities", "NEE"),
-            "XLC": ("Communication", "META"),
-            "XLRE": ("Real Estate", "AMT"),
-            "XLB": ("Materials", "LIN"),
-        }
+        # sector_service의 SECTOR_ETFS 사용 (일관성 유지)
+        from app.services.sector_service import SECTOR_ETFS
         
-        symbols = list(sector_etfs.keys())
+        symbols = list(SECTOR_ETFS.keys())
         ticker = Ticker(symbols)
         data = ticker.price
         
         sectors = []
-        for symbol, (sector_name, top_stock) in sector_etfs.items():
+        for symbol, meta in SECTOR_ETFS.items():
             if symbol in data and isinstance(data[symbol], dict):
                 info = data[symbol]
                 change_pct = info.get("regularMarketChangePercent", 0) * 100
                 sectors.append(SectorPerformanceData(
-                    sector=sector_name,
+                    sector=meta["name_en"],  # 영문 이름 사용
                     change_percent=round(change_pct, 2),
-                    top_stock=top_stock,
+                    top_stock=meta.get("top_stock", ""),
                 ))
         
         # 등락률 기준 정렬

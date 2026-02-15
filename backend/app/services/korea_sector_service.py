@@ -250,6 +250,11 @@ async def get_korea_sector_holdings(
     """
     한국 섹터 ETF 보유 종목 조회
     
+    우선순위:
+    1. KIS Open API (실시간)
+    2. pykrx (마감 후 확정 데이터) - fallback
+    3. 정적 메타데이터 - fallback
+    
     Args:
         symbol: 섹터 ETF 심볼 (예: 091160.KS)
         kis_credentials: (app_key, app_secret) 튜플 (선택)
@@ -263,7 +268,7 @@ async def get_korea_sector_holdings(
     
     meta = KOREA_SECTOR_ETFS[symbol]
     
-    # KIS API 사용 가능 시 실시간 조회
+    # 1. KIS API 사용 가능 시 실시간 조회
     if kis_credentials:
         try:
             from app.services.kis_api_service import get_etf_holdings
@@ -295,16 +300,43 @@ async def get_korea_sector_holdings(
                     "note": "한국투자증권 API로 조회된 실시간 데이터입니다."
                 }
         except Exception as e:
-            logger.error(f"[KIS] ETF {symbol} 조회 실패: {e}")
-            # Fallback to static data
+            logger.warning(f"[KIS] ETF {symbol} 조회 실패, pykrx로 fallback: {e}")
     
-    # Fallback: 정적 메타데이터
+    # 2. pykrx fallback - 정적 메타데이터 + 시세 조회
+    try:
+        from app.services.pykrx_service import get_etf_portfolio, is_pykrx_available, get_data_date
+        
+        if is_pykrx_available():
+            logger.debug(f"[pykrx] ETF {symbol} 구성종목 조회 (fallback)")
+            
+            etf_code = symbol.replace(".KS", "")
+            holdings_data = await get_etf_portfolio(etf_code, limit=10)
+            
+            if holdings_data:
+                data_date = get_data_date()
+                return {
+                    "sector_symbol": symbol,
+                    "sector_name": meta["name"],
+                    "holdings": holdings_data,
+                    "last_updated": datetime.now().isoformat(),
+                    "note": f"{data_date} 기준 마감 데이터입니다. 한국투자증권 API 키를 설정하면 실시간 상세 정보(비중 포함)를 확인할 수 있습니다.",
+                    "requires_kis_key": True
+                }
+    except Exception as e:
+        logger.warning(f"[pykrx] ETF {symbol} 조회 실패: {e}")
+    
+    # 3. Fallback: 정적 메타데이터만 반환
     holdings_names = KOREA_SECTOR_HOLDINGS.get(symbol, [])
-    
+
+    # 정적 메타데이터도 없으면 실패
+    if not holdings_names:
+        logger.error(f"[Fallback] ETF {symbol} 정적 메타데이터 없음 - 모든 조회 실패")
+        return None
+
     holdings = []
     for i, name in enumerate(holdings_names):
         # 비중은 추정값 (실제 데이터 없이 균등 분배)
-        estimated_weight = round(100 / len(holdings_names), 2) if holdings_names else 0
+        estimated_weight = round(100 / len(holdings_names), 2)
         holdings.append({
             "symbol": f"KR_{i+1}",  # 한국 종목은 별도 심볼 체계
             "name": name,
@@ -312,11 +344,14 @@ async def get_korea_sector_holdings(
             "price": None,
             "change_1d": None,
         })
-    
+
+    logger.warning(f"[Fallback] ETF {symbol} 정적 메타데이터 사용 (pykrx 실패)")
+
     return {
         "sector_symbol": symbol,
         "sector_name": meta["name"],
         "holdings": holdings,
         "last_updated": datetime.now().isoformat(),
-        "note": "추정 데이터입니다. 한국투자증권 API 키를 등록하면 실시간 데이터를 확인할 수 있습니다."
+        "note": "정적 데이터입니다. 한국투자증권 API 키를 설정하면 실시간 상세 정보를 확인할 수 있습니다.",
+        "requires_kis_key": True
     }

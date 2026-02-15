@@ -248,57 +248,68 @@ SECTOR_ETFS = {
     "XLK": {
         "name": "기술",
         "name_en": "Technology",
-        "description": "반도체, 소프트웨어, IT서비스"
+        "description": "반도체, 소프트웨어, IT서비스",
+        "top_stock": "MSFT"
     },
     "XLF": {
         "name": "금융",
         "name_en": "Financials",
-        "description": "은행, 보험, 자산운용"
+        "description": "은행, 보험, 자산운용",
+        "top_stock": "JPM"
     },
     "XLV": {
         "name": "헬스케어",
         "name_en": "Healthcare",
-        "description": "제약, 바이오, 의료기기"
+        "description": "제약, 바이오, 의료기기",
+        "top_stock": "UNH"
     },
     "XLE": {
         "name": "에너지",
         "name_en": "Energy",
-        "description": "석유, 가스, 에너지장비"
+        "description": "석유, 가스, 에너지장비",
+        "top_stock": "XOM"
     },
     "XLI": {
         "name": "산업재",
         "name_en": "Industrials",
-        "description": "항공, 건설, 기계"
+        "description": "항공, 건설, 기계",
+        "top_stock": "GE"
     },
     "XLB": {
         "name": "소재",
         "name_en": "Materials",
-        "description": "화학, 금속, 건축자재"
+        "description": "화학, 금속, 건축자재",
+        "top_stock": "LIN"
     },
     "XLY": {
         "name": "경기소비재",
         "name_en": "Consumer Cyclical",
-        "description": "자동차, 유통, 호텔"
+        "description": "자동차, 유통, 호텔",
+        "top_stock": "AMZN"
     },
     "XLP": {
         "name": "필수소비재",
         "name_en": "Consumer Defensive",
-        "description": "식음료, 생활용품, 담배"
+        "description": "식음료, 생활용품, 담배",
+        "top_stock": "PG"
     },
     "XLRE": {
         "name": "부동산",
         "name_en": "Real Estate",
-        "description": "REITs, 부동산개발"
+        "description": "REITs, 부동산개발",
+        "top_stock": "AMT"
     },
     "XLU": {
         "name": "유틸리티",
         "name_en": "Utilities",
-        "description": "전력, 가스, 수도"
+        "description": "전력, 가스, 수도",
+        "top_stock": "NEE"
     },
     "XLC": {
         "name": "커뮤니케이션",
         "name_en": "Communication Services",
-        "description": "미디어, 통신, 소셜미디어"
+        "description": "미디어, 통신, 소셜미디어",
+        "top_stock": "META"
     },
 }
 

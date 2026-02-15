@@ -343,34 +343,26 @@ async def get_sector_holdings_api(
         if symbol.endswith('.KS'):
             from app.services.korea_sector_service import get_korea_sector_holdings
 
-            # KIS API 인증정보 조회
+            # KIS API 인증정보 조회 (없어도 pykrx fallback 사용 가능)
+            kis_credentials = None
             user_repo = UserRepository(db)
-            kis_credentials = user_repo.get_kis_credentials(current_user.id)
+            user_kis = user_repo.get_kis_credentials(current_user.id)
 
-            if kis_credentials:
-                logger.debug(f"   사용자 {current_user.username}의 KIS 인증정보 확인")
-            else:
-                # Admin인 경우 환경변수 키 사용 (fallback)
-                if current_user.role == "admin":
-                    from app.config import settings
-                    if settings.kis_app_key and settings.kis_app_secret:
-                        logger.debug(f"   Admin 사용자 - 환경변수 KIS 키 사용")
-                        kis_credentials = (settings.kis_app_key, settings.kis_app_secret)
-                    else:
-                        logger.debug(f"   환경변수에 KIS 키 없음 - API 키 필요")
-                        return SectorHoldingsResponse(
-                            success=False,
-                            error="한국 섹터 ETF 구성종목을 조회하려면 한국투자증권 API 키가 필요합니다.",
-                            requires_kis_key=True
-                        )
+            if user_kis:
+                logger.debug(f"   사용자 {current_user.username}의 KIS 인증정보 사용")
+                kis_credentials = user_kis
+            elif current_user.role == "admin":
+                # Admin인 경우 환경변수 키 사용
+                from app.config import settings
+                if settings.kis_app_key and settings.kis_app_secret:
+                    logger.debug(f"   Admin 사용자 - 환경변수 KIS 키 사용")
+                    kis_credentials = (settings.kis_app_key, settings.kis_app_secret)
                 else:
-                    logger.debug(f"   KIS 인증정보 없음 - API 키 필요")
-                    return SectorHoldingsResponse(
-                        success=False,
-                        error="한국 섹터 ETF 구성종목을 조회하려면 한국투자증권 API 키가 필요합니다.",
-                        requires_kis_key=True
-                    )
+                    logger.debug(f"   KIS 키 없음 - pykrx fallback 사용")
+            else:
+                logger.debug(f"   KIS 인증정보 없음 - pykrx fallback 사용")
 
+            # KIS 키 유무와 관계없이 호출 (내부에서 pykrx fallback 처리)
             result = await get_korea_sector_holdings(symbol, kis_credentials)
         else:
             result = await get_sector_holdings(symbol)
@@ -391,7 +383,8 @@ async def get_sector_holdings_api(
             sector_name=result["sector_name"],
             holdings=holdings,
             last_updated=datetime.now().isoformat(),
-            note=result.get("note")
+            note=result.get("note"),
+            requires_kis_key=result.get("requires_kis_key", False)
         )
         
     except Exception as e:

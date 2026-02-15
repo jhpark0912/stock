@@ -153,7 +153,7 @@ class SectorHolding(BaseModel):
     """섹터 ETF 보유 종목"""
     symbol: str              # 종목 심볼 (MSFT)
     name: str                # 종목명 (Microsoft Corporation)
-    weight: float            # 비중 (12.5)
+    weight: Optional[float] = None     # 비중 (12.5) - pykrx는 비중 정보 없음
     price: Optional[float] = None      # 현재가
     change_1d: Optional[float] = None  # 일간 변화율
 
