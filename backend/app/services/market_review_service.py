@@ -4,6 +4,7 @@
 한국/미국 증시 마감 데이터를 조회하여 통합된 리뷰 데이터를 제공합니다.
 """
 
+import asyncio
 import logging
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
@@ -701,7 +702,14 @@ async def generate_market_review_ai(
         내일 전망 (오늘의 흐름을 바탕으로 내일 장에서 투자자가 집중해야 할 핵심 변수 1문장 제시)
         """
         
-        response = model.generate_content(prompt)
+        # 60초 타임아웃 적용
+        def _generate():
+            return model.generate_content(prompt)
+
+        response = await asyncio.wait_for(
+            asyncio.to_thread(_generate),
+            timeout=60.0  # 1분 타임아웃
+        )
         text = response.text
         
         # 파싱
@@ -733,6 +741,9 @@ async def generate_market_review_ai(
             tomorrow_outlook=tomorrow_outlook or None,
             generated_at=datetime.now(UTC).isoformat(),
         )
+    except asyncio.TimeoutError:
+        logger.error("AI 마감 리뷰 생성 타임아웃: 60초 내에 응답을 받지 못했습니다")
+        raise ValueError("AI 마감 리뷰 생성 시간이 초과되었습니다 (60초). 잠시 후 다시 시도해주세요.")
     except Exception as e:
         logger.error(f"AI 마감 리뷰 생성 실패: {e}")
         raise

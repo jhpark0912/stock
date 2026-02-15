@@ -521,7 +521,7 @@ class StockService:
             
             response = await asyncio.wait_for(
                 asyncio.to_thread(_generate),
-                timeout=30.0  # 요약은 30초 타임아웃
+                timeout=60.0  # 요약도 1분 타임아웃
             )
             
             # JSON 파싱 (응답에서 JSON 추출)
@@ -550,8 +550,8 @@ class StockService:
             logger.error(f"[Gemini Summary] JSON 파싱 실패: {e}, 응답: {response_text}")
             raise ValueError("요약 생성 결과 파싱에 실패했습니다. 다시 시도해주세요.")
         except asyncio.TimeoutError:
-            logger.error("[Gemini Summary] 타임아웃: 30초 내에 응답을 받지 못했습니다")
-            raise ValueError("요약 생성 시간이 초과되었습니다 (30초). 잠시 후 다시 시도해주세요.")
+            logger.error("[Gemini Summary] 타임아웃: 60초 내에 응답을 받지 못했습니다")
+            raise ValueError("요약 생성 시간이 초과되었습니다 (60초). 잠시 후 다시 시도해주세요.")
         except Exception as e:
             error_msg = str(e)
             logger.error(f"[Gemini Summary] 에러: {type(e).__name__}: {error_msg}")
