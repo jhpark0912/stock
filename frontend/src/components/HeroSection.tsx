@@ -1,5 +1,5 @@
 import { TrendingUp, TrendingDown } from 'lucide-react';
-import { calculateProfit } from '../lib/utils';
+import { calculateProfit, formatCurrency, formatLargeCurrency, isKoreanTicker } from '../lib/utils';
 
 interface HeroSectionProps {
   ticker?: string;
@@ -58,7 +58,7 @@ export function HeroSection({
             <h1 className="text-base font-bold text-foreground">{ticker || 'N/A'}</h1>
             <div className="flex items-center gap-1.5">
               <span className="text-lg font-bold text-foreground">
-                ${(currentPrice || 0).toFixed(2)}
+                {formatCurrency(currentPrice || 0, ticker)}
               </span>
               <span
                 className={`text-xs font-semibold ${
@@ -84,7 +84,7 @@ export function HeroSection({
           {/* Current Price */}
           <div className="flex items-baseline gap-4 mb-2">
             <span className="text-3xl font-bold text-foreground">
-              ${(currentPrice || 0).toFixed(2)}
+              {formatCurrency(currentPrice || 0, ticker)}
             </span>
             <div
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md ${
@@ -100,7 +100,7 @@ export function HeroSection({
               )}
               <span className="text-sm font-semibold">
                 {isPositive ? '+' : ''}
-                {(priceChange || 0).toFixed(2)} ({(priceChangePercent || 0).toFixed(2)}%)
+                {isKoreanTicker(ticker) ? Math.round(priceChange || 0).toLocaleString('ko-KR') : (priceChange || 0).toFixed(2)} ({(priceChangePercent || 0).toFixed(2)}%)
               </span>
             </div>
           </div>
@@ -126,7 +126,7 @@ export function HeroSection({
             <div className="sm:hidden">
               <div className="flex items-center justify-between text-[11px]">
                 <span className="text-muted-foreground">
-                  평단 ${profitInfo.purchasePrice.toFixed(2)} × {profitInfo.quantity.toLocaleString()}주
+                  평단 {formatCurrency(profitInfo.purchasePrice, ticker)} × {profitInfo.quantity.toLocaleString()}주
                 </span>
                 <span
                   className={`font-bold ${
@@ -144,7 +144,7 @@ export function HeroSection({
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground font-medium">평단가:</span>
                   <span className="text-foreground font-semibold">
-                    ${profitInfo.purchasePrice.toFixed(2)}
+                    {formatCurrency(profitInfo.purchasePrice, ticker)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -156,13 +156,13 @@ export function HeroSection({
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground font-medium">매입금액:</span>
                   <span className="text-foreground font-semibold">
-                    ${profitInfo.totalPurchaseAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatLargeCurrency(profitInfo.totalPurchaseAmount, ticker)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground font-medium">평가금액:</span>
                   <span className="text-foreground font-semibold">
-                    ${profitInfo.totalCurrentAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatLargeCurrency(profitInfo.totalCurrentAmount, ticker)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 col-span-2 pt-1 border-t border-border/50">
@@ -173,7 +173,7 @@ export function HeroSection({
                     }`}
                   >
                     {profitInfo.totalProfitAmount > 0 ? '+' : ''}
-                    ${profitInfo.totalProfitAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {formatLargeCurrency(Math.abs(profitInfo.totalProfitAmount), ticker)}
                     {' '}
                     ({profitInfo.profitPercent > 0 ? '+' : ''}{profitInfo.profitPercent.toFixed(2)}%)
                   </span>

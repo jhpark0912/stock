@@ -14,6 +14,7 @@ import { GaugeBar } from '../GaugeBar';
 import { LoadingSpinner } from '../LoadingSpinner';
 import { AIAnalysisTab } from '../AIAnalysisTab';
 import { usePortfolio } from '@/hooks/usePortfolio';
+import { formatCurrency } from '@/lib/utils';
 
 interface PortfolioPageProps {
   /** 설정 페이지로 이동하는 콜백 */
@@ -95,7 +96,7 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
 
         {/* 주식 미선택 시: 안내 메시지 */}
         {!stockData && !loadingStates.stock && (
-          <div className="flex-1 flex items-center justify-center">
+          <div className="flex-1 flex items-center justify-center pb-20 sm:pb-0">
             <div className="text-center">
               <p className="text-lg text-muted-foreground mb-2">
                 {userSettings.tickers.length === 0
@@ -113,7 +114,7 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
 
         {/* 주식 선택 시: MainTabs 표시 */}
         {(stockData || loadingStates.stock) && (
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto pb-20 sm:pb-0">
             <MainTabs>
               {(activeTab) => {
                 switch (activeTab) {
@@ -247,7 +248,9 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
                               <div className="space-y-2">
                                 <h3 className="text-sm font-medium text-muted-foreground">SMA (20일)</h3>
                                 <p className="text-2xl font-bold text-foreground">
-                                  ${stockData.technical_indicators.sma?.sma20?.toFixed(2) || 'N/A'}
+                                  {stockData.technical_indicators.sma?.sma20
+                                    ? formatCurrency(stockData.technical_indicators.sma.sma20, stockData.ticker)
+                                    : 'N/A'}
                                 </p>
                                 <GaugeBar percent={55} colorType="primary" height="md" />
                                 <p className="text-xs text-muted-foreground">
@@ -261,7 +264,7 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
                                 <h3 className="text-sm font-medium text-muted-foreground">볼린저밴드</h3>
                                 <p className="text-2xl font-bold text-foreground">
                                   {stockData.technical_indicators.bollinger_bands?.middle
-                                    ? `$${stockData.technical_indicators.bollinger_bands.middle.toFixed(2)}`
+                                    ? formatCurrency(stockData.technical_indicators.bollinger_bands.middle, stockData.ticker)
                                     : 'N/A'}
                                 </p>
                                 <GaugeBar percent={50} colorType="primary" height="md" />

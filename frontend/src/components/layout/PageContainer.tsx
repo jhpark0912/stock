@@ -21,7 +21,8 @@ export function PageContainer({
   return (
     <div className={cn(
       "flex-1 min-h-0 overflow-auto",
-      padded && "p-6",
+      "pb-20 sm:pb-0", // 모바일 브라우저 하단 네비게이션 바 대응
+      padded && "p-6 pb-20 sm:pb-6",
       className
     )}>
       <div className={cn(centered && "max-w-2xl mx-auto")}>

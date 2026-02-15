@@ -14,7 +14,7 @@ export function HomePage() {
         description="거시경제 지표 현황"
       />
       {/* 콘텐츠 - EconomicIndicators 전체 사용 (패딩 없이) */}
-      <div className="flex-1 min-h-0 overflow-auto">
+      <div className="flex-1 min-h-0 overflow-auto pb-20 sm:pb-0">
         <EconomicIndicators />
       </div>
     </div>
