@@ -136,12 +136,12 @@ export function AIAnalysisTab({
   // API 키 없음
   if (!user?.has_gemini_key && user?.role !== 'admin') {
     return (
-      <div className="p-6">
+      <div className="p-3 sm:p-6">
         <div className="bg-card border border-border rounded-lg p-6">
           {/* 헤더 - 이력 버튼 포함 */}
           {stockData && (
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-foreground">
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground">
                 AI 분석 (Gemini)
               </h2>
               <Button
@@ -193,12 +193,12 @@ export function AIAnalysisTab({
   // AI 분석 에러
   if (aiError) {
     return (
-      <div className="p-6">
+      <div className="p-3 sm:p-6">
         <div className="bg-card border border-border rounded-lg p-6">
           {/* 헤더 - 이력 버튼 포함 */}
           {stockData && (
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold text-foreground">
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground">
                 AI 분석 (Gemini)
               </h2>
               <Button
@@ -266,7 +266,7 @@ export function AIAnalysisTab({
         {/* 전체 보고서 카드 */}
         <div className="bg-card border border-border rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground flex items-center gap-2">
               <FileText className="h-5 w-5" />
               AI 분석 (Gemini)
             </h2>
@@ -407,10 +407,10 @@ export function AIAnalysisTab({
   // 분석 시작 전 상태
   if (stockData) {
     return (
-      <div className="p-6">
+      <div className="p-3 sm:p-6">
         <div className="bg-card border border-border rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-foreground">
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground">
               AI 분석 (Gemini)
             </h2>
             <Button
@@ -458,7 +458,7 @@ export function AIAnalysisTab({
 
   // 티커 미선택 상태
   return (
-    <div className="p-6">
+    <div className="p-3 sm:p-6">
       <div className="bg-card border border-border rounded-lg p-6">
         <div className="text-center py-6">
           <p className="text-sm text-muted-foreground mb-1">

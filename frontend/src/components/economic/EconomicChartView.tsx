@@ -112,7 +112,7 @@ export function EconomicChartView({
     <div className="h-full flex flex-col">
       {/* 헤더 */}
       <div className="flex items-center justify-between p-4 border-b border-border">
-        <h2 className="text-xl font-semibold text-foreground">시장 경제 지표</h2>
+        <h2 className="text-lg sm:text-xl font-semibold text-foreground">시장 경제 지표</h2>
 
         <div className="flex items-center gap-2">
           {/* 뷰 토글 */}

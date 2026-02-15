@@ -198,7 +198,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
                 <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4">
                   <TrendingUp className="h-10 w-10 text-primary" />
                 </div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">
+                <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
                   마감 리뷰를 확인할 국가를 선택하세요
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -232,7 +232,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4">
                 <BarChart3 className="h-10 w-10 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">
+              <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
                 경제 지표를 확인할 국가를 선택하세요
               </h3>
               <p className="text-sm text-muted-foreground">
@@ -313,12 +313,12 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
     <div className={cn('h-full', className)}>
       <SubTabHeader />
 
-      <div className="p-6 space-y-6">
+      <div className="p-3 sm:p-6 space-y-4 sm:space-y-6">
         {/* 헤더 */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <BarChart3 className="h-6 w-6 text-primary" />
-            <h2 className="text-xl font-semibold text-foreground">시장 경제 지표</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground">시장 경제 지표</h2>
           </div>
 
           <div className="flex items-center gap-2">

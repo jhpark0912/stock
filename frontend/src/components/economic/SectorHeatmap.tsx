@@ -310,7 +310,7 @@ export function SectorHeatmap({ country }: SectorHeatmapProps) {
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4">
               <TrendingUp className="h-10 w-10 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold text-foreground mb-2">
+            <h3 className="text-lg sm:text-xl font-semibold text-foreground mb-2">
               섹터 정보를 확인할 국가를 선택하세요
             </h3>
             <p className="text-sm text-muted-foreground">
@@ -328,7 +328,7 @@ export function SectorHeatmap({ country }: SectorHeatmapProps) {
 
   if (error) {
     return (
-      <div className="p-6">
+      <div className="p-3 sm:p-6">
         <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-6 text-center">
           <p className="text-destructive font-medium mb-2">오류 발생</p>
           <p className="text-sm text-muted-foreground mb-4">{error}</p>
@@ -342,7 +342,7 @@ export function SectorHeatmap({ country }: SectorHeatmapProps) {
   }
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-3 sm:p-6 space-y-3 sm:space-y-4">
       {/* 헤더 */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -350,7 +350,7 @@ export function SectorHeatmap({ country }: SectorHeatmapProps) {
             <TrendingUp className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-foreground">섹터 로테이션</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground">섹터 로테이션</h2>
             <p className="text-sm text-muted-foreground">
               {country === 'us' && 'GICS 11개 섹터 ETF (AUM 기준)'}
               {country === 'kr' && 'KODEX 10개 섹터 ETF (AUM 기준)'}

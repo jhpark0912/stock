@@ -32,7 +32,7 @@ export function CountryTab({ selected, onChange }: CountryTabProps) {
           key={value}
           onClick={() => onChange(value)}
           className={cn(
-            'px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center gap-1 sm:gap-1.5',
+            'px-1.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center gap-1 sm:gap-1.5',
             selected === value
               ? 'bg-background text-foreground shadow-sm'
               : 'text-muted-foreground hover:text-foreground'

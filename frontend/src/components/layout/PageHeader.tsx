@@ -11,10 +11,10 @@ interface PageHeaderProps {
 
 export function PageHeader({ title, description, actions }: PageHeaderProps) {
   return (
-    <div className="flex-none px-6 py-4 border-b border-border bg-card">
+    <div className="flex-none px-3 sm:px-6 py-2 sm:py-4 border-b border-border bg-card">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold">{title}</h1>
+          <h1 className="text-lg sm:text-xl font-semibold">{title}</h1>
           {description && (
             <p className="text-sm text-muted-foreground">{description}</p>
           )}

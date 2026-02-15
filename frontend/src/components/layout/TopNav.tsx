@@ -47,7 +47,7 @@ export function TopNav({
   const visiblePages = pageConfigs.filter((page) => !page.adminOnly || isAdmin);
 
   return (
-    <header className="h-14 flex-none border-b border-border bg-card flex items-center justify-between px-2 sm:px-4 md:px-6 relative">
+    <header className="h-12 sm:h-14 flex-none border-b border-border bg-card flex items-center justify-between px-2 sm:px-4 md:px-6 relative">
       {/* 좌측: 로고 + 네비게이션 */}
       <div className="flex items-center gap-1 sm:gap-4 md:gap-8 flex-shrink-0">
         {/* 모바일 햄버거 메뉴 */}
@@ -119,7 +119,7 @@ export function TopNav({
 
       {/* 모바일 드롭다운 메뉴 */}
       {mobileMenuOpen && (
-        <div className="absolute top-14 left-0 right-0 z-50 bg-card border-b border-border shadow-lg md:hidden">
+        <div className="absolute top-12 sm:top-14 left-0 right-0 z-50 bg-card border-b border-border shadow-lg md:hidden">
           <nav className="flex flex-col p-2">
             {visiblePages.map((page) => (
               <button

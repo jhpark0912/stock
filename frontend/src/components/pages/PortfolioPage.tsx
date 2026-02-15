@@ -124,7 +124,7 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
                     return stockData ? (
                       <CategoryMetrics financials={stockData.financials} />
                     ) : (
-                      <div className="p-6">
+                      <div className="p-3 sm:p-6">
                         <div className="bg-card border border-border rounded-lg p-6 text-center">
                           <p className="text-sm text-muted-foreground mb-1">
                             {userSettings.tickers.length === 0
@@ -167,7 +167,7 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
                         chartType="area"
                       />
                     ) : (
-                      <div className="p-6">
+                      <div className="p-3 sm:p-6">
                         <div className="bg-card border border-border rounded-lg p-6 text-center">
                           <p className="text-sm text-muted-foreground mb-1">
                             {userSettings.tickers.length === 0
@@ -190,7 +190,7 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
                     return (
                       <div className="p-6 space-y-4">
                         <div className="bg-card border border-border rounded-lg p-6">
-                          <h2 className="text-xl font-semibold text-foreground mb-4">
+                          <h2 className="text-lg sm:text-xl font-semibold text-foreground mb-4">
                             기술적 지표
                           </h2>
                           {stockData?.technical_indicators ? (

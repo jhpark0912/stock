@@ -293,29 +293,29 @@ export function Sidebar({
                       : `${ticker.profitPercent > 0 ? '+' : ''}${ticker.profitPercent.toFixed(1)}%`}
                   </span>
 
-                  {/* 평단가 편집 버튼 (hover 시 표시) */}
+                  {/* 평단가 편집 버튼 (모바일: 항상 표시, 데스크톱: hover 시 표시) */}
                   <button
                     onClick={(e) => handleStartEditPrice(ticker.symbol, e)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-primary/10 rounded"
+                    className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-1 sm:p-0.5 hover:bg-primary/10 rounded"
                     aria-label={`Edit purchase price for ${ticker.symbol}`}
                   >
-                    <Edit2 className="h-2.5 w-2.5 text-primary" />
+                    <Edit2 className="h-3 w-3 sm:h-2.5 sm:w-2.5 text-primary" />
                   </button>
 
-                  {/* 삭제 버튼 (hover 시 표시) */}
+                  {/* 삭제 버튼 (모바일: 항상 표시, 데스크톱: hover 시 표시) */}
                   <button
                     onClick={(e) => handleDeleteTicker(ticker.symbol, e)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-destructive/10 rounded"
+                    className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity p-1 sm:p-0.5 hover:bg-destructive/10 rounded"
                     aria-label={`Delete ${ticker.symbol}`}
                   >
-                    <X className="h-2.5 w-2.5 text-destructive" />
+                    <X className="h-3 w-3 sm:h-2.5 sm:w-2.5 text-destructive" />
                   </button>
                 </div>
               </div>
 
               {/* 평단가 및 수량 입력 UI (편집 중일 때만 표시) */}
               {editingTicker === ticker.symbol && (
-                <div className="mt-1.5 space-y-1" onClick={(e) => e.stopPropagation()}>
+                <div className="mt-1.5 space-y-1.5 sm:space-y-1" onClick={(e) => e.stopPropagation()}>
                   {/* 평단가 입력 */}
                   <input
                     type="number"
@@ -323,7 +323,7 @@ export function Sidebar({
                     onChange={(e) => setPurchasePriceInput(e.target.value)}
                     onKeyDown={(e) => handlePriceKeyPress(ticker.symbol, e)}
                     placeholder="평단가 (USD)"
-                    className="w-full px-1.5 py-0.5 text-[10px] border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full px-2 sm:px-1.5 py-1.5 sm:py-0.5 text-xs sm:text-[10px] border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                     autoFocus
                   />
                   {/* 수량 입력 */}
@@ -335,13 +335,13 @@ export function Sidebar({
                     placeholder="수량"
                     min="1"
                     step="1"
-                    className="w-full px-1.5 py-0.5 text-[10px] border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full px-2 sm:px-1.5 py-1.5 sm:py-0.5 text-xs sm:text-[10px] border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
                   />
                   {/* 버튼 그룹 */}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5 sm:gap-1">
                     <button
                       onClick={(e) => handleSavePurchasePrice(ticker.symbol, e)}
-                      className="flex-1 px-1.5 py-0.5 bg-primary text-primary-foreground rounded text-[10px] font-medium hover:opacity-90"
+                      className="flex-1 px-2 sm:px-1.5 py-1.5 sm:py-0.5 bg-primary text-primary-foreground rounded text-xs sm:text-[10px] font-medium hover:opacity-90"
                     >
                       저장
                     </button>
@@ -352,7 +352,7 @@ export function Sidebar({
                         setPurchasePriceInput('');
                         setQuantityInput('');
                       }}
-                      className="flex-1 px-1.5 py-0.5 bg-secondary text-secondary-foreground rounded text-[10px] font-medium hover:opacity-90"
+                      className="flex-1 px-2 sm:px-1.5 py-1.5 sm:py-0.5 bg-secondary text-secondary-foreground rounded text-xs sm:text-[10px] font-medium hover:opacity-90"
                     >
                       취소
                     </button>

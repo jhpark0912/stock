@@ -112,7 +112,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
   // 실제 데이터가 없으면 빈 메시지 표시
   if (!chartData || chartData.length === 0) {
     return (
-      <div className="p-6">
+      <div className="p-3 sm:p-6">
         <div className="bg-card border border-border rounded-lg p-6 text-center">
           <p className="text-sm text-muted-foreground">차트 데이터가 없습니다.</p>
         </div>
