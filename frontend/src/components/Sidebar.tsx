@@ -270,7 +270,12 @@ export function Sidebar({
             >
               {/* 티커 정보 행 */}
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium">{ticker.symbol}</span>
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium">{ticker.displayName || ticker.symbol}</span>
+                  {ticker.displayName && (
+                    <span className="text-[10px] text-muted-foreground">{ticker.symbol}</span>
+                  )}
+                </div>
                 <div className="flex items-center gap-1.5">
                   {/* 수익률 표시 */}
                   <span

@@ -8,6 +8,7 @@ from datetime import date, datetime
 
 class PortfolioBase(BaseModel):
     ticker: str = Field(..., max_length=10)
+    display_name: Optional[str] = Field(None, max_length=50)  # 한글 이름 (예: 애플, 테슬라)
     purchase_price: Optional[float] = Field(None, ge=0)
     quantity: Optional[int] = Field(None, ge=0)
     purchase_date: Optional[date] = None
@@ -24,6 +25,7 @@ class PortfolioCreate(PortfolioBase):
 
 class PortfolioUpdate(BaseModel):
     """수정 요청 (모든 필드 선택적)"""
+    display_name: Optional[str] = Field(None, max_length=50)  # 한글 이름 (예: 애플, 테슬라)
     purchase_price: Optional[float] = Field(None, ge=0)
     quantity: Optional[int] = Field(None, ge=0)
     purchase_date: Optional[date] = None

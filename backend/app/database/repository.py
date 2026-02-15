@@ -16,6 +16,7 @@ class PortfolioRepository:
         db_portfolio = PortfolioDB(
             user_id=user_id,
             ticker=portfolio.ticker.upper(),
+            display_name=portfolio.display_name,
             purchase_price=portfolio.purchase_price,
             quantity=portfolio.quantity,
             purchase_date=portfolio.purchase_date,

@@ -64,6 +64,7 @@ export function usePortfolio() {
           ...prev,
           tickers: portfolios.map(p => ({
             symbol: p.ticker,
+            displayName: p.display_name || undefined,
             purchasePrice: p.purchase_price,
             quantity: p.quantity,
             purchaseDate: p.purchase_date || undefined,
@@ -220,6 +221,26 @@ export function usePortfolio() {
     }
   };
 
+  const handleUpdateDisplayName = async (symbol: string, displayName: string | null) => {
+    try {
+      await updatePortfolio(symbol, {
+        display_name: displayName,
+      });
+
+      setUserSettings(prev => ({
+        ...prev,
+        tickers: prev.tickers.map(t =>
+          t.symbol === symbol
+            ? { ...t, displayName: displayName || undefined }
+            : t
+        ),
+      }));
+    } catch (error) {
+      console.error('Failed to update display name:', error);
+      alert('한글 이름 업데이트에 실패했습니다.');
+    }
+  };
+
   // AI 분석 수동 실행
   const handleAnalyzeAI = async () => {
     if (!stockData) return;
@@ -274,10 +295,12 @@ export function usePortfolio() {
   };
 
   // 파생 데이터: displayData
+  const currentTicker = stockData ? userSettings.tickers.find(t => t.symbol === stockData.ticker) : null;
   const displayData = stockData
     ? {
         ticker: stockData.ticker,
         companyName: stockData.company.name,
+        displayName: currentTicker?.displayName || null,
         currentPrice: stockData.price.current,
         priceChange: stockData.price.current - stockData.price.open,
         priceChangePercent: ((stockData.price.current - stockData.price.open) / stockData.price.open) * 100,
@@ -285,13 +308,14 @@ export function usePortfolio() {
           ? `$${(stockData.market_cap / 1e9).toFixed(2)}B`
           : 'N/A',
         sector: stockData.company.sector || 'N/A',
-        purchasePrice: userSettings.tickers.find(t => t.symbol === stockData.ticker)?.purchasePrice || null,
-        quantity: userSettings.tickers.find(t => t.symbol === stockData.ticker)?.quantity || null,
+        purchasePrice: currentTicker?.purchasePrice || null,
+        quantity: currentTicker?.quantity || null,
         hasData: true,
       }
     : {
         ticker: undefined,
         companyName: undefined,
+        displayName: null,
         currentPrice: 0,
         priceChange: 0,
         priceChangePercent: 0,
@@ -319,6 +343,7 @@ export function usePortfolio() {
 
     return {
       symbol: t.symbol,
+      displayName: t.displayName,
       purchasePrice: t.purchasePrice,
       quantity: t.quantity,
       purchaseDate: t.purchaseDate,
@@ -345,6 +370,7 @@ export function usePortfolio() {
     handleRemoveTicker,
     handleSelectTicker,
     handleUpdatePurchasePrice,
+    handleUpdateDisplayName,
     handleAnalyzeAI,
 
     // 파생 데이터

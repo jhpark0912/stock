@@ -9,6 +9,7 @@ import { api, type ApiResponse } from './api';
 export interface PortfolioItem {
   id: number;
   ticker: string;
+  display_name: string | null;
   purchase_price: number | null;
   quantity: number | null;
   purchase_date: string | null;
@@ -35,6 +36,7 @@ export interface CreatePortfolioRequest {
  * 포트폴리오 업데이트 요청 타입
  */
 export interface UpdatePortfolioRequest {
+  display_name?: string | null;
   purchase_price?: number | null;
   quantity?: number | null;
   purchase_date?: string | null;

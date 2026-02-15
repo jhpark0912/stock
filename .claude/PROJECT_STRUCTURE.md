@@ -1,6 +1,6 @@
 # 프로젝트 구조
 
-> 최종 업데이트: 2026-02-13 (AI 분석 요약 저장 기능 추가)
+> 최종 업데이트: 2026-02-15 (티커 한글 이름 저장 기능 추가)
 
 ## 전체 아키텍처
 
@@ -524,6 +524,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - id (PK)
 - user_id (FK → User, NOT NULL) - 2026-02-06 추가
 - ticker (VARCHAR(10), NOT NULL)
+- display_name (VARCHAR(50), NULL) - 한글 이름 (예: 애플, 테슬라) - 2026-02-15 추가
 - quantity (INTEGER)
 - purchase_price (NUMERIC(10, 2))
 - purchase_date (DATE)
@@ -563,6 +564,51 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 - **프로젝트 가이드**: `CLAUDE.md`
 
 ## 최근 변경 이력
+
+### 2026-02-15: 티커 한글 이름 저장 기능 추가
+
+1. **Backend - DB 스키마 확장**
+   - `database/models.py`: `PortfolioDB.display_name` 컬럼 추가 (VARCHAR(50), NULL)
+   - `models/portfolio.py`: `PortfolioBase`, `PortfolioUpdate`에 `display_name` 필드 추가
+   - `database/repository.py`: `create` 메서드에 `display_name` 매핑 추가
+   - `migrations/add_display_name.py`: 마이그레이션 스크립트 신규 생성
+
+2. **Frontend - 타입 및 API 확장**
+   - `types/user.ts`: `UserTicker.displayName` 필드 추가
+   - `lib/portfolioApi.ts`: `PortfolioItem`, `UpdatePortfolioRequest`에 `display_name` 필드 추가
+
+3. **Frontend - usePortfolio 훅 확장**
+   - `hooks/usePortfolio.ts`:
+     - `loadPortfoliosFromDB`에서 `displayName` 매핑
+     - `handleUpdateDisplayName` 핸들러 추가
+     - `displayData`에 `displayName` 포함
+     - `sidebarTickers`에 `displayName` 포함
+
+4. **Frontend - HeroSection UI 개선**
+   - `components/HeroSection.tsx`:
+     - `displayName`, `onUpdateDisplayName` props 추가
+     - 한글 이름 편집 상태 관리 (useState)
+     - 인라인 편집 UI (입력 + 저장/취소 버튼)
+     - 모바일/데스크톱 레이아웃 모두 지원
+     - 회사명 옆에 한글 이름 표시: `Apple Inc. (애플)`
+     - 편집 아이콘 (Pencil) 클릭 시 인라인 입력 활성화
+
+5. **Frontend - Sidebar 한글 이름 표시**
+   - `components/Sidebar.tsx`:
+     - 티커 심볼 아래에 한글 이름 표시 (displayName 있을 경우)
+     - 편집 기능 없음 (HeroSection에서만 편집)
+
+6. **Frontend - PortfolioPage 연결**
+   - `components/pages/PortfolioPage.tsx`:
+     - `handleUpdateDisplayName` 핸들러 연결
+     - `displayData.displayName` HeroSection에 전달
+     - `onUpdateDisplayName` 콜백 전달
+
+7. **UI/UX**
+   - **데스크톱**: 회사명 옆에 한글 이름 + 편집 아이콘
+   - **모바일**: 회사명 옆에 한글 이름 + 편집 아이콘 (컴팩트 레이아웃)
+   - **편집 모드**: 인풋 필드 + 체크/X 버튼 (Enter/Escape 키 지원)
+   - **Sidebar**: 한글 이름만 표시 (편집 불가)
 
 ### 2026-02-13: 증시 마감 리뷰 버그 수정 및 개선
 

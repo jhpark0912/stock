@@ -46,6 +46,7 @@ class PortfolioDB(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False, index=True)
     ticker = Column(String(10), nullable=False, index=True)
+    display_name = Column(String(50), nullable=True)  # 한글 이름 (예: 애플, 테슬라)
     purchase_price = Column(Numeric(10, 2), nullable=True)
     quantity = Column(Integer, nullable=True)
     purchase_date = Column(Date, nullable=True)

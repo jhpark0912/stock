@@ -1,9 +1,11 @@
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { useState } from 'react';
+import { TrendingUp, TrendingDown, Pencil, Check, X } from 'lucide-react';
 import { calculateProfit, formatCurrency, formatLargeCurrency, isKoreanTicker } from '../lib/utils';
 
 interface HeroSectionProps {
   ticker?: string;
   companyName?: string;
+  displayName?: string | null;
   currentPrice?: number;
   priceChange?: number;
   priceChangePercent?: number;
@@ -12,11 +14,13 @@ interface HeroSectionProps {
   purchasePrice?: number | null;
   quantity?: number | null;
   hasData?: boolean;
+  onUpdateDisplayName?: (displayName: string | null) => void;
 }
 
 export function HeroSection({
   ticker,
   companyName,
+  displayName,
   currentPrice = 0,
   priceChange = 0,
   priceChangePercent = 0,
@@ -25,8 +29,41 @@ export function HeroSection({
   purchasePrice,
   quantity,
   hasData = false,
+  onUpdateDisplayName,
 }: HeroSectionProps) {
   const isPositive = priceChange >= 0;
+
+  // 한글 이름 편집 상태
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState(displayName || '');
+
+  // 편집 시작
+  const handleStartEdit = () => {
+    setNameInput(displayName || '');
+    setIsEditingName(true);
+  };
+
+  // 저장
+  const handleSaveName = () => {
+    const trimmedName = nameInput.trim();
+    onUpdateDisplayName?.(trimmedName || null);
+    setIsEditingName(false);
+  };
+
+  // 취소
+  const handleCancelEdit = () => {
+    setNameInput(displayName || '');
+    setIsEditingName(false);
+  };
+
+  // Enter/Escape 키 처리
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSaveName();
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
+  };
 
   // 평가손익 계산
   const profitInfo = calculateProfit(purchasePrice || null, currentPrice, quantity || null);
@@ -53,10 +90,49 @@ export function HeroSection({
       <div className="px-3 sm:px-6 py-2 sm:py-3">
         {/* 모바일: 한 줄 레이아웃 */}
         <div className="sm:hidden">
-          {/* 첫 줄: 티커 + 가격 + 변동률 */}
+          {/* 첫 줄: 이름 + 가격 + 변동률 */}
           <div className="flex items-center justify-between mb-0.5">
-            <h1 className="text-base font-bold text-foreground">{ticker || 'N/A'}</h1>
-            <div className="flex items-center gap-1.5">
+            {isEditingName ? (
+              <div className="flex items-center gap-1.5 flex-1 mr-2">
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="이름 (예: 애플)"
+                  className="flex-1 px-2 py-0.5 text-sm border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  autoFocus
+                />
+                <button
+                  onClick={handleSaveName}
+                  className="p-1 hover:bg-success/10 rounded transition-colors"
+                  aria-label="저장"
+                >
+                  <Check className="h-3.5 w-3.5 text-success" />
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="p-1 hover:bg-destructive/10 rounded transition-colors"
+                  aria-label="취소"
+                >
+                  <X className="h-3.5 w-3.5 text-destructive" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1">
+                <h1 className="text-base font-bold text-foreground truncate">
+                  {displayName || companyName || 'N/A'}
+                </h1>
+                <button
+                  onClick={handleStartEdit}
+                  className="p-0.5 hover:bg-muted rounded transition-colors flex-shrink-0"
+                  aria-label="이름 편집"
+                >
+                  <Pencil className="h-3 w-3 text-muted-foreground hover:text-primary" />
+                </button>
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
               <span className="text-lg font-bold text-foreground">
                 {formatCurrency(currentPrice || 0, ticker)}
               </span>
@@ -69,16 +145,55 @@ export function HeroSection({
               </span>
             </div>
           </div>
-          {/* 둘째 줄: 회사명 */}
-          <p className="text-[11px] text-muted-foreground truncate">{companyName || 'Select a ticker'}</p>
+          {/* 둘째 줄: 티커 */}
+          <p className="text-[11px] text-muted-foreground">{ticker || 'N/A'}</p>
         </div>
 
         {/* 데스크톱: 기존 레이아웃 */}
         <div className="hidden sm:block">
-          {/* Ticker + Company Name */}
+          {/* 이름 (첫째 줄) + 티커 (둘째 줄) */}
           <div className="mb-2">
-            <h1 className="text-xl font-bold text-foreground">{ticker || 'N/A'}</h1>
-            <p className="text-sm text-muted-foreground">{companyName || 'Select a ticker'}</p>
+            {isEditingName ? (
+              <div className="flex items-center gap-2 mb-1">
+                <input
+                  type="text"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="이름 (예: 애플)"
+                  className="w-48 px-2 py-1 text-lg font-bold border border-border rounded bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  autoFocus
+                />
+                <button
+                  onClick={handleSaveName}
+                  className="p-1 hover:bg-success/10 rounded transition-colors"
+                  aria-label="저장"
+                >
+                  <Check className="h-4 w-4 text-success" />
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="p-1 hover:bg-destructive/10 rounded transition-colors"
+                  aria-label="취소"
+                >
+                  <X className="h-4 w-4 text-destructive" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5">
+                <h1 className="text-xl font-bold text-foreground">
+                  {displayName || companyName || 'N/A'}
+                </h1>
+                <button
+                  onClick={handleStartEdit}
+                  className="p-0.5 hover:bg-muted rounded transition-colors"
+                  aria-label="이름 편집"
+                >
+                  <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-primary" />
+                </button>
+              </div>
+            )}
+            <p className="text-sm text-muted-foreground">{ticker || 'N/A'}</p>
           </div>
 
           {/* Current Price */}

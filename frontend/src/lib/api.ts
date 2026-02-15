@@ -21,7 +21,7 @@ export interface ApiResponse<T> {
  */
 export const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000, // 30초
+  timeout: 65000, // 65초 (AI 분석 백엔드 타임아웃 60초 + 여유 5초)
   headers: {
     'Content-Type': 'application/json',
   },

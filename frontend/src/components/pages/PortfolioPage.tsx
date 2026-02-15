@@ -37,6 +37,7 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
     handleRemoveTicker,
     handleSelectTicker,
     handleUpdatePurchasePrice,
+    handleUpdateDisplayName,
     handleAnalyzeAI,
     displayData,
     sidebarTickers,
@@ -83,6 +84,7 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
           <HeroSection
             ticker={displayData.ticker}
             companyName={displayData.companyName}
+            displayName={displayData.displayName}
             currentPrice={displayData.currentPrice}
             priceChange={displayData.priceChange}
             priceChangePercent={displayData.priceChangePercent}
@@ -91,6 +93,7 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
             purchasePrice={displayData.purchasePrice}
             quantity={displayData.quantity}
             hasData={displayData.hasData}
+            onUpdateDisplayName={(name) => displayData.ticker && handleUpdateDisplayName(displayData.ticker, name)}
           />
         )}
 
