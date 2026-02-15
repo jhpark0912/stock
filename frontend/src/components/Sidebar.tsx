@@ -5,6 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { Plus, X, Edit2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { UserTicker } from '../types/user';
 
 // Sidebar에서 사용하는 Ticker 타입은 UserTicker를 그대로 사용
@@ -16,6 +17,8 @@ interface SidebarProps {
   onUpdatePurchasePrice?: (symbol: string, price: number | null, quantity: number | null) => void;
   initialTickers?: UserTicker[];
   selectedTicker?: string;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 export function Sidebar({
@@ -25,6 +28,8 @@ export function Sidebar({
   onUpdatePurchasePrice,
   initialTickers = [],
   selectedTicker: selectedTickerProp,
+  isOpen = true,
+  onClose,
 }: SidebarProps) {
   // 티커 목록 상태
   const [tickers, setTickers] = useState<UserTicker[]>(initialTickers);
@@ -165,13 +170,39 @@ export function Sidebar({
   };
 
   return (
-    <aside className="w-60 bg-card flex flex-col h-full border-r border-border">
-      {/* 헤더 - 고정 */}
-      <div className="flex-none px-3 py-2 border-b border-border">
-        <h2 className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-          MY TICKERS
-        </h2>
-      </div>
+    <>
+      {/* 백드롭 오버레이 */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* 사이드바 */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-50 w-64 sm:w-72 bg-card border-r border-border",
+          "flex flex-col h-full",
+          "transform transition-transform duration-300 ease-in-out",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
+        {/* 헤더 - 고정 */}
+        <div className="flex-none px-3 py-2 border-b border-border flex items-center justify-between">
+          <h2 className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            MY TICKERS
+          </h2>
+          {/* 닫기 버튼 */}
+          <button
+            onClick={onClose}
+            className="p-1 rounded-md hover:bg-muted transition-colors"
+            aria-label="사이드바 닫기"
+          >
+            <X className="h-4 w-4 text-muted-foreground" />
+          </button>
+        </div>
 
       {/* 추가 버튼 또는 입력 필드 - 고정 */}
       <div className="flex-none p-1.5">
@@ -332,6 +363,7 @@ export function Sidebar({
           ))
         )}
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

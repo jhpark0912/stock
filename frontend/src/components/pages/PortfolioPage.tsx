@@ -3,6 +3,8 @@
  * 데이터 로직은 usePortfolio 훅으로 분리됨
  */
 
+import { useState } from 'react';
+import { PanelLeft } from 'lucide-react';
 import { Sidebar } from '../Sidebar';
 import { HeroSection } from '../HeroSection';
 import { MainTabs } from '../MainTabs';
@@ -19,6 +21,9 @@ interface PortfolioPageProps {
 }
 
 export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
+  // 사이드바 토글 상태
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const {
     user,
     stockData,
@@ -36,16 +41,38 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
     sidebarTickers,
   } = usePortfolio();
 
+  // 티커 선택 시 사이드바 닫기
+  const handleSelectTickerWithClose = (symbol: string) => {
+    handleSelectTicker(symbol);
+    setSidebarOpen(false);
+  };
+
   return (
-    <div className="h-full min-h-0 flex">
-      {/* 사이드바 */}
+    <div className="h-full min-h-0 flex flex-col">
+      {/* 모바일 헤더 - 햄버거 메뉴 */}
+      <div className="flex-none flex items-center gap-3 px-4 py-2 border-b border-border bg-card">
+        <button
+          onClick={() => setSidebarOpen(true)}
+          className="p-2 rounded-md hover:bg-muted transition-colors"
+          aria-label="티커 목록 열기"
+        >
+          <PanelLeft className="h-5 w-5 text-foreground" />
+        </button>
+        <span className="text-sm font-medium text-foreground">
+          {userSettings.selectedTicker || '티커를 선택하세요'}
+        </span>
+      </div>
+
+      {/* 사이드바 (슬라이드 오버레이) */}
       <Sidebar
-        onTickerSelect={handleSelectTicker}
+        onTickerSelect={handleSelectTickerWithClose}
         onAddTicker={handleAddTicker}
         onRemoveTicker={handleRemoveTicker}
         onUpdatePurchasePrice={handleUpdatePurchasePrice}
         initialTickers={sidebarTickers}
         selectedTicker={userSettings.selectedTicker || sidebarTickers[0]?.symbol}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
       {/* 메인 콘텐츠 */}

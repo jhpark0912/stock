@@ -32,23 +32,23 @@ export function CountryTab({ selected, onChange }: CountryTabProps) {
           key={value}
           onClick={() => onChange(value)}
           className={cn(
-            'px-3 py-1.5 text-sm font-medium rounded-md transition-colors flex items-center gap-1.5',
+            'px-2 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors flex items-center gap-1 sm:gap-1.5',
             selected === value
               ? 'bg-background text-foreground shadow-sm'
               : 'text-muted-foreground hover:text-foreground'
           )}
         >
           {isGlobe ? (
-            <Globe className="w-4 h-4" />
+            <Globe className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           ) : (
             <img
               src={`https://flagcdn.com/w40/${flagCode}.png`}
               srcSet={`https://flagcdn.com/w80/${flagCode}.png 2x`}
               alt={label}
-              className="w-5 h-3.5 rounded-sm object-cover"
+              className="w-4 h-3 sm:w-5 sm:h-3.5 rounded-sm object-cover"
             />
           )}
-          <span>{label}</span>
+          <span className="hidden sm:inline">{label}</span>
         </button>
       ))}
     </div>

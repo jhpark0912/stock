@@ -393,7 +393,7 @@ export function SectorHeatmap({ country }: SectorHeatmapProps) {
       </div>
 
       {/* 트리맵 */}
-      <div className="h-[400px] w-full rounded-lg overflow-hidden border bg-gray-900">
+      <div className="h-[280px] sm:h-[350px] md:h-[400px] w-full rounded-lg overflow-hidden border bg-gray-900">
         <ResponsiveContainer width="100%" height="100%">
           <Treemap
             data={treemapData}

@@ -226,7 +226,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
     <div className="p-4 space-y-3">
       {/* 차트 정보 요약 */}
       <div className="bg-card border border-border rounded-lg p-3">
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
           <div>
             <p className="text-xs text-muted-foreground">종목</p>
             <p className="text-sm font-semibold text-foreground">{ticker}</p>
@@ -261,7 +261,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
       </div>
 
       {/* 2x2 차트 그리드 */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* 1. 주가 + 거래량 차트 */}
         <div className="bg-card border border-border rounded-lg p-3">
           <div className="mb-2">

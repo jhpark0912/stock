@@ -99,7 +99,7 @@ export function HeroSection({
         {/* 평단가 정보 (있을 경우에만 표시) */}
         {profitInfo && (
           <div className="mt-3 pt-3 border-t border-border">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
               {/* 첫 번째 행 */}
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground font-medium">평단가:</span>

@@ -91,7 +91,7 @@ export function IndicatorListPanel({
   };
 
   return (
-    <div className="w-56 border-r border-border bg-card">
+    <div className="w-full lg:w-56 border-r border-border bg-card overflow-y-auto">
       {Object.entries(grouped).map(([category, items]) => (
         <div key={category} className="py-2">
           {/* 카테고리 헤더 */}

@@ -84,6 +84,9 @@ export function EconomicChartView({
   // 비교할 지표들
   const [compareSymbols, setCompareSymbols] = useState<string[]>([]);
 
+  // 모바일 뷰 상태: 'list' | 'chart'
+  const [mobileView, setMobileView] = useState<'list' | 'chart'>('list');
+
   // 선택된 지표 찾기
   const selectedIndicator = useMemo(() => {
     return allIndicators.find(item => item.indicator.symbol === selectedSymbol)?.indicator || null;
@@ -145,17 +148,55 @@ export function EconomicChartView({
         </div>
       </div>
 
+      {/* 모바일 탭 토글 */}
+      <div className="flex lg:hidden border-b border-border">
+        <button
+          onClick={() => setMobileView('list')}
+          className={cn(
+            'flex-1 py-3 text-sm font-medium transition-colors',
+            mobileView === 'list'
+              ? 'text-primary border-b-2 border-primary bg-primary/5'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          📋 지표 목록
+        </button>
+        <button
+          onClick={() => setMobileView('chart')}
+          className={cn(
+            'flex-1 py-3 text-sm font-medium transition-colors',
+            mobileView === 'chart'
+              ? 'text-primary border-b-2 border-primary bg-primary/5'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          📈 차트
+        </button>
+      </div>
+
       {/* 메인 컨텐츠 */}
       <div className="flex-1 flex min-h-0">
-        {/* 좌측: 지표 목록 */}
-        <IndicatorListPanel
-          indicators={allIndicators}
-          selectedSymbol={selectedSymbol}
-          onSelect={setSelectedSymbol}
-        />
+        {/* 좌측: 지표 목록 - 모바일에서는 탭에 따라 표시/숨김 */}
+        <div className={cn(
+          'lg:block',
+          mobileView === 'list' ? 'block w-full' : 'hidden'
+        )}>
+          <IndicatorListPanel
+            indicators={allIndicators}
+            selectedSymbol={selectedSymbol}
+            onSelect={(symbol) => {
+              setSelectedSymbol(symbol);
+              setMobileView('chart'); // 지표 선택 시 자동으로 차트 뷰로 전환
+            }}
+          />
+        </div>
 
-        {/* 우측: 상세 정보 */}
-        <div className="flex-1 p-6 overflow-y-auto">
+        {/* 우측: 상세 정보 - 모바일에서는 탭에 따라 표시/숨김 */}
+        <div className={cn(
+          'flex-1 p-4 sm:p-6 overflow-y-auto',
+          'lg:block',
+          mobileView === 'chart' ? 'block' : 'hidden'
+        )}>
           {selectedIndicator ? (
             <div className="space-y-6">
               {/* 지표 헤더 */}

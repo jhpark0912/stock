@@ -121,53 +121,56 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
 
   // 서브 탭 헤더 컴포넌트
   const SubTabHeader = () => (
-    <div className="px-6 pt-6 pb-4 border-b">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 bg-muted rounded-lg p-1 w-fit">
+    <div className="px-3 sm:px-6 pt-4 sm:pt-6 pb-3 sm:pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        {/* 메인 탭: 경제지표 / 섹터 / 마감리뷰 */}
+        <div className="flex items-center gap-0.5 sm:gap-1 bg-muted rounded-lg p-1 overflow-x-auto">
           <button
             onClick={() => setActiveTab('indicators')}
             className={cn(
-              'px-4 py-2 text-sm font-medium rounded-md transition-colors',
+              'px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap',
               activeTab === 'indicators'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            경제 지표
+            경제지표
           </button>
           <button
             onClick={() => setActiveTab('sectors')}
             className={cn(
-              'px-4 py-2 text-sm font-medium rounded-md transition-colors',
+              'px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap',
               activeTab === 'sectors'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            섹터 히트맵
+            섹터
           </button>
           <button
             onClick={() => setActiveTab('review')}
             className={cn(
-              'px-4 py-2 text-sm font-medium rounded-md transition-colors',
+              'px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap',
               activeTab === 'review'
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            마감 리뷰
+            리뷰
           </button>
         </div>
         {/* 국가 선택 탭 */}
-        {activeTab === 'indicators' && (
-          <CountryTab selected={country} onChange={handleCountryChange} />
-        )}
-        {activeTab === 'sectors' && (
-          <CountryTab selected={sectorCountry} onChange={setSectorCountry} />
-        )}
-        {activeTab === 'review' && (
-          <CountryTab selected={reviewCountry} onChange={setReviewCountry} />
-        )}
+        <div className="flex-shrink-0">
+          {activeTab === 'indicators' && (
+            <CountryTab selected={country} onChange={handleCountryChange} />
+          )}
+          {activeTab === 'sectors' && (
+            <CountryTab selected={sectorCountry} onChange={setSectorCountry} />
+          )}
+          {activeTab === 'review' && (
+            <CountryTab selected={reviewCountry} onChange={setReviewCountry} />
+          )}
+        </div>
       </div>
     </div>
   );
