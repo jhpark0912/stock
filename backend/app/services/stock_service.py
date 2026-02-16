@@ -111,12 +111,65 @@ class StockService:
                 volume=summary.get('regularMarketVolume') or summary.get('volume'),
             )
 
-            # 재무 지표
+            # 재무 지표 (기본값)
+            trailing_pe = summary.get('trailingPE')
+            forward_pe = summary.get('forwardPE')
+            pbr = stats.get('priceToBook')
+            
+            # PE/PBR이 None인 경우 재무제표에서 직접 계산 (한국 주식 대응)
+            if trailing_pe is None or pbr is None:
+                try:
+                    market_cap = summary.get('marketCap')
+                    
+                    if market_cap and market_cap > 0:
+                        # PBR 계산: 시가총액 / 자본총계
+                        if pbr is None:
+                            balance_sheet = ticker.balance_sheet()
+                            if hasattr(balance_sheet, 'columns') and not balance_sheet.empty:
+                                # StockholdersEquity 또는 TotalStockholderEquity
+                                equity = None
+                                for col in ['StockholdersEquity', 'TotalStockholderEquity']:
+                                    if col in balance_sheet.columns:
+                                        equity = balance_sheet[col].iloc[0]
+                                        break
+                                
+                                if equity and pd.notna(equity) and equity > 0:
+                                    pbr = round(market_cap / equity, 2)
+                        
+                        # PER 계산: 시가총액 / 당기순이익 또는 현재가 / EPS
+                        if trailing_pe is None:
+                            income_stmt = ticker.income_statement()
+                            if hasattr(income_stmt, 'columns') and not income_stmt.empty:
+                                # 방법 1: NetIncome으로 계산
+                                net_income = None
+                                for col in ['NetIncome', 'NetIncomeCommonStockholders']:
+                                    if col in income_stmt.columns:
+                                        net_income = income_stmt[col].iloc[0]
+                                        if pd.notna(net_income):
+                                            break
+
+                                if net_income and pd.notna(net_income) and net_income > 0:
+                                    trailing_pe = round(market_cap / net_income, 2)
+
+                                # 방법 2: EPS로 계산 (NetIncome이 없는 경우)
+                                if trailing_pe is None and current_price:
+                                    eps = None
+                                    for col in ['BasicEPS', 'DilutedEPS']:
+                                        if col in income_stmt.columns:
+                                            eps = income_stmt[col].iloc[0]
+                                            if pd.notna(eps):
+                                                break
+
+                                    if eps and pd.notna(eps) and eps > 0:
+                                        trailing_pe = round(current_price / eps, 2)
+                except Exception:
+                    pass  # 계산 실패 시 None 유지
+            
             financials = FinancialsInfo(
                 # 밸류에이션
-                trailing_pe=summary.get('trailingPE'),
-                forward_pe=summary.get('forwardPE'),
-                pbr=stats.get('priceToBook'),
+                trailing_pe=trailing_pe,
+                forward_pe=forward_pe,
+                pbr=pbr,
                 roe=fin_data.get('returnOnEquity'),
                 opm=fin_data.get('operatingMargins'),
                 peg=stats.get('pegRatio'),

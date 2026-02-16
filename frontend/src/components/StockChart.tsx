@@ -25,6 +25,23 @@ interface StockChartProps {
   chartType?: 'line' | 'area';
 }
 
+// 한국 주식 여부 판별
+const isKoreanStock = (ticker?: string): boolean => {
+  if (!ticker) return false;
+  const upperTicker = ticker.toUpperCase();
+  return upperTicker.endsWith('.KS') || upperTicker.endsWith('.KQ');
+};
+
+// 통화 포맷팅 (한국 주식: 원화, 그 외: 달러)
+const formatPrice = (price: number, ticker?: string): string => {
+  if (isKoreanStock(ticker)) {
+    // 한국 원화: 소수점 없음, 천 단위 콤마
+    return `₩${price.toLocaleString('ko-KR', { maximumFractionDigits: 0 })}`;
+  }
+  // 미국 달러: 소수점 2자리
+  return `$${price.toFixed(2)}`;
+};
+
 // 차트 데이터 변환 (모든 필드 포함)
 const formatChartData = (data: ChartDataPoint[]) => {
   return data.map((point) => ({
@@ -130,7 +147,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
         <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
           <p className="text-xs text-muted-foreground mb-2">{data.date}</p>
           <div className="space-y-1">
-            <p className="text-sm font-bold text-foreground">종가: ${data.price.toFixed(2)}</p>
+            <p className="text-sm font-bold text-foreground">종가: {formatPrice(data.price, ticker)}</p>
             <p className="text-xs text-muted-foreground">
               거래량: {(data.volume / 1000000).toFixed(2)}M
             </p>
@@ -149,15 +166,15 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
         <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
           <p className="text-xs text-muted-foreground mb-2">{data.date}</p>
           <div className="space-y-1">
-            <p className="text-sm font-bold text-foreground">종가: ${data.price.toFixed(2)}</p>
+            <p className="text-sm font-bold text-foreground">종가: {formatPrice(data.price, ticker)}</p>
             {data.sma20 && (
-              <p className="text-xs text-blue-500">SMA20: ${data.sma20.toFixed(2)}</p>
+              <p className="text-xs text-blue-500">SMA20: {formatPrice(data.sma20, ticker)}</p>
             )}
             {data.sma50 && (
-              <p className="text-xs text-orange-500">SMA50: ${data.sma50.toFixed(2)}</p>
+              <p className="text-xs text-orange-500">SMA50: {formatPrice(data.sma50, ticker)}</p>
             )}
             {data.sma200 && (
-              <p className="text-xs text-red-500">SMA200: ${data.sma200.toFixed(2)}</p>
+              <p className="text-xs text-red-500">SMA200: {formatPrice(data.sma200, ticker)}</p>
             )}
           </div>
         </div>
@@ -174,12 +191,12 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
         <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
           <p className="text-xs text-muted-foreground mb-2">{data.date}</p>
           <div className="space-y-1">
-            <p className="text-sm font-bold text-foreground">종가: ${data.price.toFixed(2)}</p>
+            <p className="text-sm font-bold text-foreground">종가: {formatPrice(data.price, ticker)}</p>
             {data.bb_upper && (
               <>
-                <p className="text-xs text-purple-500">상단: ${data.bb_upper.toFixed(2)}</p>
-                <p className="text-xs text-gray-500">중간: ${data.bb_middle?.toFixed(2)}</p>
-                <p className="text-xs text-purple-500">하단: ${data.bb_lower?.toFixed(2)}</p>
+                <p className="text-xs text-purple-500">상단: {formatPrice(data.bb_upper, ticker)}</p>
+                <p className="text-xs text-gray-500">중간: {data.bb_middle ? formatPrice(data.bb_middle, ticker) : '-'}</p>
+                <p className="text-xs text-purple-500">하단: {data.bb_lower ? formatPrice(data.bb_lower, ticker) : '-'}</p>
               </>
             )}
           </div>
@@ -197,19 +214,19 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
         <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
           <p className="text-xs text-muted-foreground mb-2">{data.date}</p>
           <div className="space-y-1">
-            <p className="text-sm font-bold text-foreground">종가: ${data.price.toFixed(2)}</p>
+            <p className="text-sm font-bold text-foreground">종가: {formatPrice(data.price, ticker)}</p>
             {data.sma20 && (
-              <p className="text-xs text-blue-500">SMA20: ${data.sma20.toFixed(2)}</p>
+              <p className="text-xs text-blue-500">SMA20: {formatPrice(data.sma20, ticker)}</p>
             )}
             {data.sma50 && (
-              <p className="text-xs text-orange-500">SMA50: ${data.sma50.toFixed(2)}</p>
+              <p className="text-xs text-orange-500">SMA50: {formatPrice(data.sma50, ticker)}</p>
             )}
             {data.sma200 && (
-              <p className="text-xs text-red-500">SMA200: ${data.sma200.toFixed(2)}</p>
+              <p className="text-xs text-red-500">SMA200: {formatPrice(data.sma200, ticker)}</p>
             )}
             {data.bb_upper && (
               <p className="text-xs text-purple-500">
-                BB: ${data.bb_lower?.toFixed(2)} - ${data.bb_upper.toFixed(2)}
+                BB: {data.bb_lower ? formatPrice(data.bb_lower, ticker) : '-'} - {formatPrice(data.bb_upper, ticker)}
               </p>
             )}
             <p className="text-xs text-muted-foreground">
@@ -233,12 +250,12 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
           </div>
           <div>
             <p className="text-xs text-muted-foreground">시작가</p>
-            <p className="text-sm font-semibold text-foreground">${data[0].price.toFixed(2)}</p>
+            <p className="text-sm font-semibold text-foreground">{formatPrice(data[0].price, ticker)}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">현재가</p>
             <p className="text-sm font-semibold text-foreground">
-              ${data[data.length - 1].price.toFixed(2)}
+              {formatPrice(data[data.length - 1].price, ticker)}
             </p>
           </div>
           <div>
