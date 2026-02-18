@@ -19,42 +19,56 @@ interface Tab {
 }
 
 const tabs: Tab[] = [
-  { id: 'overview', label: 'Overview', icon: <BarChart3 className="h-4 w-4" /> },
-  { id: 'ai', label: 'AI Analysis', icon: <Sparkles className="h-4 w-4" /> },
-  { id: 'chart', label: 'Chart', icon: <LineChart className="h-4 w-4" /> },
-  { id: 'technical', label: 'Technical', icon: <TrendingUp className="h-4 w-4" /> },
-  { id: 'news', label: 'News', icon: <Newspaper className="h-4 w-4" /> },
+  { id: 'overview', label: '종합', icon: <BarChart3 className="h-5 w-5 sm:h-4 sm:w-4" /> },
+  { id: 'ai', label: 'AI', icon: <Sparkles className="h-5 w-5 sm:h-4 sm:w-4" /> },
+  { id: 'chart', label: '차트', icon: <LineChart className="h-5 w-5 sm:h-4 sm:w-4" /> },
+  { id: 'technical', label: '기술', icon: <TrendingUp className="h-5 w-5 sm:h-4 sm:w-4" /> },
+  { id: 'news', label: '뉴스', icon: <Newspaper className="h-5 w-5 sm:h-4 sm:w-4" /> },
 ];
 
 export function MainTabs({ children }: MainTabsProps) {
   const [activeTab, setActiveTab] = useState<TabId>('overview');
+  const [visitedTabs, setVisitedTabs] = useState<Set<TabId>>(new Set(['overview']));
+
+  const handleTabClick = (tabId: TabId) => {
+    setActiveTab(tabId);
+    setVisitedTabs((prev) => {
+      if (prev.has(tabId)) return prev;
+      return new Set([...prev, tabId]);
+    });
+  };
 
   return (
     <div className="flex flex-col">
       {/* 탭 버튼 */}
       <div className="border-b border-border bg-card overflow-x-auto">
-        <div className="flex gap-0.5 sm:gap-1 px-2 sm:px-4 md:px-6 pt-1 sm:pt-2 min-w-max">
+        <div className="flex gap-1 sm:gap-1 px-2 sm:px-4 md:px-6 pt-1 sm:pt-2 min-w-max">
           {tabs.map((tab) => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-t-lg transition-all ${
+              onClick={() => handleTabClick(tab.id)}
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-2 text-xs sm:text-sm font-medium rounded-t-lg transition-all min-h-[44px] sm:min-h-0 ${
                 activeTab === tab.id
                   ? 'bg-background text-foreground border-t border-l border-r border-border'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
               }`}
             >
               {tab.icon}
-              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="text-[11px] sm:text-sm">{tab.label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* 탭 콘텐츠 */}
-      <div>
-        {children(activeTab)}
-      </div>
+      {/* 탭 콘텐츠 - 방문한 탭은 유지, 비활성은 숨김 */}
+      {tabs.map((tab) =>
+        visitedTabs.has(tab.id) ? (
+          <div key={tab.id} className={activeTab === tab.id ? '' : 'hidden'}>
+            {children(tab.id)}
+          </div>
+        ) : null
+      )}
     </div>
   );
 }
+

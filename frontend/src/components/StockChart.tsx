@@ -4,7 +4,7 @@
  * 실제 ChartDataPoint[] 사용 + SMA, 볼린저밴드, 거래량 표시
  */
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   ComposedChart,
   Line,
@@ -137,7 +137,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
     );
   }
 
-  const data = formatChartData(chartData);
+  const data = useMemo(() => formatChartData(chartData), [chartData]);
 
   // 커스텀 툴팁 - 주가용
   const PriceTooltip = ({ active, payload }: any) => {
