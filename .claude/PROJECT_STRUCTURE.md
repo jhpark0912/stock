@@ -186,7 +186,7 @@ backend/
 │   │   ├── technical_indicators.py  # 기술적 지표 계산
 │   │   ├── mock_data.py     # 목 데이터 생성
 │   │   ├── economic_service.py  # 경제 지표 서비스 (yahooquery, 6개월 히스토리)
-│   │   ├── fred_service.py  # FRED API 서비스 (CPI, M2, YoY 계산)
+│   │   ├── fred_service.py  # FRED API 서비스 (CPI, M2, CFNAI, UMCSENT, Philly Fed Spread, YoY 계산)
 │   │   ├── indicator_status.py  # 지표 상태 판단 로직 (YoY 변화율 기반)
 │   │   └── sector_service.py    # 섹터 ETF 서비스 (GICS 11개 섹터, 5분 캐싱)
 │   ├── utils/               # 유틸리티
@@ -358,7 +358,7 @@ Frontend (토큰 저장)
    - **미국 지표**:
      - 금리: 미국채 10년물 (^TNX), 3개월 T-Bill (^IRX)
      - 변동성: VIX (^VIX)
-     - 거시경제: CPI (CPIAUCSL), M2 통화량 (M2SL) - FRED API
+     - 거시경제: CPI (CPIAUCSL), M2 통화량 (M2SL), 필라델피아 연준 스프레드 (PHILLY_FED_SPREAD), CFNAI (CFNAIMA3), 미시간 소비자심리 (UMCSENT) - FRED API
      - 원자재: WTI 원유 (CL=F), 금 (GC=F)
    - **한국 지표** (2026-02-08 추가):
      - 금리: 국고채 10년물 (KR_BOND_10Y), 기준금리 (KR_BASE_RATE) - ECOS API (일간)
@@ -372,6 +372,7 @@ Frontend (토큰 저장)
      - **ECOS API 페이징**: `/1/10000/` (최대 10,000개 조회)
    - **상태 판단**:
      - FRED/ECOS: YoY 변화율 기반 (CPI: 1.5-2.5% 좋음, M2: 4-8% 좋음)
+     - FRED 절대값 기반: Philly Fed(>10 확장), CFNAI(>0 확장, <-0.7 침체), UMCSENT(>80 낙관, <60 비관)
      - Yahoo: 절대값 기반 (금리, VIX, 원자재, 환율)
      - 한국 금리: KR_BOND_10Y(<3%), KR_BASE_RATE(<2.5%), KR_CREDIT_SPREAD(<0.5%p)
    - **Chart 뷰** (2026-02-08 완성):

@@ -408,7 +408,25 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
                 <BarChart3 className="h-5 w-5 text-primary" />
                 <h3 className="text-lg font-medium text-foreground">🇺🇸 거시경제</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <IndicatorCard
+                  indicator={data?.macro.philly_fed || null}
+                  showChart={false}
+                  formatType="number"
+                  icon="🏭"
+                />
+                <IndicatorCard
+                  indicator={data?.macro.cfnai || null}
+                  showChart={false}
+                  formatType="number"
+                  icon="📋"
+                />
+                <IndicatorCard
+                  indicator={data?.macro.umcsent || null}
+                  showChart={false}
+                  formatType="number"
+                  icon="👛"
+                />
                 <IndicatorCard
                   indicator={data?.macro.cpi || null}
                   showChart={false}
@@ -520,25 +538,31 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
                 <BarChart3 className="h-5 w-5 text-primary" />
                 <h3 className="text-lg font-medium text-foreground">🇰🇷 거시경제</h3>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <IndicatorCard
-                  indicator={krData?.macro.cpi || null}
+                  indicator={krData?.macro.leading_index || null}
                   showChart={false}
                   formatType="number"
-                  icon="📊"
+                  icon="🧭"
                 />
                 <IndicatorCard
-                  indicator={krData?.macro.m2 || null}
+                  indicator={krData?.macro.ccsi || null}
                   showChart={false}
-                  formatType="trillion"
-                  icon="💵"
+                  formatType="number"
+                  icon="😊"
+                />
+                <IndicatorCard
+                  indicator={krData?.macro.export || null}
+                  showChart={false}
+                  formatType="number"
+                  icon="🚢"
                 />
               </div>
               {/* ECOS API 안내 */}
-              {(!krData?.macro.cpi && !krData?.macro.m2) && (
+              {(!krData?.macro.leading_index && !krData?.macro.ccsi && !krData?.macro.export) && (
                 <div className="mt-3 p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
                   <p>
-                    💡 한국 CPI와 M2 데이터를 보려면 ECOS API 키가 필요합니다.
+                    💡 한국 거시경제 지표를 보려면 ECOS API 키가 필요합니다.
                     <a
                       href="https://ecos.bok.or.kr/api/"
                       target="_blank"

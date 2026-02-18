@@ -156,8 +156,9 @@ async def _get_kr_indicators(include_history: bool) -> KoreaEconomicResponse:
             credit_spread=kr_data["rates"]["credit_spread"]
         ),
         macro=KoreaMacroData(
-            cpi=kr_data["macro"]["cpi"],
-            m2=kr_data["macro"]["m2"]
+            leading_index=kr_data["macro"]["leading_index"],
+            ccsi=kr_data["macro"]["ccsi"],
+            export=kr_data["macro"]["export"]
         ),
         fx=KoreaFxData(
             usd_krw=kr_data["fx"]["usd_krw"]
@@ -171,8 +172,9 @@ async def _get_kr_indicators(include_history: bool) -> KoreaEconomicResponse:
             korea_data.rates.bond_10y,
             korea_data.rates.base_rate,
             korea_data.rates.credit_spread,
-            korea_data.macro.cpi,
-            korea_data.macro.m2,
+            korea_data.macro.leading_index,
+            korea_data.macro.ccsi,
+            korea_data.macro.export,
             korea_data.fx.usd_krw
         ] if ind
     ])
@@ -221,8 +223,9 @@ async def _get_all_indicators(include_history: bool) -> AllEconomicResponse:
             credit_spread=kr_data["rates"]["credit_spread"]
         ),
         macro=KoreaMacroData(
-            cpi=kr_data["macro"]["cpi"],
-            m2=kr_data["macro"]["m2"]
+            leading_index=kr_data["macro"]["leading_index"],
+            ccsi=kr_data["macro"]["ccsi"],
+            export=kr_data["macro"]["export"]
         ),
         fx=KoreaFxData(
             usd_krw=kr_data["fx"]["usd_krw"]

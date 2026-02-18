@@ -239,6 +239,108 @@ def get_usd_krw_status(value: float) -> Tuple[IndicatorStatus, str]:
     return status, STATUS_LABELS["economic"][status]
 
 
+def get_kr_leading_index_status(value: float) -> Tuple[IndicatorStatus, str]:
+    """
+    선행지수 순환변동치 상태 판단
+    - 확장: > 100
+    - 보합: 99.5 ~ 100
+    - 수축: < 99.5
+    """
+    if value > 100:
+        status = IndicatorStatus.GOOD
+    elif value >= 99.5:
+        status = IndicatorStatus.CAUTION
+    else:
+        status = IndicatorStatus.DANGER
+    
+    return status, STATUS_LABELS["economic"][status]
+
+
+def get_kr_ccsi_status(value: float) -> Tuple[IndicatorStatus, str]:
+    """
+    소비자심리지수(CCSI) 상태 판단
+    - 낙관: > 100
+    - 보통: 90 ~ 100
+    - 비관: < 90
+    """
+    if value > 100:
+        status = IndicatorStatus.GOOD
+    elif value >= 90:
+        status = IndicatorStatus.CAUTION
+    else:
+        status = IndicatorStatus.DANGER
+    
+    return status, STATUS_LABELS["economic"][status]
+
+
+def get_kr_export_status(yoy_change: float) -> Tuple[IndicatorStatus, str]:
+    """
+    월간 수출액(BOP) YoY 상태 판단
+    - 호조: YoY > 5%
+    - 보합: -5% ~ 5%
+    - 부진: < -5%
+    """
+    if yoy_change > 5:
+        status = IndicatorStatus.GOOD
+    elif yoy_change >= -5:
+        status = IndicatorStatus.CAUTION
+    else:
+        status = IndicatorStatus.DANGER
+    
+    return status, STATUS_LABELS["economic"][status]
+
+
+def get_philly_fed_spread_status(value: float) -> Tuple[IndicatorStatus, str]:
+    """
+    필라델피아 연준 스프레드 (신규주문 - 재고) 상태 판단
+    - 확장: > 10
+    - 보합: 0 ~ 10
+    - 수축: < 0
+    """
+    if value > 10:
+        status = IndicatorStatus.GOOD
+    elif value >= 0:
+        status = IndicatorStatus.CAUTION
+    else:
+        status = IndicatorStatus.DANGER
+
+    return status, STATUS_LABELS["economic"][status]
+
+
+def get_cfnai_status(value: float) -> Tuple[IndicatorStatus, str]:
+    """
+    CFNAI 3개월 이동평균 상태 판단
+    - 확장: > 0
+    - 둔화: -0.7 ~ 0
+    - 침체: < -0.7
+    """
+    if value > 0:
+        status = IndicatorStatus.GOOD
+    elif value >= -0.7:
+        status = IndicatorStatus.CAUTION
+    else:
+        status = IndicatorStatus.DANGER
+
+    return status, STATUS_LABELS["economic"][status]
+
+
+def get_umcsent_status(value: float) -> Tuple[IndicatorStatus, str]:
+    """
+    미시간대 소비자심리지수 상태 판단
+    - 낙관: > 80
+    - 보통: 60 ~ 80
+    - 비관: < 60
+    """
+    if value > 80:
+        status = IndicatorStatus.GOOD
+    elif value >= 60:
+        status = IndicatorStatus.CAUTION
+    else:
+        status = IndicatorStatus.DANGER
+
+    return status, STATUS_LABELS["economic"][status]
+
+
 # 지표별 판단 기준 설명
 INDICATOR_CRITERIA = {
     # 미국 지표
@@ -249,6 +351,9 @@ INDICATOR_CRITERIA = {
     "M2SL": "🟢 좋음: 4% - 8%\n🟡 주의: 1% - 4%\n🔴 위험: < 0% (유동성 수축)",
     "CL=F": "🟢 좋음: $60 - $80\n🟡 주의: $80 - $95\n🔴 위험: > $95 또는 < $40",
     "GC=F": None,  # 측정 안 함
+    "PHILLY_FED_SPREAD": "🟢 확장: > 10\n🟡 보합: 0 ~ 10\n🔴 수축: < 0",
+    "CFNAIMA3": "🟢 확장: > 0\n🟡 둔화: -0.7 ~ 0\n🔴 침체: < -0.7",
+    "UMCSENT": "🟢 낙관: > 80\n🟡 보통: 60 ~ 80\n🔴 비관: < 60",
     
     # 한국 지표
     "KR_BOND_10Y": "🟢 좋음: < 3.0%\n🟡 주의: 3.0% - 4.0%\n🔴 위험: > 4.0%",
@@ -256,6 +361,9 @@ INDICATOR_CRITERIA = {
     "KR_CREDIT_SPREAD": "🟢 안정: < 0.5%p\n🟡 주의: 0.5% - 1.0%p\n🔴 위험: > 1.0%p",
     "KR_CPI": "🟢 좋음: 1.5% - 2.5%\n🟡 주의: 2.5% - 4.0%\n🔴 위험: > 4.0% 또는 < 0%",
     "KR_M2": "🟢 좋음: 4% - 8%\n🟡 주의: 1% - 4%\n🔴 위험: < 0% (유동성 수축)",
+    "KR_LEADING_INDEX": "🟢 확장: > 100\n🟡 보합: 99.5 ~ 100\n🔴 수축: < 99.5",
+    "KR_CCSI": "🟢 낙관: > 100\n🟡 보통: 90 ~ 100\n🔴 비관: < 90",
+    "KR_EXPORT": "🟢 호조: YoY > 5%\n🟡 보합: -5% ~ 5%\n🔴 부진: < -5%",
     "KRW=X": "🟢 안정: 1200 - 1300원\n🟡 주의: 1300 - 1400원\n🔴 위험: > 1400원",
 }
 
@@ -305,7 +413,16 @@ def get_indicator_status(symbol: str, value: Optional[float], yoy_change: Option
             status, label = get_m2_status(yoy_change)
             return status, label, criteria
         return IndicatorStatus.NONE, "-", criteria
-    
+    elif symbol == "PHILLY_FED_SPREAD":
+        status, label = get_philly_fed_spread_status(value)
+        return status, label, criteria
+    elif symbol == "CFNAIMA3":
+        status, label = get_cfnai_status(value)
+        return status, label, criteria
+    elif symbol == "UMCSENT":
+        status, label = get_umcsent_status(value)
+        return status, label, criteria
+
     # 한국 지표
     elif symbol == "KR_BOND_10Y":
         status, label = get_kr_bond_10y_status(value)
@@ -324,6 +441,17 @@ def get_indicator_status(symbol: str, value: Optional[float], yoy_change: Option
     elif symbol == "KR_M2":
         if yoy_change is not None:
             status, label = get_m2_status(yoy_change)  # 미국과 동일한 기준 사용
+            return status, label, criteria
+        return IndicatorStatus.NONE, "-", criteria
+    elif symbol == "KR_LEADING_INDEX":
+        status, label = get_kr_leading_index_status(value)
+        return status, label, criteria
+    elif symbol == "KR_CCSI":
+        status, label = get_kr_ccsi_status(value)
+        return status, label, criteria
+    elif symbol == "KR_EXPORT":
+        if yoy_change is not None:
+            status, label = get_kr_export_status(yoy_change)
             return status, label, criteria
         return IndicatorStatus.NONE, "-", criteria
     elif symbol == "KRW=X":

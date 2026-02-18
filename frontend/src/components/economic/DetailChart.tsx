@@ -41,7 +41,7 @@ export function DetailChart({ indicator, compareIndicators = [] }: DetailChartPr
     if (symbol === 'CPIAUCSL' || symbol === 'M2SL') return true;
 
     // ECOS 월간 데이터
-    if (symbol === 'KR_CPI' || symbol === 'KR_M2' || symbol === 'KR_INDPRO' || symbol === 'KR_EXPORT') {
+    if (symbol.startsWith('KR_') && !symbol.startsWith('KR_BOND') && !symbol.startsWith('KR_BASE') && !symbol.startsWith('KR_CREDIT')) {
       return true;
     }
 

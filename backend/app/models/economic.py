@@ -45,6 +45,9 @@ class MacroData(BaseModel):
     cpi: Optional[EconomicIndicator] = None
     m2: Optional[EconomicIndicator] = None
     indpro: Optional[EconomicIndicator] = None
+    philly_fed: Optional[EconomicIndicator] = None   # 필라델피아 연준 스프레드 (신규주문-재고)
+    cfnai: Optional[EconomicIndicator] = None         # 시카고 연준 국가활동지수 (3개월 이동평균)
+    umcsent: Optional[EconomicIndicator] = None       # 미시간대 소비자심리지수
 
 
 class CommoditiesData(BaseModel):
@@ -80,9 +83,10 @@ class KoreaRatesData(BaseModel):
 
 
 class KoreaMacroData(BaseModel):
-    """한국 거시경제 지표"""
-    cpi: Optional[EconomicIndicator] = None  # 소비자물가지수
-    m2: Optional[EconomicIndicator] = None  # M2 통화량
+    """한국 거시경제 지표 (경기-심리-실적 3대장)"""
+    leading_index: Optional[EconomicIndicator] = None  # 선행지수 순환변동치
+    ccsi: Optional[EconomicIndicator] = None           # 소비자심리지수
+    export: Optional[EconomicIndicator] = None         # 월간 수출액 BOP
 
 
 class KoreaFxData(BaseModel):

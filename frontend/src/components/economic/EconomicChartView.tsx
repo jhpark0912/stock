@@ -30,6 +30,9 @@ function getUsIndicators(data: EconomicData): { indicator: EconomicIndicator; ca
   if (data.rates.vix) indicators.push({ indicator: data.rates.vix, category: '💵 금리 & 변동성' });
 
   // 거시경제
+  if (data.macro.philly_fed) indicators.push({ indicator: data.macro.philly_fed, category: '📊 거시경제' });
+  if (data.macro.cfnai) indicators.push({ indicator: data.macro.cfnai, category: '📊 거시경제' });
+  if (data.macro.umcsent) indicators.push({ indicator: data.macro.umcsent, category: '📊 거시경제' });
   if (data.macro.cpi) indicators.push({ indicator: data.macro.cpi, category: '📊 거시경제' });
   if (data.macro.m2) indicators.push({ indicator: data.macro.m2, category: '📊 거시경제' });
 
@@ -50,8 +53,9 @@ function getKrIndicators(data: KoreaEconomicData): { indicator: EconomicIndicato
   if (data.rates.credit_spread) indicators.push({ indicator: data.rates.credit_spread, category: '🇰🇷 금리' });
 
   // 거시경제
-  if (data.macro.cpi) indicators.push({ indicator: data.macro.cpi, category: '🇰🇷 거시경제' });
-  if (data.macro.m2) indicators.push({ indicator: data.macro.m2, category: '🇰🇷 거시경제' });
+  if (data.macro.leading_index) indicators.push({ indicator: data.macro.leading_index, category: '🇰🇷 거시경제' });
+  if (data.macro.ccsi) indicators.push({ indicator: data.macro.ccsi, category: '🇰🇷 거시경제' });
+  if (data.macro.export) indicators.push({ indicator: data.macro.export, category: '🇰🇷 거시경제' });
 
   // 환율
   if (data.fx.usd_krw) indicators.push({ indicator: data.fx.usd_krw, category: '🇰🇷 환율' });
@@ -109,7 +113,7 @@ export function EconomicChartView({
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col">
       {/* 헤더 */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <h2 className="text-lg sm:text-xl font-semibold text-foreground">시장 경제 지표</h2>
@@ -175,10 +179,10 @@ export function EconomicChartView({
       </div>
 
       {/* 메인 컨텐츠 */}
-      <div className="flex-1 flex min-h-0">
+      <div className="flex">
         {/* 좌측: 지표 목록 - 모바일에서는 탭에 따라 표시/숨김 */}
         <div className={cn(
-          'lg:block',
+          'lg:block lg:w-56 lg:flex-shrink-0',
           mobileView === 'list' ? 'block w-full' : 'hidden'
         )}>
           <IndicatorListPanel
@@ -193,7 +197,7 @@ export function EconomicChartView({
 
         {/* 우측: 상세 정보 - 모바일에서는 탭에 따라 표시/숨김 */}
         <div className={cn(
-          'flex-1 p-4 sm:p-6 overflow-y-auto',
+          'flex-1 p-4 sm:p-6',
           'lg:block',
           mobileView === 'chart' ? 'block' : 'hidden'
         )}>

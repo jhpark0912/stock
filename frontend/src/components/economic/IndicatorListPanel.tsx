@@ -38,6 +38,9 @@ const indicatorIcons: Record<string, string> = {
   'GC=F': '💰',
   'CPIAUCSL': '📊',
   'M2SL': '💵',
+  'PHILLY_FED_SPREAD': '🏭',
+  'CFNAIMA3': '📋',
+  'UMCSENT': '👛',
   // 한국
   'KR_BOND_10Y': '🏛️',
   'KR_BASE_RATE': '🏛️',
@@ -91,7 +94,7 @@ export function IndicatorListPanel({
   };
 
   return (
-    <div className="w-full lg:w-56 border-r border-border bg-card overflow-y-auto">
+    <div className="w-full border-r border-border bg-card">
       {Object.entries(grouped).map(([category, items]) => (
         <div key={category} className="py-2">
           {/* 카테고리 헤더 */}

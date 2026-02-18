@@ -35,6 +35,10 @@ export interface RatesData {
 export interface MacroData {
   cpi: EconomicIndicator | null;
   m2: EconomicIndicator | null;
+  indpro?: EconomicIndicator | null;
+  philly_fed: EconomicIndicator | null;     // 필라델피아 연준 스프레드
+  cfnai: EconomicIndicator | null;          // 시카고 연준 국가활동지수
+  umcsent: EconomicIndicator | null;        // 미시간대 소비자심리지수
 }
 
 export interface CommoditiesData {
@@ -72,8 +76,9 @@ export interface KoreaRatesData {
 }
 
 export interface KoreaMacroData {
-  cpi: EconomicIndicator | null;  // 소비자물가지수
-  m2: EconomicIndicator | null;  // M2 통화량
+  leading_index: EconomicIndicator | null;  // 선행지수 순환변동치
+  ccsi: EconomicIndicator | null;           // 소비자심리지수
+  export: EconomicIndicator | null;         // 월간 수출액 BOP
 }
 
 export interface KoreaFxData {

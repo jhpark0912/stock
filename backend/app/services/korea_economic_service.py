@@ -35,9 +35,9 @@ ECOS_SERIES = {
         "item_code2": None,
         "cycle": "D",
         "name": "국고채 10년물",
-        "metaphor": "한국 장기 금리",
-        "description": "한국 정부가 발행하는 10년 만기 국채의 수익률",
-        "impact": "상승 시 대출금리 인상 압력, 주식시장 부담"
+        "metaphor": "한국 자산시장의 중력",
+        "description": "한국 정부가 발행하는 10년 만기 국채의 수익률입니다. 주택담보대출 금리의 기준이 됩니다.",
+        "impact": "이 금리가 오르면 대출이자가 올라 부동산·주식에 하방 압력이 커집니다. 미국 10년물에 연동되어 움직입니다."
     },
     "KR_BASE_RATE": {
         "stat_code": "722Y001",
@@ -45,9 +45,9 @@ ECOS_SERIES = {
         "item_code2": None,
         "cycle": "D",
         "name": "한국은행 기준금리",
-        "metaphor": "경제의 기준 온도",
-        "description": "한국은행이 금융기관과 거래할 때 기준이 되는 금리",
-        "impact": "인상 시 대출이자 증가, 경기 냉각 효과"
+        "metaphor": "한국 경제의 온도 조절기",
+        "description": "한국은행이 금융기관과 거래할 때 기준이 되는 금리입니다. 모든 금리의 출발점입니다.",
+        "impact": "인상하면 예금이자는 오르지만 대출이자도 올라 소비·투자가 위축됩니다. 인하하면 돈이 풀려 주식·부동산에 호재입니다."
     },
     "KR_CPI": {
         "stat_code": "901Y009",
@@ -55,9 +55,9 @@ ECOS_SERIES = {
         "item_code2": None,
         "cycle": "M",
         "name": "한국 소비자물가지수",
-        "metaphor": "장바구니 물가",
-        "description": "소비자가 구매하는 상품·서비스의 가격 변동을 측정",
-        "impact": "2% 목표. 높으면 금리 인상 압력, 실질 구매력 하락"
+        "metaphor": "장바구니 물가 (한국판 CPI)",
+        "description": "마트에서 장을 보는 비용이 작년보다 얼마나 올랐는지 보여줍니다. 한국은행의 목표는 2%입니다.",
+        "impact": "2%대면 안정적, 3% 넘으면 금리 인상 압력이 커져 주식·부동산에 악재입니다. 마이너스면 디플레이션 경고입니다."
     },
     "KR_M2": {
         "stat_code": "161Y006",  # M2 상품별 구성내역(평잔, 원계열)
@@ -65,19 +65,19 @@ ECOS_SERIES = {
         "item_code2": None,
         "cycle": "M",
         "name": "한국 M2 통화량",
-        "metaphor": "시중 자금량",
-        "description": "시중에 풀린 돈의 양 (현금 + 예적금 등)",
-        "impact": "증가 시 유동성 증가 → 자산 가격 상승 가능성"
+        "metaphor": "한국 주식시장의 연료",
+        "description": "시중에 풀린 현금, 예적금 등 바로 쓸 수 있는 돈의 총량입니다.",
+        "impact": "M2가 늘어나면 갈 곳 없는 돈이 주식·부동산으로 흘러갑니다. 줄어들면 자산 가격 하락 압력이 커집니다."
     },
     "KR_EXPORT": {
-        "stat_code": "403Y001",
-        "item_code": "1",
+        "stat_code": "301Y013",
+        "item_code": "110000",
         "item_code2": None,
         "cycle": "M",
-        "name": "수출액",
-        "metaphor": "세계 경제 체온계",
-        "description": "한국 상품 수출 금액 (백만불)",
-        "impact": "상승 시 경기 확장, 하락 시 수축 신호"
+        "name": "월간 수출액 (BOP)",
+        "metaphor": "코스피의 심장 박동",
+        "description": "국제수지 기준 상품 수출 금액(백만달러)입니다. 반도체·자동차 등 한국 주력 수출품이 세계에서 얼마나 팔리는지 보여줍니다.",
+        "impact": "수출 YoY 증가 → 기업 실적 개선 → 코스피 상승 동력. 3개월 연속 감소 시 경기 침체 신호."
     },
     "KR_INDPRO": {
         "stat_code": "901Y033",
@@ -85,10 +85,30 @@ ECOS_SERIES = {
         "item_code2": "2",   # 계절조정 (1=원계열, 2=계절조정)
         "cycle": "M",
         "name": "전산업생산지수",
-        "metaphor": "경제의 맥박",
-        "description": "광업, 제조업, 전기가스업 생산량 종합 (농림어업 제외)",
-        "impact": "상승 시 경기 확장, 100 이상이면 기준기간 초과"
-    }
+        "metaphor": "한국 공장의 심장 박동",
+        "description": "광업, 제조업, 전기가스업의 생산량을 종합한 지수입니다(2020=100). 한국 경제의 실물 활동을 직접 보여줍니다.",
+        "impact": "100 이상이면 기준기간보다 생산이 활발한 것이고, YoY 양수(+)면 경기 확장 신호입니다."
+    },
+    "KR_LEADING_INDEX": {
+        "stat_code": "901Y067",
+        "item_code": "I16E",
+        "item_code2": None,
+        "cycle": "M",
+        "name": "선행지수 순환변동치",
+        "metaphor": "경기의 내비게이션",
+        "description": "6~9개월 후 경기 방향을 미리 보여주는 지표입니다. 기준값 100을 중심으로 위면 경기 확장, 아래면 경기 수축을 예고합니다.",
+        "impact": "100 이상 & 상승이면 경기 확장 신호로 주식 비중 확대. 하락 전환하면 경기 고점 통과 가능성, 하락장 대비 필요."
+    },
+    "KR_CCSI": {
+        "stat_code": "511Y002",
+        "item_code": "FME",
+        "item_code2": None,
+        "cycle": "M",
+        "name": "소비자심리지수 (CCSI)",
+        "metaphor": "국민 경기 체감 온도",
+        "description": "소비자들이 현재·미래 경기를 어떻게 느끼는지 수치화한 지표입니다. 기준값 100이 '보통'입니다.",
+        "impact": "100 초과면 '먹고살 만하다' → 소비 활성화 기대. 100 미만이면 '지갑 닫음' → 경기 침체 우려."
+    },
 }
 
 # Yahoo Finance 한국 지표
@@ -101,9 +121,9 @@ YAHOO_KR_SYMBOLS = {
     # },  # Yahoo Finance에서 제공하지 않음
     "KRW=X": {
         "name": "원/달러 환율",
-        "metaphor": "원화 가치 지표",
-        "description": "1달러를 사는 데 필요한 원화",
-        "impact": "상승 시 수출 기업 유리, 수입 물가 상승"
+        "metaphor": "한국 경제의 체온계",
+        "description": "1달러를 사기 위해 필요한 원화입니다. 환율이 오르면 원화 가치가 떨어진다는 뜻입니다.",
+        "impact": "1,300원 이상이면 수입 물가 상승으로 서민 생활이 힘들어지고, 외국인 투자자가 한국 주식을 팔고 나갈 수 있습니다."
     }
 }
 
@@ -170,9 +190,12 @@ def get_ecos_indicator(
     # 날짜 범위 설정
     today = datetime.now()
     if cycle == "M":
-        # 월간 데이터: 최근 15개월 (YoY 계산을 위해 13개월 + 여유)
+        # 월간 데이터: 히스토리 포함 시 약 3.5년, 미포함 시 15개월
         end_date = today.strftime("%Y%m")
-        start_date = (today - timedelta(days=460)).strftime("%Y%m")
+        if include_history:
+            start_date = (today - timedelta(days=1280)).strftime("%Y%m")  # ~42개월
+        else:
+            start_date = (today - timedelta(days=460)).strftime("%Y%m")   # ~15개월
     else:
         # 일간 데이터: 최근 200일 (6개월 + 여유)
         end_date = today.strftime("%Y%m%d")
@@ -235,8 +258,8 @@ def get_ecos_indicator(
         history = None
         if include_history:
             history = []
-            # 일간 데이터: 최근 200개 (약 7~8개월), 월간 데이터: 최근 30개 (약 2.5년)
-            max_points = 200 if cycle == "D" else 30
+            # 일간 데이터: 최근 200개 (약 7~8개월), 월간 데이터: 최근 36개 (3년)
+            max_points = 200 if cycle == "D" else 36
             for row in rows[-max_points:]:
                 date_str = row.get("TIME", "")
                 if cycle == "M":
@@ -403,9 +426,9 @@ def get_credit_spread(
             value=round(spread, 3),
             change=round(change, 3) if change else None,
             change_percent=round(change_percent, 2) if change_percent else None,
-            metaphor="시장 불안 온도계",
-            description="회사채와 국고채 간 금리 차이",
-            impact="확대 시 시장 불안 증가, 축소 시 안정",
+            metaphor="기업 신용 위험의 체온계",
+            description="기업이 돈을 빌릴 때 내는 이자율(회사채)에서 정부가 내는 이자율(국고채)을 뺀 차이입니다. 기업의 부도 위험이 클수록 벌어집니다.",
+            impact="0.5%p 이하면 시장이 안정적이고, 1%p 이상으로 벌어지면 '기업 부도 공포'가 커지는 신호입니다. 2008년 금융위기 때 급등했습니다.",
             history=history,
             status=status.value,
             status_label=status_label,
@@ -544,8 +567,9 @@ def get_all_korea_indicators(
             "credit_spread": None  # 신용 스프레드 (회사채-국고채 금리 차이)
         },
         "macro": {
-            "cpi": None,
-            "m2": None
+            "leading_index": None,
+            "ccsi": None,
+            "export": None
         },
         "fx": {
             "usd_krw": None
@@ -562,13 +586,14 @@ def get_all_korea_indicators(
         return ("KR_CREDIT_SPREAD", get_credit_spread(include_history))
 
     # 병렬 조회
-    with ThreadPoolExecutor(max_workers=6) as executor:
+    with ThreadPoolExecutor(max_workers=7) as executor:
         # ECOS 지표
         ecos_futures = [
             executor.submit(fetch_ecos, "KR_BOND_10Y"),
             executor.submit(fetch_ecos, "KR_BASE_RATE"),
-            executor.submit(fetch_ecos, "KR_CPI"),
-            executor.submit(fetch_ecos, "KR_M2"),
+            executor.submit(fetch_ecos, "KR_LEADING_INDEX"),
+            executor.submit(fetch_ecos, "KR_CCSI"),
+            executor.submit(fetch_ecos, "KR_EXPORT"),
         ]
 
         # Yahoo 지표
@@ -590,10 +615,12 @@ def get_all_korea_indicators(
                         results["rates"]["base_rate"] = indicator
                     elif series_id == "KR_CREDIT_SPREAD":
                         results["rates"]["credit_spread"] = indicator
-                    elif series_id == "KR_CPI":
-                        results["macro"]["cpi"] = indicator
-                    elif series_id == "KR_M2":
-                        results["macro"]["m2"] = indicator
+                    elif series_id == "KR_LEADING_INDEX":
+                        results["macro"]["leading_index"] = indicator
+                    elif series_id == "KR_CCSI":
+                        results["macro"]["ccsi"] = indicator
+                    elif series_id == "KR_EXPORT":
+                        results["macro"]["export"] = indicator
                     elif series_id == "KRW=X":
                         results["fx"]["usd_krw"] = indicator
             except Exception as e:
