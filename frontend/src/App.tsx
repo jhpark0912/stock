@@ -5,12 +5,15 @@
 
 import { useState, useEffect } from 'react'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { StealthProvider, useStealthMode } from './contexts/StealthContext'
 import { LoginPage } from './components/auth/LoginPage'
 import { TopNav, type PageType } from './components/layout/TopNav'
 import { HomePage } from './components/pages/HomePage'
 import { PortfolioPage } from './components/pages/PortfolioPage'
 import { AdminPage } from './components/admin/AdminPage'
 import { SettingsPage } from './components/settings/SettingsPage'
+import { StealthHomePage } from './components/stealth/StealthHomePage'
+import { StealthPortfolioPage } from './components/stealth/StealthPortfolioPage'
 import { LoadingSpinner } from './components/LoadingSpinner'
 
 /**
@@ -18,6 +21,7 @@ import { LoadingSpinner } from './components/LoadingSpinner'
  */
 function AuthenticatedApp() {
   const { user, logout, isLoading } = useAuth()
+  const { stealthMode } = useStealthMode()
   const [currentPage, setCurrentPage] = useState<PageType>('economic')
 
   // 사용자 변경 시 페이지 리셋 (로그아웃 후 재로그인 시)
@@ -27,6 +31,13 @@ function AuthenticatedApp() {
       setCurrentPage('economic')
     }
   }, [user, currentPage])
+
+  // 스텔스 모드에서 숨겨진 페이지에 있으면 economic으로 이동
+  useEffect(() => {
+    if (stealthMode && (currentPage === 'settings' || currentPage === 'admin')) {
+      setCurrentPage('economic')
+    }
+  }, [stealthMode, currentPage])
 
   // 로그아웃 핸들러 (페이지 상태 리셋 포함)
   const handleLogout = () => {
@@ -62,12 +73,16 @@ function AuthenticatedApp() {
 
       {/* 페이지 콘텐츠 */}
       <main className="flex-1 min-h-0">
-        {currentPage === 'economic' && <HomePage />}
-        {currentPage === 'portfolio' && (
-          <PortfolioPage onNavigateToSettings={() => setCurrentPage('settings')} />
+        {currentPage === 'economic' && (
+          stealthMode ? <StealthHomePage /> : <HomePage />
         )}
-        {currentPage === 'settings' && <SettingsPage />}
-        {currentPage === 'admin' && user.role === 'admin' && <AdminPage />}
+        {currentPage === 'portfolio' && (
+          stealthMode
+            ? <StealthPortfolioPage />
+            : <PortfolioPage onNavigateToSettings={() => setCurrentPage('settings')} />
+        )}
+        {currentPage === 'settings' && !stealthMode && <SettingsPage />}
+        {currentPage === 'admin' && !stealthMode && user.role === 'admin' && <AdminPage />}
       </main>
     </div>
   )
@@ -79,7 +94,9 @@ function AuthenticatedApp() {
 function App() {
   return (
     <AuthProvider>
-      <AuthenticatedApp />
+      <StealthProvider>
+        <AuthenticatedApp />
+      </StealthProvider>
     </AuthProvider>
   )
 }

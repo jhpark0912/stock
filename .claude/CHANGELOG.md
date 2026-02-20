@@ -1,632 +1,112 @@
-# 프로젝트 구조
+# 변경 이력 (Changelog)
+
+> 프로젝트의 주요 변경 사항을 날짜별로 기록합니다.
+> 구조 정보는 `.claude/PROJECT_STRUCTURE.md`를 참조하세요.
 
-> 최종 업데이트: 2026-02-20 (스텔스 모드, 모바일 반응형 개선)
+## 최근 변경 이력
 
-## 전체 아키텍처
+### 2026-02-20: 스텔스 모드 탭 전환 기능 확장 및 모바일 사이드바 수정
 
-```
-stock/
-├── frontend/          # React + TypeScript + Vite
-├── backend/           # FastAPI + Python
-├── nginx/             # Nginx Reverse Proxy + SSL 설정
-├── docs/              # 문서
-├── data/              # 데이터 파일
-└── .claude/           # Claude 설정 및 문서
-```
+1. **StealthHomePage 탭 구조 추가**
+   - 3개 탭 도입: 회의록(경제지표) / 사업현황(섹터) / 업무일지(마감리뷰)
+   - 기존 경제지표 메모 콘텐츠 → "회의록" 탭으로 이동
+   - 섹터 데이터 → "사업현황" 탭 (부서별 실적표 형태, 금일/주간/월간)
+   - 마감리뷰 데이터 → "업무일지" 탭 (일일 업무 보고 형태)
+   - 스텔스 국가 선택: "해외팀/국내팀" 텍스트 버튼 (국기 아이콘 제거)
 
-## 기술 스택
+2. **StealthPortfolioPage 모바일 사이드바 수정**
+   - 사이드바/오버레이 `fixed` → `absolute`로 변경
+   - TopNav와의 z-index 충돌 해소 (뷰포트 전체 덮음 → 컨테이너 내부 스코핑)
 
-### Frontend
-- **프레임워크**: React 19.2, TypeScript 5.9
-- **빌드 도구**: Vite 7.2
-- **UI 라이브러리**:
-  - Radix UI (헤드리스 컴포넌트)
-  - Tailwind CSS 4.1 (스타일링)
-  - Lucide React (아이콘)
-- **상태 관리**: TanStack Query 5.90
-- **라우팅**: React Router 7.13
-- **차트**: Recharts 2.15
-- **기타**:
-  - DnD Kit (드래그앤드롭)
-  - Zod (스키마 검증)
-  - Axios (HTTP 클라이언트)
+### 2026-02-20: 스텔스 모드 (몰래보기) 기능 추가
 
-### Backend
-- **프레임워크**: FastAPI 0.109
-- **서버**: Uvicorn 0.27
-- **데이터베이스**: SQLAlchemy 2.0+
-- **인증**:
-  - python-jose (JWT)
-  - passlib + bcrypt (비밀번호 해싱)
-- **주식 데이터**: yahooquery 2.4.1
-- **경제 지표**:
-  - fredapi 0.5.2 (미국 FRED API)
-  - requests (한국 ECOS API, 한국은행 경제통계시스템)
-- **AI 분석**: Google Generative AI 0.8.3 (Gemini)
-- **번역**: deep-translator 1.11.4
-- **기타**:
-  - pandas, numpy (데이터 처리)
-  - pydantic (데이터 검증)
+1. **StealthContext 구현**
+   - `contexts/StealthContext.tsx` 신규 생성
+   - ThemeProvider 패턴 따름 (localStorage 기반 상태 유지)
+   - `useStealthMode()` 커스텀 훅 제공
+   - 스텔스 ON 시 `document.title` → "내 메모"로 변경
 
-### 배포 및 SSL
-- **컨테이너**: Docker + Docker Compose
-- **리버스 프록시**: Nginx Alpine
-- **SSL 인증서**: Let's Encrypt (Certbot)
-- **자동 갱신**: Certbot 컨테이너 (12시간마다 체크)
-- **환경 분리**: 개발(dev), 프로덕션(ssl)
+2. **경제지표 위장 (StealthHomePage)**
+   - `components/stealth/StealthHomePage.tsx` 신규 생성
+   - 경제지표 데이터를 "회의록/업무 메모" 형태로 표시
+   - 미국: "주간 회의록" (금리, 거시경제, 원자재)
+   - 한국: "업무 체크리스트" (금리, 거시지표, 환율)
+   - 시장 사이클: "분기 평가 현황" (해외/국내 사업부)
+   - 차트 완전 숨김, 색상 코딩 제거, 이모지 없음
+   - 검색 필터 기능 포함
 
-## 디렉토리 구조
+3. **종목 조회 위장 (StealthPortfolioPage)**
+   - `components/stealth/StealthPortfolioPage.tsx` 신규 생성
+   - 포트폴리오를 "프로젝트 관리 노트" 형태로 표시
+   - 사이드바 → "프로젝트 목록", 종목 → "프로젝트 현황 보고"
+   - 재무 지표 → "세부 지표", 뉴스 → "관련 보고서"
+   - AI 분석 → "분석 보고서" (요약 생성/저장/이력 기능 포함)
+   - 투자 전략 위장: buy→확대, hold→유지, sell→축소
+   - 이력 조회: 인라인 패널 (모달 대신 메모 스타일)
+   - 차트/기술적 지표 완전 숨김, 모노톤 색상
+   - `usePortfolio()` 훅 그대로 재사용
+   - 모바일: 프로젝트 목록 슬라이드 여닫기 (햄버거 메뉴)
 
-### Frontend
+4. **TopNav 수정**
+   - Eye/EyeOff lucide 아이콘 토글 버튼 추가
+   - 스텔스 ON: 로고 "RD" → "M", 앱명 "Rice Digger" → "Memo"
+   - 탭 라벨 변경: "Economic" → "회의록", "Portfolio" → "프로젝트"
+   - Settings/Admin 탭 스텔스 시 숨김
+   - remote 모바일 반응형 코드(햄버거 메뉴, 드롭다운)와 통합
 
-```
-frontend/
-├── src/
-│   ├── components/           # React 컴포넌트
-│   │   ├── admin/           # 관리자 페이지 컴포넌트
-│   │   ├── auth/            # 인증 관련 컴포넌트
-│   │   ├── economic/        # 경제 지표 관련 컴포넌트
-│   │   │   ├── EconomicChartView.tsx    # Chart 뷰 메인 레이아웃
-│   │   │   ├── IndicatorListPanel.tsx   # 좌측 지표 목록
-│   │   │   ├── DetailChart.tsx          # 메인 차트 (기간 선택)
-│   │   │   ├── StatusGauge.tsx          # 판단 기준 게이지
-│   │   │   ├── CompareSelector.tsx      # 비교 지표 선택
-│   │   │   ├── SectorHeatmap.tsx        # 섹터 히트맵 (GICS 11개 섹터)
-│   │   │   ├── SectorDetail.tsx         # 섹터 상세 모달 (보유종목 트리맵)
-│   │   │   └── MarketReview/            # 증시 마감 리뷰 (신규)
-│   │   │       ├── MarketReviewSection.tsx  # 메인 컨테이너
-│   │   │       ├── IndexSummary.tsx         # 지수 마감 카드
-│   │   │       ├── TopMoversCard.tsx        # 급등/급락 종목
-│   │   │       ├── MajorStocksCard.tsx      # 시총 Top 5
-│   │   │       ├── SectorSummary.tsx        # 섹터 등락 요약
-│   │   │       └── AIInsightCard.tsx        # AI 분석 카드
-│   │   ├── layout/          # 레이아웃 컴포넌트
-│   │   │   ├── TopNav.tsx       # 상단 네비게이션 (ThemeToggle 포함)
-│   │   │   ├── PageHeader.tsx   # 공통 페이지 헤더
-│   │   │   ├── PageContainer.tsx # 공통 콘텐츠 컨테이너
-│   │   │   └── index.ts
-│   │   ├── pages/           # 페이지 컴포넌트 (신규)
-│   │   │   ├── HomePage.tsx       # Economic 페이지 (기본)
-│   │   │   ├── PortfolioPage.tsx  # 포트폴리오 페이지
-│   │   │   └── index.ts
-│   │   ├── stealth/         # 스텔스 모드 위장 페이지
-│   │   │   ├── StealthHomePage.tsx       # 경제지표 → 회의록/메모 위장
-│   │   │   └── StealthPortfolioPage.tsx  # 포트폴리오 → 프로젝트 관리 위장
-│   │   ├── settings/        # 설정 페이지 컴포넌트
-│   │   ├── ui/              # 재사용 가능한 UI 컴포넌트 (shadcn/ui)
-│   │   ├── AppLayout.tsx    # 앱 레이아웃
-│   │   ├── Dashboard.tsx    # 대시보드 (레거시, PortfolioPage로 이동됨)
-│   │   ├── MainTabs.tsx     # 주식별 탭 (5개: Overview, AI, Chart, Technical, News)
-│   │   ├── StockChart.tsx   # 주식 차트
-│   │   ├── Sidebar.tsx      # 티커 목록 사이드바
-│   │   └── ...
-│   ├── hooks/               # 커스텀 훅
-│   │   ├── usePortfolio.ts  # 포트폴리오 데이터 관리 훅
-│   │   └── index.ts
-│   ├── contexts/            # React Context (테마, 인증, 스텔스 등)
-│   │   ├── AuthContext.tsx      # 인증 상태 관리
-│   │   └── StealthContext.tsx   # 스텔스 모드 상태 관리 (localStorage 기반)
-│   ├── lib/                 # 라이브러리 설정
-│   ├── types/               # TypeScript 타입 정의
-│   ├── utils/               # 유틸리티 함수
-│   ├── assets/              # 정적 리소스
-│   ├── App.tsx              # 앱 루트 (TopNav + 페이지 라우팅)
-│   └── main.tsx             # 엔트리 포인트
-├── public/                  # 정적 파일 (favicon 등)
-├── index.html               # HTML 템플릿
-├── vite.config.ts           # Vite 설정
-├── tailwind.config.js       # Tailwind 설정
-└── package.json             # npm 의존성
-```
+5. **App.tsx 수정**
+   - `StealthProvider`로 `AuthenticatedApp` 래핑
+   - 스텔스 ON: 페이지별 위장 컴포넌트로 교체
+   - 스텔스에서 숨겨진 페이지(settings/admin)에 있으면 자동 이동
 
-**페이지 구조** (TopNav 기반):
-```
-App.tsx
-├── TopNav (상단 네비게이션)
-│   ├── Economic (기본 페이지)
-│   ├── Portfolio
-│   ├── Settings
-│   └── Admin (관리자만)
-└── Pages
-    ├── HomePage (EconomicIndicators)
-    │   └── [스텔스] StealthHomePage (회의록/메모 위장)
-    ├── PortfolioPage (Sidebar + MainTabs)
-    │   └── [스텔스] StealthPortfolioPage (프로젝트 관리 위장)
-    ├── SettingsPage (스텔스 시 숨김)
-    └── AdminPage (관리자만, 스텔스 시 숨김)
-```
+6. **기존 기능 보호**
+   - 스텔스 컴포넌트는 `components/stealth/` 디렉토리에 격리
+   - 기존 컴포넌트(EconomicIndicators, PortfolioPage 등) 코드 수정 없음
+   - 스텔스 OFF 시 기존 페이지가 정확히 동일하게 렌더링
 
-**스텔스 모드** (2026-02-20 추가):
-- `StealthContext.tsx` - localStorage 기반 상태 관리, `useStealthMode()` 훅
-- 스텔스 ON: 로고 "RD"→"M", 앱명→"Memo", 탭 라벨 위장, document.title→"내 메모"
-- `StealthHomePage` - 경제지표를 회의록/업무 메모 형태로 표시 (차트 숨김, 모노톤)
-- `StealthPortfolioPage` - 포트폴리오를 프로젝트 관리 노트로 표시 (AI 요약 저장/이력 포함)
-- Settings/Admin 탭은 스텔스 시 숨김, 해당 페이지에 있으면 자동 이동
+### 2026-02-20: 모바일 탭 터치 개선 및 탭 전환 성능 최적화
 
-**주요 컴포넌트**:
-- **페이지 컴포넌트**:
-  - `pages/HomePage.tsx` - Economic 페이지 (기본 페이지, EconomicIndicators 래핑)
-  - `pages/PortfolioPage.tsx` - 포트폴리오 페이지 (Sidebar + MainTabs)
-- **레이아웃 컴포넌트**:
-  - `layout/TopNav.tsx` - 상단 네비게이션 (페이지 전환 + ThemeToggle + 로그아웃)
-  - `layout/PageHeader.tsx` - 공통 페이지 헤더 (타이틀, 설명, 액션 버튼)
-  - `layout/PageContainer.tsx` - 공통 콘텐츠 컨테이너 (스크롤, 패딩, 중앙 정렬)
-- **커스텀 훅**:
-  - `hooks/usePortfolio.ts` - 포트폴리오 데이터 관리 (상태 + 액션 분리)
-- **경제 지표 컴포넌트**:
-  - `EconomicIndicators.tsx` - 경제 지표 대시보드 (서브탭: 경제 지표/섹터 히트맵)
-  - `economic/EconomicChartView.tsx` - Chart 뷰 메인 레이아웃
-  - `economic/IndicatorListPanel.tsx` - 좌측 지표 목록 (카테고리별 그룹핑)
-  - `economic/DetailChart.tsx` - 메인 차트 (기간 선택)
-  - `economic/StatusGauge.tsx` - 판단 기준 (기준값 리스트, YoY 변화율 표시)
-  - `economic/CompareSelector.tsx` - 비교 지표 선택 (멀티 차트)
-  - `economic/SectorHeatmap.tsx` - 섹터 히트맵 (GICS 11개 섹터, 1D/1W/1M)
-  - `economic/SectorDetail.tsx` - 섹터 상세 모달 (보유종목 트리맵, 초보자 설명)
-- **주식 컴포넌트**:
-  - `MainTabs.tsx` - 주식별 탭 (5개: Overview, AI, Chart, Technical, News)
-  - `AIAnalysisTab.tsx` - AI 분석 탭 (요약 생성/저장, 이력 보기)
-  - `AnalysisHistory.tsx` - AI 분석 이력 모달
-  - `StockChart.tsx` - 주식 차트 (Recharts 사용)
-  - `CategoryMetrics.tsx` - 카테고리별 메트릭
-  - `Sidebar.tsx` - 티커 목록 사이드바 (Portfolio 페이지에서 사용)
+- TopNav 모바일 반응형: 햄버거 메뉴, 드롭다운, 반응형 패딩/사이즈
+- 모바일 탭 터치 영역 확대 및 전환 성능 최적화
 
-### Backend
+### 2026-02-18: 한국 거시경제 지표 교체 및 미국 거시지표 확장
 
-```
-backend/
-├── app/
-│   ├── api/
-│   │   └── routes/          # API 엔드포인트
-│   │       ├── admin.py     # 관리자 API
-│   │       ├── auth.py      # 인증 API
-│   │       ├── health.py    # 헬스체크
-│   │       ├── portfolio.py # 포트폴리오 API
-│   │       ├── stock.py     # 주식 데이터 API
-│   │       ├── economic.py  # 경제 지표 API
-│   │       └── secret_stats.py  # Secret Manager 캐시 통계 API
-│   ├── database/            # 데이터베이스 설정
-│   │   ├── models.py        # SQLAlchemy ORM 모델 (UserDB, PortfolioDB, StockAnalysisDB)
-│   │   ├── repository.py    # 포트폴리오 Repository
-│   │   ├── analysis_repository.py  # AI 분석 저장소 (신규)
-│   │   └── connection.py    # DB 연결
-│   ├── models/              # Pydantic 모델
-│   │   ├── user.py          # 사용자 스키마
-│   │   ├── stock.py         # 주식 스키마 (AnalysisSummary, StockAnalysisCreate 포함)
-│   │   ├── portfolio.py     # 포트폴리오 스키마
-│   │   └── economic.py      # 경제 지표 스키마
-│   ├── services/            # 비즈니스 로직
-│   │   ├── auth_service.py  # 인증 서비스
-│   │   ├── stock_service.py # 주식 데이터 서비스
-│   │   ├── technical_indicators.py  # 기술적 지표 계산
-│   │   ├── mock_data.py     # 목 데이터 생성
-│   │   ├── economic_service.py  # 경제 지표 서비스 (yahooquery, 6개월 히스토리)
-│   │   ├── fred_service.py  # FRED API 서비스 (CPI, M2, CFNAI, UMCSENT, Philly Fed Spread, YoY 계산)
-│   │   ├── indicator_status.py  # 지표 상태 판단 로직 (YoY 변화율 기반)
-│   │   └── sector_service.py    # 섹터 ETF 서비스 (GICS 11개 섹터, 5분 캐싱)
-│   ├── utils/               # 유틸리티
-│   │   └── secret_manager.py    # GCP Secret Manager 클라이언트 (캐싱 포함)
-│   ├── config.py            # 앱 설정
-│   ├── main.py              # FastAPI 앱 엔트리
-│   └── __init__.py
-├── migrations/              # 데이터베이스 마이그레이션
-├── requirements.txt         # Python 의존성
-└── Dockerfile               # Docker 이미지
-```
+- 한국 거시경제 3대장 지표 교체
+- 미국 거시지표 확장: CFNAI, UMCSENT, Philly Fed Spread 추가
+- `fred_service.py`: 확장된 FRED API 지표 조회
 
-**주요 모듈**:
-- `main.py` - FastAPI 앱 초기화, CORS 설정, 라우터 등록
-- `config.py` - 환경 변수, 로깅, 데이터베이스 설정
-- `api/routes/stock.py` - 주식 데이터 조회, AI 분석 API
-- `api/routes/auth.py` - 회원가입, 로그인, 토큰 발급
-- `services/stock_service.py` - yahooquery를 사용한 주식 데이터 조회
-- `services/technical_indicators.py` - RSI, MACD 등 기술적 지표 계산
+### 2026-02-17: 한국 주식 PE/PBR 직접 계산 및 차트 원화 표시
 
-### Nginx
+- 한국 주식 PE/PBR 직접 계산 로직 추가
+- 차트에서 한국 주식 원화(KRW) 표시
 
-```
-nginx/
-├── nginx.conf               # Nginx 설정 (리버스 프록시, SSL)
-├── certbot-init.sh          # SSL 인증서 초기 발급 스크립트
-├── README.md                # SSL 설정 가이드
-└── certs/                   # 자체 서명 인증서 (개발용, Git 제외)
-    ├── server.crt
-    └── server.key
-```
+### 2026-02-16: pykrx fallback 및 KIS API 키 안내 기능 추가
 
-**주요 기능**:
-- **리버스 프록시**: Frontend(80) + Backend(8000) → 단일 도메인 통합
-- **SSL Termination**: HTTPS 복호화를 Nginx에서 처리, 내부는 HTTP 통신
-- **HTTP → HTTPS 리디렉션**: 모든 HTTP 요청을 HTTPS로 자동 리디렉션
-- **Let's Encrypt 통합**: ACME Challenge 처리 (/.well-known/acme-challenge/)
-- **보안 헤더**: HSTS, X-Frame-Options, X-Content-Type-Options 등
-- **Rate Limiting**: API 10req/s, 일반 30req/s로 DDoS 방지
-- **Gzip 압축**: 텍스트 기반 리소스 압축으로 대역폭 절약
+- `pykrx_service.py` 신규: pykrx fallback 서비스
+- KIS API 키 미설정 시 안내 기능
 
-### Docker Compose
+### 2026-02-15: 티커 한글 이름 저장 기능 및 API 타임아웃 수정
 
-프로젝트는 3가지 Docker Compose 파일로 환경을 분리합니다:
+- `PortfolioDB.display_name` 컬럼 추가 (VARCHAR(50), NULL)
+- `usePortfolio.ts`: `handleUpdateDisplayName` 핸들러 추가
+- `HeroSection.tsx`: 한글 이름 인라인 편집 UI
+- `Sidebar.tsx`: 한글 이름 표시
+- API 타임아웃 수정
 
-```
-docker-compose.yml          # 기본 설정
-docker-compose.override.yml # 프로덕션 환경 (SSL) - 자동 적용
-docker-compose.dev.yml      # 로컬 개발 환경 (Hot Reload)
-```
+### 2026-02-15: 한국 주식 원화 표기 및 모바일 하단 여백 추가
 
-#### 개발 환경 실행
+- 한국 주식 원화 표기
+- 모바일 하단 여백 추가
 
-```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
-```
+### 2026-02-14: AI 분석 타임아웃 60초로 통일
 
-**특징**:
-- Hot Reload 활성화 (소스 코드 마운트)
-- Frontend: Vite Dev Server (5173 포트)
-- Backend: Uvicorn --reload (8000 포트)
-- 환경: `ENVIRONMENT=development`
+- AI 분석 API 타임아웃 60초로 통일
 
-#### 프로덕션 환경 실행
+### 2026-02-14: 모바일 반응형 디자인 개선 (1차/2차)
 
-```bash
-docker compose up -d --build
-```
-
-**특징**:
-- `docker-compose.override.yml` 자동 적용 (명시적 지정 불필요)
-- 로컬 빌드 사용
-- Nginx 리버스 프록시 (80, 443 포트)
-- Let's Encrypt SSL 인증서 자동 발급/갱신
-- Backend/Frontend 외부 노출 포트 제거 (Nginx 통해서만 접근)
-- Certbot 자동 갱신 컨테이너 (12시간마다 체크)
-- HTTPS Only (HTTP는 HTTPS로 리디렉션) (HTTP는 HTTPS로 리디렉션)
-
-**컨테이너 목록**:
-- `stock-backend`: FastAPI (8000, 내부만)
-- `stock-frontend`: Nginx 정적 파일 (80, 내부만)
-- `stock-nginx`: 리버스 프록시 (80, 443, 외부 노출)
-- `stock-certbot`: SSL 인증서 관리
-
-**Docker 볼륨**:
-- `certbot-etc`: Let's Encrypt 인증서
-- `certbot-var`: Certbot 데이터
-- `certbot-www`: ACME Challenge 응답
-
-## 데이터 흐름
-
-### 주식 데이터 조회 플로우
-
-```
-Frontend (Dashboard)
-    ↓ (Axios GET /api/stock/{ticker})
-Backend (stock.py router)
-    ↓
-StockService.get_stock_data()
-    ↓ (yahooquery API)
-Yahoo Finance
-    ↓
-Technical Indicators 계산
-    ↓
-Gemini AI 분석 (선택적)
-    ↓
-JSON 응답
-    ↓
-Frontend (차트 렌더링)
-```
-
-### 인증 플로우
-
-```
-Frontend (Login Form)
-    ↓ (POST /api/auth/login)
-Backend (auth.py router)
-    ↓
-AuthService.authenticate()
-    ↓ (DB 조회)
-SQLAlchemy (User model)
-    ↓ (비밀번호 검증)
-JWT Token 생성
-    ↓
-Frontend (토큰 저장)
-    ↓
-이후 요청 시 Authorization 헤더에 포함
-```
-
-## 주요 기능
-
-### Frontend
-1. **대시보드**
-   - 포트폴리오 요약
-   - 카테고리별 메트릭
-   - 실시간 차트
-
-2. **주식 차트**
-   - Recharts를 사용한 인터랙티브 차트
-   - 기술적 지표 오버레이
-
-3. **설정**
-   - 테마 전환 (다크/라이트)
-   - 사용자 프로필 관리
-
-4. **인증**
-   - 회원가입/로그인
-   - JWT 토큰 기반 인증
-
-### Backend
-1. **주식 데이터 API**
-   - 실시간 주가 조회
-   - 과거 데이터 조회
-   - 기술적 지표 계산 (RSI, MACD, SMA, EMA, 볼린저밴드)
-
-2. **AI 분석**
-   - Gemini를 사용한 주식 분석
-   - 뉴스 감성 분석
-
-3. **포트폴리오 관리**
-   - 포트폴리오 CRUD
-   - 수익률 계산
-
-4. **사용자 관리**
-   - JWT 기반 인증
-   - bcrypt 비밀번호 해싱
-
-5. **경제 지표 API**
-   - **미국 지표**:
-     - 금리: 미국채 10년물 (^TNX), 3개월 T-Bill (^IRX)
-     - 변동성: VIX (^VIX)
-     - 거시경제: CPI (CPIAUCSL), M2 통화량 (M2SL), 필라델피아 연준 스프레드 (PHILLY_FED_SPREAD), CFNAI (CFNAIMA3), 미시간 소비자심리 (UMCSENT) - FRED API
-     - 원자재: WTI 원유 (CL=F), 금 (GC=F)
-   - **한국 지표** (2026-02-08 추가):
-     - 금리: 국고채 10년물 (KR_BOND_10Y), 기준금리 (KR_BASE_RATE) - ECOS API (일간)
-     - 신용 스프레드: 회사채-국고채 금리 차이 (KR_CREDIT_SPREAD) - ECOS API (일간)
-     - 거시경제: CPI (KR_CPI), M2 통화량 (KR_M2) - ECOS API (월간)
-     - 환율: 원/달러 환율 (KRW=X) - Yahoo Finance (일간)
-   - **히스토리 데이터**:
-     - Yahoo: 6개월 (일간 데이터, period="6mo")
-     - FRED: 최근 30개 데이터 포인트 (월간)
-     - ECOS: 일간 200개 (약 7~8개월), 월간 30개 (약 2.5년)
-     - **ECOS API 페이징**: `/1/10000/` (최대 10,000개 조회)
-   - **상태 판단**:
-     - FRED/ECOS: YoY 변화율 기반 (CPI: 1.5-2.5% 좋음, M2: 4-8% 좋음)
-     - FRED 절대값 기반: Philly Fed(>10 확장), CFNAI(>0 확장, <-0.7 침체), UMCSENT(>80 낙관, <60 비관)
-     - Yahoo: 절대값 기반 (금리, VIX, 원자재, 환율)
-     - 한국 금리: KR_BOND_10Y(<3%), KR_BASE_RATE(<2.5%), KR_CREDIT_SPREAD(<0.5%p)
-   - **Chart 뷰** (2026-02-08 완성):
-     - **데이터 주기 구분**:
-       - 월간: FRED(CPI, M2), ECOS(KR_CPI, KR_M2, KR_INDPRO, KR_EXPORT)
-       - 일간: Yahoo(금리, 원자재, 환율), ECOS(KR_BOND_10Y, KR_BASE_RATE, KR_CREDIT_SPREAD)
-     - **기간 필터링**:
-       - 월간 데이터: 3M/6M/1Y/ALL (데이터 포인트 개수 기준)
-       - 일간 데이터: 1W/1M/3M/6M (날짜 기준)
-     - **판단 기준**: 기준값 리스트 + 현재값 표시 게이지
-     - **지표 비교**: 멀티 라인 차트 (최대 5개)
-   - **국가 선택**: 미국/한국/전체 탭으로 전환
-
-## 환경 변수
-
-### Frontend (.env)
-```
-VITE_API_URL=http://localhost:8000
-```
-
-### Backend (.env)
-```
-DATABASE_URL=sqlite:///./data/stock.db
-SECRET_KEY=your-secret-key
-GEMINI_API_KEY=your-gemini-api-key
-FRED_API_KEY=your-fred-api-key  # 미국 경제 지표용 (선택)
-ECOS_API_KEY=your-ecos-api-key  # 한국 경제 지표용 (선택)
-LOG_LEVEL=INFO
-
-# 🔐 GCP Secret Manager (선택적, 보안 강화)
-USE_SECRET_MANAGER=false  # true로 설정 시 Secret Manager 사용
-GCP_PROJECT_ID=your-gcp-project-id
-
-# 로컬 환경: USE_SECRET_MANAGER=false (기본값)
-# GCP Cloud 환경 (GCE/Cloud Run/GKE): USE_SECRET_MANAGER=true
-# GCP Cloud 환경에서는 자격증명 파일 불필요 (Workload Identity/Metadata Server 자동 사용)
-```
-
-### SSL 프로덕션 환경 (.env)
-
-`.env.production.example` 참조:
-
-```bash
-# 도메인 설정 (필수)
-DOMAIN=example.com
-SSL_EMAIL=admin@example.com
-
-# 서버 설정
-SERVER_IP=0.0.0.0
-ENVIRONMENT=production
-
-# 무료 도메인 발급:
-#   - Freenom: https://www.freenom.com (.tk, .ml, .ga, .cf, .gq)
-#   - DuckDNS: https://www.duckdns.org (서브도메인)
-#   - No-IP: https://www.noip.com (Dynamic DNS)
-```
-
-**보안 계층 구분** (2026-02-09 추가):
-- **🔴 높은 보안** (Secret Manager 권장): GEMINI_API_KEY, KIS_APP_KEY, KIS_APP_SECRET, JWT_SECRET_KEY, ENCRYPTION_KEY, ADMIN_PASSWORD
-- **🟢 낮은 보안** (.env 유지): FRED_API_KEY, ECOS_API_KEY (무료 API)
-
-**GCP 인증 방식** (2026-02-10 추가):
-- **로컬 환경**: `USE_SECRET_MANAGER=false` + `.env` 파일 사용
-- **GCP Cloud 환경**: `USE_SECRET_MANAGER=true` + Workload Identity 자동 인증
-- **자격증명 파일 불필요**: `docker-compose.yml`에서 `GOOGLE_APPLICATION_CREDENTIALS` 및 `gcp-credentials.json` 마운트 제거됨
-
-## 개발 서버 실행
-
-### Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-# → http://localhost:5173
-```
-
-### Backend
-```bash
-cd backend
-pip install -r requirements.txt
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-# → http://localhost:8000
-```
-
-## API 엔드포인트
-
-### 인증
-- `POST /api/auth/register` - 회원가입
-- `POST /api/auth/login` - 로그인
-- `GET /api/auth/me` - 현재 사용자 정보
-
-### 주식
-- `GET /api/stock/{ticker}` - 주식 데이터 조회
-- `POST /api/stock/{ticker}/analysis` - AI 분석 (전체 보고서 생성)
-- `POST /api/stock/{ticker}/analysis/summary` - 요약 생성 (3줄 요약 + 투자 전략)
-- `POST /api/stock/{ticker}/analysis/save` - 분석 저장 (DB)
-- `GET /api/stock/{ticker}/analysis/history` - 티커별 분석 이력 조회
-- `GET /api/stock/{ticker}/analysis/latest` - 티커별 최신 분석 조회
-- `GET /api/stock/analysis/all` - 사용자의 모든 분석 조회
-- `DELETE /api/stock/{ticker}/analysis` - 티커별 분석 전체 삭제
-- `DELETE /api/stock/analysis/{analysis_id}` - 단일 분석 삭제
-
-### 포트폴리오
-- `GET /api/portfolio` - 포트폴리오 목록
-- `POST /api/portfolio` - 포트폴리오 생성
-- `PUT /api/portfolio/{id}` - 포트폴리오 수정
-- `DELETE /api/portfolio/{id}` - 포트폴리오 삭제
-
-### 관리자
-- `GET /api/admin/users` - 사용자 목록
-- `DELETE /api/admin/users/{id}` - 사용자 삭제
-
-### 경제 지표
-- `GET /api/economic?country=us` - 미국 경제 지표 조회 (기본값)
-- `GET /api/economic?country=kr` - 한국 경제 지표 조회
-- `GET /api/economic?country=all` - 미국+한국 통합 조회
-- `GET /api/economic?include_history=true` - 히스토리 포함 (Yahoo: 6개월, FRED: 30개월, ECOS: 13개월)
-- `GET /api/economic/status` - API 상태 확인 (FRED, Yahoo, ECOS)
-- `GET /api/economic/sectors` - 섹터 ETF 성과 (GICS 11개 섹터, 1D/1W/1M 변화율)
-- `GET /api/economic/sectors/{symbol}/holdings` - 섹터 보유종목 상세 (상위 10개, DB 캐시)
-- `GET /api/economic/market-cycle` - 시장 사이클 조회 (일반 사용자)
-- `GET /api/economic/market-cycle/analysis` - 시장 사이클 + AI 분석 (Admin 전용)
-
-### Secret Manager (2026-02-09 추가)
-- `GET /api/secret-stats/cache-stats` - Secret Manager 캐시 통계 조회
-- `POST /api/secret-stats/clear-cache` - Secret Manager 캐시 초기화
-
-## 데이터베이스 스키마
-
-### User (사용자)
-- id (PK, AUTOINCREMENT)
-- username (VARCHAR(50), NOT NULL, UNIQUE)
-- password_hash (VARCHAR(255), NOT NULL)
-- role (VARCHAR(20), NOT NULL, DEFAULT 'user') - 'user' | 'admin'
-- is_active (BOOLEAN, DEFAULT TRUE)
-- is_approved (BOOLEAN, DEFAULT FALSE) - Admin 승인 여부
-- gemini_api_key (VARCHAR(255), NULL) - 유저별 Gemini API 키
-- created_at (DATETIME, DEFAULT CURRENT_TIMESTAMP)
-- updated_at (DATETIME, DEFAULT CURRENT_TIMESTAMP)
-
-### Stock (주식)
-- id (PK)
-- ticker (UNIQUE)
-- company_name
-- sector
-- last_price
-- date_updated
-
-### Portfolio (포트폴리오)
-- id (PK)
-- user_id (FK → User, NOT NULL) - 2026-02-06 추가
-- ticker (VARCHAR(10), NOT NULL)
-- display_name (VARCHAR(50), NULL) - 한글 이름 (예: 애플, 테슬라) - 2026-02-15 추가
-- quantity (INTEGER)
-- purchase_price (NUMERIC(10, 2))
-- purchase_date (DATE)
-- notes (TEXT)
-- last_price (NUMERIC(10, 2)) - 마지막 조회 현재가
-- profit_percent (NUMERIC(10, 2)) - 수익률
-- last_updated (DATETIME) - 마지막 업데이트 시각
-- created_at (DATETIME, DEFAULT CURRENT_TIMESTAMP)
-- updated_at (DATETIME, DEFAULT CURRENT_TIMESTAMP)
-- UNIQUE (user_id, ticker) - 사용자당 티커 중복 방지
-
-### StockAnalysis (AI 분석 요약) - 2026-02-13 추가
-- id (PK, AUTOINCREMENT)
-- user_id (FK → User, NOT NULL, ondelete='CASCADE')
-- ticker (VARCHAR(10), NOT NULL, INDEX)
-- summary (TEXT, NOT NULL) - 3줄 요약
-- strategy (VARCHAR(20), NOT NULL) - 'buy' | 'hold' | 'sell'
-- current_price (NUMERIC(10, 2)) - 분석 시점 가격
-- user_avg_price (NUMERIC(10, 2)) - 사용자 평단가
-- profit_loss_ratio (NUMERIC(10, 2)) - 수익률
-- full_report (TEXT) - 전체 마크다운 보고서 (선택)
-- created_at (DATETIME, DEFAULT CURRENT_TIMESTAMP)
-- INDEX (user_id, ticker) - 복합 인덱스
-
-## 디자인 시스템
-
-모든 UI 작업은 `docs/DESIGN_SYSTEM.md` 참조:
-- Primary Color: Indigo (#6366F1)
-- 아이콘: Lucide React only
-- 스페이싱: 4의 배수
-- 애니메이션: GPU 가속 속성 (transform, opacity)
-
-## 참고 문서
-
-- **AI 협업 지침**: `.claude/AI_COLLABORATION_GUIDE.md`
-- **디자인 시스템**: `docs/DESIGN_SYSTEM.md`
-- **프로젝트 가이드**: `CLAUDE.md`
-
----
-
-> 변경 이력은 `.claude/CHANGELOG.md`를 참조하세요.
-
-<!-- 이하 변경 이력은 CHANGELOG.md로 이관됨 (2026-02-20) -->
-<!-- ### 2026-02-15: 티커 한글 이름 저장 기능 추가
-
-1. **Backend - DB 스키마 확장**
-   - `database/models.py`: `PortfolioDB.display_name` 컬럼 추가 (VARCHAR(50), NULL)
-   - `models/portfolio.py`: `PortfolioBase`, `PortfolioUpdate`에 `display_name` 필드 추가
-   - `database/repository.py`: `create` 메서드에 `display_name` 매핑 추가
-   - `migrations/add_display_name.py`: 마이그레이션 스크립트 신규 생성
-
-2. **Frontend - 타입 및 API 확장**
-   - `types/user.ts`: `UserTicker.displayName` 필드 추가
-   - `lib/portfolioApi.ts`: `PortfolioItem`, `UpdatePortfolioRequest`에 `display_name` 필드 추가
-
-3. **Frontend - usePortfolio 훅 확장**
-   - `hooks/usePortfolio.ts`:
-     - `loadPortfoliosFromDB`에서 `displayName` 매핑
-     - `handleUpdateDisplayName` 핸들러 추가
-     - `displayData`에 `displayName` 포함
-     - `sidebarTickers`에 `displayName` 포함
-
-4. **Frontend - HeroSection UI 개선**
-   - `components/HeroSection.tsx`:
-     - `displayName`, `onUpdateDisplayName` props 추가
-     - 한글 이름 편집 상태 관리 (useState)
-     - 인라인 편집 UI (입력 + 저장/취소 버튼)
-     - 모바일/데스크톱 레이아웃 모두 지원
-     - 회사명 옆에 한글 이름 표시: `Apple Inc. (애플)`
-     - 편집 아이콘 (Pencil) 클릭 시 인라인 입력 활성화
-
-5. **Frontend - Sidebar 한글 이름 표시**
-   - `components/Sidebar.tsx`:
-     - 티커 심볼 아래에 한글 이름 표시 (displayName 있을 경우)
-     - 편집 기능 없음 (HeroSection에서만 편집)
-
-6. **Frontend - PortfolioPage 연결**
-   - `components/pages/PortfolioPage.tsx`:
-     - `handleUpdateDisplayName` 핸들러 연결
-     - `displayData.displayName` HeroSection에 전달
-     - `onUpdateDisplayName` 콜백 전달
-
-7. **UI/UX**
-   - **데스크톱**: 회사명 옆에 한글 이름 + 편집 아이콘
-   - **모바일**: 회사명 옆에 한글 이름 + 편집 아이콘 (컴팩트 레이아웃)
-   - **편집 모드**: 인풋 필드 + 체크/X 버튼 (Enter/Escape 키 지원)
-   - **Sidebar**: 한글 이름만 표시 (편집 불가)
+- 전체 컴포넌트 모바일 반응형 대응
+- TopNav, Sidebar, MainTabs 등 모바일 최적화
+- 터치 친화적 UI 개선
 
 ### 2026-02-13: 증시 마감 리뷰 버그 수정 및 개선
 
@@ -1207,4 +687,3 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    - `StatusGauge.tsx`: 절대값 대신 YoY 변화율 기준으로 표시
    - FRED 지표: "YoY 변화율: +2.54%" 형식으로 표시
    - 게이지 바 제거, 기준값 리스트와 현재값만 표시
--->
