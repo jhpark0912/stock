@@ -1,6 +1,6 @@
 # 프로젝트 구조
 
-> 최종 업데이트: 2026-02-20 (스텔스 모드, 모바일 반응형 개선)
+> 최종 업데이트: 2026-02-20 (P1 services/ 도메인 서브패키지 재편)
 
 ## 전체 아키텍처
 
@@ -182,7 +182,7 @@ backend/
 │   │       ├── health.py    # 헬스체크
 │   │       ├── portfolio.py # 포트폴리오 API
 │   │       ├── stock.py     # 주식 데이터 API
-│   │       ├── economic.py  # 경제 지표 API
+│   │       ├── economic.py  # 경제 지표 API (693줄, P2에서 분할 예정)
 │   │       └── secret_stats.py  # Secret Manager 캐시 통계 API
 │   ├── database/            # 데이터베이스 설정
 │   │   ├── models.py        # SQLAlchemy ORM 모델 (UserDB, PortfolioDB, StockAnalysisDB)
@@ -194,15 +194,30 @@ backend/
 │   │   ├── stock.py         # 주식 스키마 (AnalysisSummary, StockAnalysisCreate 포함)
 │   │   ├── portfolio.py     # 포트폴리오 스키마
 │   │   └── economic.py      # 경제 지표 스키마
-│   ├── services/            # 비즈니스 로직
-│   │   ├── auth_service.py  # 인증 서비스
-│   │   ├── stock_service.py # 주식 데이터 서비스
-│   │   ├── technical_indicators.py  # 기술적 지표 계산
-│   │   ├── mock_data.py     # 목 데이터 생성
-│   │   ├── economic_service.py  # 경제 지표 서비스 (yahooquery, 6개월 히스토리)
-│   │   ├── fred_service.py  # FRED API 서비스 (CPI, M2, CFNAI, UMCSENT, Philly Fed Spread, YoY 계산)
-│   │   ├── indicator_status.py  # 지표 상태 판단 로직 (YoY 변화율 기반)
-│   │   └── sector_service.py    # 섹터 ETF 서비스 (GICS 11개 섹터, 5분 캐싱)
+│   ├── services/            # 비즈니스 로직 (도메인 서브패키지 구조)
+│   │   ├── __init__.py      # re-export 안전망 (구 경로 하위호환)
+│   │   ├── auth/
+│   │   │   └── auth_service.py      # JWT 인증, 비밀번호 해싱, 의존성 주입
+│   │   ├── common/
+│   │   │   └── indicator_status.py  # 지표 상태 판단 유틸리티 (YoY 기반)
+│   │   ├── economic/
+│   │   │   ├── economic_service.py  # Yahoo Finance 경제 지표 (6개월 히스토리)
+│   │   │   ├── fred_service.py      # FRED API (CPI, M2, CFNAI, UMCSENT, Philly Fed)
+│   │   │   └── korea_economic_service.py  # ECOS API (한국은행 경제통계)
+│   │   ├── market/
+│   │   │   ├── market_cycle_service.py     # 미국 시장 사이클 (4계절, INDPRO 기반)
+│   │   │   ├── kr_market_cycle_service.py  # 한국 시장 사이클 (수출/CPI/신용 스프레드)
+│   │   │   └── market_review_service.py    # 증시 마감 리뷰 (급등/급락/섹터)
+│   │   ├── sector/
+│   │   │   ├── sector_service.py          # 미국 섹터 ETF (GICS 11개, 5분 캐싱)
+│   │   │   └── korea_sector_service.py    # 한국 섹터 ETF (KODEX, KIS/pykrx)
+│   │   ├── stock/
+│   │   │   ├── stock_service.py           # 주식 데이터 조회 + AI 분석
+│   │   │   ├── technical_indicators.py    # RSI, MACD, 볼린저밴드 등
+│   │   │   └── mock_data.py               # 목 데이터 생성
+│   │   └── korea_data/
+│   │       ├── kis_api_service.py         # KIS Open API 클라이언트 (OAuth2)
+│   │       └── pykrx_service.py           # pykrx fallback (급등/급락, 시총)
 │   ├── utils/               # 유틸리티
 │   │   └── secret_manager.py    # GCP Secret Manager 클라이언트 (캐싱 포함)
 │   ├── config.py            # 앱 설정

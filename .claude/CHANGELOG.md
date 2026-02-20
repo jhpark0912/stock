@@ -5,6 +5,25 @@
 
 ## 최근 변경 이력
 
+### 2026-02-20: P1 - services/ 도메인 기반 서브패키지 재편 (리팩토링)
+
+1. **서비스 레이어 구조 개선**
+   - 기존 `services/` 평면 구조(15개 파일) → 7개 도메인 서브패키지로 재편
+   - `auth/`, `common/`, `economic/`, `market/`, `sector/`, `stock/`, `korea_data/`
+   - git mv로 이동 → 파일 변경 이력 보존
+
+2. **import 경로 마이그레이션**
+   - 내부 서비스 간 import 15곳 신규 경로로 수정
+   - 외부 소비자(main.py, routes 5개) import 수정
+   - `services/__init__.py` re-export 안전망 추가 (TODO: 모든 소비자 전환 후 제거)
+
+3. **검증 완료**
+   - 핵심 import 7개 항목 검증 통과
+   - 서버 기동 (uvicorn) 정상 확인
+
+4. **미완료 (P2 다음 세션 예정)**
+   - `routes/economic.py` (693줄) → `economic/` 패키지 4파일 분할
+
 ### 2026-02-20: 스텔스 모드 탭 전환 기능 확장 및 모바일 사이드바 수정
 
 1. **StealthHomePage 탭 구조 추가**
