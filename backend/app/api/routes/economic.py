@@ -16,11 +16,11 @@ from app.models.economic import (
     MarketCycleResponse,
     KrMarketCycleResponse
 )
-from app.services.economic_service import get_all_yahoo_indicators_parallel
-from app.services.fred_service import get_macro_data_parallel, check_fred_availability
-from app.services.sector_service import get_sector_data, get_sector_holdings
-from app.services.korea_economic_service import get_all_korea_indicators, check_ecos_availability
-from app.services.auth_service import get_current_user, get_current_user_optional
+from app.services.economic.economic_service import get_all_yahoo_indicators_parallel
+from app.services.economic.fred_service import get_macro_data_parallel, check_fred_availability
+from app.services.sector.sector_service import get_sector_data, get_sector_holdings
+from app.services.economic.korea_economic_service import get_all_korea_indicators, check_ecos_availability
+from app.services.auth.auth_service import get_current_user, get_current_user_optional
 from app.database.connection import get_db
 from app.database.models import UserDB
 from app.database.user_repository import UserRepository
@@ -255,7 +255,7 @@ async def get_economic_status():
     - Yahoo Finance 상태
     - ECOS API 상태 (한국 경제지표)
     """
-    from app.services.economic_service import YAHOOQUERY_AVAILABLE
+    from app.services.economic.economic_service import YAHOOQUERY_AVAILABLE
     
     fred_status = check_fred_availability()
     ecos_status = check_ecos_availability()
@@ -344,7 +344,7 @@ async def get_sector_holdings_api(
         
         # 한국 섹터인지 확인 (.KS 접미사)
         if symbol.endswith('.KS'):
-            from app.services.korea_sector_service import get_korea_sector_holdings
+            from app.services.sector.korea_sector_service import get_korea_sector_holdings
 
             # KIS API 인증정보 조회 (없어도 pykrx fallback 사용 가능)
             kis_credentials = None
@@ -433,12 +433,12 @@ async def get_market_cycle(
         logger.debug(f"시장 사이클 조회 요청 (country={country})")
 
         if country == "us":
-            from app.services.market_cycle_service import get_real_market_cycle
+            from app.services.market.market_cycle_service import get_real_market_cycle
             cycle_data = get_real_market_cycle()
             logger.debug(f"미국 시장 사이클 조회 완료: {cycle_data.season}")
             return MarketCycleResponse(success=True, data=cycle_data)
         else:  # kr
-            from app.services.kr_market_cycle_service import get_real_kr_market_cycle, get_sample_kr_market_cycle
+            from app.services.market.kr_market_cycle_service import get_real_kr_market_cycle, get_sample_kr_market_cycle
             try:
                 cycle_data = get_real_kr_market_cycle()
                 logger.debug(f"한국 시장 사이클 조회 완료: {cycle_data.season}")
@@ -487,7 +487,7 @@ async def get_market_cycle_with_ai(
         api_key = settings.gemini_api_key
 
         if country == "us":
-            from app.services.market_cycle_service import get_real_market_cycle, generate_ai_comment
+            from app.services.market.market_cycle_service import get_real_market_cycle, generate_ai_comment
 
             cycle_data = get_real_market_cycle()
 
@@ -508,7 +508,7 @@ async def get_market_cycle_with_ai(
             return MarketCycleResponse(success=True, data=cycle_data)
 
         else:  # kr
-            from app.services.kr_market_cycle_service import get_real_kr_market_cycle, get_sample_kr_market_cycle, generate_kr_ai_comment
+            from app.services.market.kr_market_cycle_service import get_real_kr_market_cycle, get_sample_kr_market_cycle, generate_kr_ai_comment
 
             # 실제 데이터 조회 (실패 시 샘플 데이터)
             try:
@@ -578,7 +578,7 @@ async def get_market_review_api(
     - KIS 키가 없으면 급등/급락 데이터는 빈 배열로 반환
     """
     from app.models.economic import MarketReviewResponse
-    from app.services.market_review_service import get_market_review
+    from app.services.market.market_review_service import get_market_review
 
     try:
         logger.debug(f"증시 마감 리뷰 조회 요청 (country={country})")
@@ -651,7 +651,7 @@ async def generate_market_review_ai_api(
     - Gemini API 키 필요 (사용자 API 키 또는 환경변수)
     """
     from app.models.economic import MarketReviewAIResponse
-    from app.services.market_review_service import get_market_review, generate_market_review_ai
+    from app.services.market.market_review_service import get_market_review, generate_market_review_ai
     from app.database.user_repository import UserRepository
     from app.config import settings
 

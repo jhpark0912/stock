@@ -9,7 +9,7 @@ from app.config import settings
 from app.api.routes import health, stock, portfolio, auth, admin, economic, secret_stats
 from app.database.connection import init_db, get_db
 from app.database.user_repository import UserRepository
-from app.services.auth_service import AuthService
+from app.services.auth.auth_service import AuthService
 import time
 
 # 로거 설정

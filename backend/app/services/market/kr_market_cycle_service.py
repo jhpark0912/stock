@@ -471,7 +471,7 @@ def get_real_kr_market_cycle() -> KrMarketCycleData:
     Raises:
         Exception: 데이터 조회 실패 또는 계산 오류
     """
-    from app.services.korea_economic_service import get_ecos_indicator, get_credit_spread
+    from app.services.economic.korea_economic_service import get_ecos_indicator, get_credit_spread
 
     logger.debug("실제 데이터 기반 한국 시장 사이클 분석 시작")
 

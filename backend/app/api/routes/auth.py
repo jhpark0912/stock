@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.database.connection import get_db
 from app.database.user_repository import UserRepository
-from app.services.auth_service import AuthService, get_current_user
+from app.services.auth.auth_service import AuthService, get_current_user
 from app.models.user import (
     UserCreate, UserLogin, Token, UserResponse,
     GeminiKeyUpdate, GeminiKeyStatus,

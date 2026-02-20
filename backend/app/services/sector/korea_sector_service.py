@@ -271,7 +271,7 @@ async def get_korea_sector_holdings(
     # 1. KIS API 사용 가능 시 실시간 조회
     if kis_credentials:
         try:
-            from app.services.kis_api_service import get_etf_holdings
+            from app.services.korea_data.kis_api_service import get_etf_holdings
             
             app_key, app_secret = kis_credentials
             etf_code = symbol.replace(".KS", "")  # 091160.KS -> 091160
@@ -304,7 +304,7 @@ async def get_korea_sector_holdings(
     
     # 2. pykrx fallback - 정적 메타데이터 + 시세 조회
     try:
-        from app.services.pykrx_service import get_etf_portfolio, is_pykrx_available, get_data_date
+        from app.services.korea_data.pykrx_service import get_etf_portfolio, is_pykrx_available, get_data_date
         
         if is_pykrx_available():
             logger.debug(f"[pykrx] ETF {symbol} 구성종목 조회 (fallback)")

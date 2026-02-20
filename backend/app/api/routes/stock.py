@@ -12,8 +12,8 @@ from app.models.stock import (
     StockAnalysisCreate, StockAnalysisResponse, 
     StockAnalysisListResponse, SaveAnalysisResponse
 )
-from app.services.stock_service import StockService
-from app.services.auth_service import get_current_user
+from app.services.stock.stock_service import StockService
+from app.services.auth.auth_service import get_current_user
 from app.database.connection import get_db
 from app.database.user_repository import UserRepository
 from app.database.repository import PortfolioRepository

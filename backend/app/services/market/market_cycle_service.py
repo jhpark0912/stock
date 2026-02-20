@@ -441,8 +441,8 @@ def get_real_market_cycle() -> MarketCycleData:
     Raises:
         Exception: 데이터 조회 실패 또는 계산 오류
     """
-    from app.services.fred_service import get_fred_indicator
-    from app.services.economic_service import get_yahoo_indicator
+    from app.services.economic.fred_service import get_fred_indicator
+    from app.services.economic.economic_service import get_yahoo_indicator
 
     logger.debug("실제 데이터 기반 시장 사이클 분석 시작")
 

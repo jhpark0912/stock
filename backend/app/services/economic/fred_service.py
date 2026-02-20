@@ -8,7 +8,7 @@ import time
 
 from app.config import settings
 from app.models.economic import EconomicIndicator, HistoryPoint, MacroData
-from app.services.indicator_status import get_indicator_status
+from app.services.common.indicator_status import get_indicator_status
 
 logger = logging.getLogger(__name__)
 

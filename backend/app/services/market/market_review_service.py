@@ -202,7 +202,7 @@ async def get_kr_top_movers(
     # 1. KIS API 시도
     if kis_app_key and kis_app_secret:
         try:
-            from app.services.kis_api_service import get_fluctuation_ranking as kis_get_fluctuation
+            from app.services.korea_data.kis_api_service import get_fluctuation_ranking as kis_get_fluctuation
 
             logger.debug("[MarketReview] KIS API로 등락률 순위 조회")
             kis_gainers, kis_losers = await kis_get_fluctuation(
@@ -246,7 +246,7 @@ async def get_kr_top_movers(
     
     # 2. pykrx fallback
     try:
-        from app.services.pykrx_service import get_fluctuation_ranking as pykrx_get_fluctuation, is_pykrx_available
+        from app.services.korea_data.pykrx_service import get_fluctuation_ranking as pykrx_get_fluctuation, is_pykrx_available
         
         if not is_pykrx_available():
             logger.warning("[MarketReview] pykrx가 설치되지 않음 - 급등/급락 조회 불가")
@@ -359,7 +359,7 @@ async def get_kr_major_stocks(
     # 1. KIS API 시도
     if kis_app_key and kis_app_secret:
         try:
-            from app.services.kis_api_service import get_market_cap_ranking as kis_get_market_cap
+            from app.services.korea_data.kis_api_service import get_market_cap_ranking as kis_get_market_cap
             
             # KOSPI, KOSDAQ 병렬 조회
             kospi_task = kis_get_market_cap(kis_app_key, kis_app_secret, "KOSPI", 5)
@@ -401,7 +401,7 @@ async def get_kr_major_stocks(
     
     # 2. pykrx fallback
     try:
-        from app.services.pykrx_service import get_market_cap_ranking as pykrx_get_market_cap, is_pykrx_available
+        from app.services.korea_data.pykrx_service import get_market_cap_ranking as pykrx_get_market_cap, is_pykrx_available
         
         if not is_pykrx_available():
             logger.warning("[MarketReview] pykrx가 설치되지 않음 - 시총 Top 5 조회 불가")
@@ -498,7 +498,7 @@ async def get_kr_sector_performance() -> List[SectorPerformanceData]:
     """한국 섹터 등락률 조회 (섹터 ETF 기반)"""
     try:
         # korea_sector_service의 KOREA_SECTOR_ETFS 사용 (일관성 유지)
-        from app.services.korea_sector_service import KOREA_SECTOR_ETFS, KOREA_SECTOR_HOLDINGS
+        from app.services.sector.korea_sector_service import KOREA_SECTOR_ETFS, KOREA_SECTOR_HOLDINGS
         
         symbols = list(KOREA_SECTOR_ETFS.keys())
         ticker = Ticker(symbols)
@@ -531,7 +531,7 @@ async def get_us_sector_performance() -> List[SectorPerformanceData]:
     """미국 섹터 등락률 조회 (섹터 ETF 기반)"""
     try:
         # sector_service의 SECTOR_ETFS 사용 (일관성 유지)
-        from app.services.sector_service import SECTOR_ETFS
+        from app.services.sector.sector_service import SECTOR_ETFS
         
         symbols = list(SECTOR_ETFS.keys())
         ticker = Ticker(symbols)

@@ -16,8 +16,8 @@ import json
 import re
 import google.generativeai as genai
 from app.config import settings
-from app.services.mock_data import get_mock_stock_data
-from app.services.technical_indicators import calculate_all_indicators, calculate_chart_data
+from app.services.stock.mock_data import get_mock_stock_data
+from app.services.stock.technical_indicators import calculate_all_indicators, calculate_chart_data
 
 
 class StockService:

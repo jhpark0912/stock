@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from app.database.connection import get_db
 from app.database.user_repository import UserRepository
-from app.services.auth_service import get_current_admin
+from app.services.auth.auth_service import get_current_admin
 from app.models.user import UserResponse
 from app.database.models import UserDB
 

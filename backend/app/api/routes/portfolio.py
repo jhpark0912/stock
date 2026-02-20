@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.database.connection import get_db
 from app.database.repository import PortfolioRepository
 from app.database.models import UserDB
-from app.services.auth_service import get_current_user
+from app.services.auth.auth_service import get_current_user
 from app.models.portfolio import (
     PortfolioCreate,
     PortfolioUpdate,

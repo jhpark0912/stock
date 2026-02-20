@@ -20,7 +20,7 @@ from app.models.economic import (
     CommoditiesData,
     EconomicData
 )
-from app.services.indicator_status import get_indicator_status
+from app.services.common.indicator_status import get_indicator_status
 
 logger = logging.getLogger(__name__)
 
