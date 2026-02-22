@@ -511,10 +511,11 @@ function MemoTabContent({
               </MemoBlock>
             )}
 
-            {matchesSearch('거시경제 물가 통화량') && (
+            {matchesSearch('거시경제 선행지수 소비자심리 수출') && (
               <MemoBlock heading="거시지표 확인">
-                <CheckItem label="소비자물가" value={formatIndicatorLine(krData.macro.cpi, 'number')} checked={!!krData.macro.cpi?.value} />
-                <CheckItem label="M2 통화량" value={formatIndicatorLine(krData.macro.m2, 'trillion')} checked={!!krData.macro.m2?.value} />
+                <CheckItem label="선행지수" value={formatIndicatorLine(krData.macro.leading_index, 'number')} checked={!!krData.macro.leading_index?.value} />
+                <CheckItem label="소비자심리" value={formatIndicatorLine(krData.macro.ccsi, 'number')} checked={!!krData.macro.ccsi?.value} />
+                <CheckItem label="수출액" value={formatIndicatorLine(krData.macro.export, 'number')} checked={!!krData.macro.export?.value} />
               </MemoBlock>
             )}
 
