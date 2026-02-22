@@ -1,6 +1,6 @@
 # 프로젝트 구조
 
-> 최종 업데이트: 2026-02-20 (P1 services/ 도메인 서브패키지 재편)
+> 최종 업데이트: 2026-02-23 (P2 economic.py 라우터 4파일 분할)
 
 ## 전체 아키텍처
 
@@ -182,7 +182,12 @@ backend/
 │   │       ├── health.py    # 헬스체크
 │   │       ├── portfolio.py # 포트폴리오 API
 │   │       ├── stock.py     # 주식 데이터 API
-│   │       ├── economic.py  # 경제 지표 API (693줄, P2에서 분할 예정)
+│   │       ├── economic/    # 경제 지표 API (패키지, P2에서 분할)
+│   │       │   ├── __init__.py       # router 통합 (include_router x4)
+│   │       │   ├── indicators.py     # GET /economic, GET /economic/status
+│   │       │   ├── sectors.py        # GET /economic/sectors, .../holdings
+│   │       │   ├── market_cycle.py   # GET /economic/market-cycle, .../analysis
+│   │       │   └── market_review.py  # GET .../market-review/{country}, POST .../ai
 │   │       └── secret_stats.py  # Secret Manager 캐시 통계 API
 │   ├── database/            # 데이터베이스 설정
 │   │   ├── models.py        # SQLAlchemy ORM 모델 (UserDB, PortfolioDB, StockAnalysisDB)

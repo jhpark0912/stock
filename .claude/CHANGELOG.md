@@ -5,6 +5,24 @@
 
 ## 최근 변경 이력
 
+### 2026-02-23: P2 - economic.py 라우터 4파일 분할 (리팩토링)
+
+1. **경제 지표 라우터 패키지화**
+   - 기존 `routes/economic.py` (693줄, 11개 엔드포인트) → `routes/economic/` 패키지 4파일 분할
+   - `indicators.py`: GET /economic, GET /economic/status (경제 지표 조회)
+   - `sectors.py`: GET /economic/sectors, GET .../holdings (섹터 ETF)
+   - `market_cycle.py`: GET /economic/market-cycle, GET .../analysis (시장 사이클)
+   - `market_review.py`: GET .../market-review/{country}, POST .../ai (증시 마감 리뷰)
+   - `__init__.py`: include_router x4로 router 통합 노출
+
+2. **main.py 무변경**
+   - `from app.api.routes import economic` → `economic.router` 경로 동일
+   - 패키지 `__init__.py`에서 router를 노출하므로 main.py 수정 불필요
+
+3. **검증 완료**
+   - Python syntax 검증 통과 (5개 파일)
+   - uvicorn 서버 기동 정상 (Application startup complete)
+
 ### 2026-02-20: P1 - services/ 도메인 기반 서브패키지 재편 (리팩토링)
 
 1. **서비스 레이어 구조 개선**
