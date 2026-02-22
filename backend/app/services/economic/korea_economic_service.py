@@ -551,7 +551,7 @@ def get_all_korea_indicators(
     Returns:
         {
             "rates": { bond_10y, base_rate, credit_spread },
-            "macro": { leading_index, ccsi, export, cpi, m2 },
+            "macro": { cpi, m2 },
             "fx": { usd_krw }
         }
 
@@ -569,9 +569,7 @@ def get_all_korea_indicators(
         "macro": {
             "leading_index": None,
             "ccsi": None,
-            "export": None,
-            "cpi": None,
-            "m2": None
+            "export": None
         },
         "fx": {
             "usd_krw": None
@@ -588,7 +586,7 @@ def get_all_korea_indicators(
         return ("KR_CREDIT_SPREAD", get_credit_spread(include_history))
 
     # 병렬 조회
-    with ThreadPoolExecutor(max_workers=9) as executor:
+    with ThreadPoolExecutor(max_workers=7) as executor:
         # ECOS 지표
         ecos_futures = [
             executor.submit(fetch_ecos, "KR_BOND_10Y"),
@@ -596,8 +594,6 @@ def get_all_korea_indicators(
             executor.submit(fetch_ecos, "KR_LEADING_INDEX"),
             executor.submit(fetch_ecos, "KR_CCSI"),
             executor.submit(fetch_ecos, "KR_EXPORT"),
-            executor.submit(fetch_ecos, "KR_CPI"),
-            executor.submit(fetch_ecos, "KR_M2"),
         ]
 
         # Yahoo 지표
@@ -625,10 +621,6 @@ def get_all_korea_indicators(
                         results["macro"]["ccsi"] = indicator
                     elif series_id == "KR_EXPORT":
                         results["macro"]["export"] = indicator
-                    elif series_id == "KR_CPI":
-                        results["macro"]["cpi"] = indicator
-                    elif series_id == "KR_M2":
-                        results["macro"]["m2"] = indicator
                     elif series_id == "KRW=X":
                         results["fx"]["usd_krw"] = indicator
             except Exception as e:

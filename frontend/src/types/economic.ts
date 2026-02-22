@@ -79,8 +79,6 @@ export interface KoreaMacroData {
   leading_index: EconomicIndicator | null;  // 선행지수 순환변동치
   ccsi: EconomicIndicator | null;           // 소비자심리지수
   export: EconomicIndicator | null;         // 월간 수출액 BOP
-  cpi: EconomicIndicator | null;            // 소비자물가지수
-  m2: EconomicIndicator | null;             // M2 통화량
 }
 
 export interface KoreaFxData {

@@ -83,12 +83,10 @@ class KoreaRatesData(BaseModel):
 
 
 class KoreaMacroData(BaseModel):
-    """한국 거시경제 지표"""
+    """한국 거시경제 지표 (경기-심리-실적 3대장)"""
     leading_index: Optional[EconomicIndicator] = None  # 선행지수 순환변동치
     ccsi: Optional[EconomicIndicator] = None           # 소비자심리지수
     export: Optional[EconomicIndicator] = None         # 월간 수출액 BOP
-    cpi: Optional[EconomicIndicator] = None            # 소비자물가지수
-    m2: Optional[EconomicIndicator] = None             # M2 통화량         # 월간 수출액 BOP
 
 
 class KoreaFxData(BaseModel):
