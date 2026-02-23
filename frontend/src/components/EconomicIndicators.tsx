@@ -2,8 +2,9 @@
  * 경제 지표 대시보드 메인 컴포넌트
  */
 
-import { RefreshCw, TrendingUp, BarChart3 } from 'lucide-react';
+import { RefreshCw, TrendingUp, BarChart3, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { IndicatorCard } from './IndicatorCard';
 import { LoadingSpinner } from './LoadingSpinner';
 import {
   EconomicChartView,
@@ -12,8 +13,6 @@ import {
   MarketReviewSection,
 } from './economic';
 import { EconomicSubTabs } from './economic/EconomicSubTabs';
-import { USSimpleView } from './economic/USSimpleView';
-import { KRSimpleView } from './economic/KRSimpleView';
 import { useEconomicData } from '@/hooks/useEconomicData';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -218,8 +217,224 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
 
         <MarketCycleSection country={country} isAdmin={user?.role === 'admin'} />
 
-        {country === 'us' && data && <USSimpleView data={data} />}
-        {country === 'kr' && krData && <KRSimpleView data={krData} />}
+        {/* 미국 지표 */}
+        {country === 'us' && data && (
+          <>
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-medium text-foreground">🇺🇸 금리 & 변동성</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <IndicatorCard
+                  indicator={data.rates.treasury_10y || null}
+                  showChart={false}
+                  formatType="percent"
+                  icon="🏛️"
+                />
+                <IndicatorCard
+                  indicator={data.rates.treasury_3m || null}
+                  showChart={false}
+                  formatType="percent"
+                  icon="🏛️"
+                />
+                <IndicatorCard
+                  indicator={data.rates.vix || null}
+                  showChart={false}
+                  formatType="number"
+                  icon="📈"
+                />
+              </div>
+            </section>
+
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-medium text-foreground">🇺🇸 거시경제</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <IndicatorCard
+                  indicator={data.macro.philly_fed || null}
+                  showChart={false}
+                  formatType="number"
+                  icon="🏭"
+                />
+                <IndicatorCard
+                  indicator={data.macro.cfnai || null}
+                  showChart={false}
+                  formatType="number"
+                  icon="📋"
+                />
+                <IndicatorCard
+                  indicator={data.macro.umcsent || null}
+                  showChart={false}
+                  formatType="number"
+                  icon="👛"
+                />
+                <IndicatorCard
+                  indicator={data.macro.cpi || null}
+                  showChart={false}
+                  formatType="number"
+                  icon="📊"
+                />
+                <IndicatorCard
+                  indicator={data.macro.m2 || null}
+                  showChart={false}
+                  formatType="trillion"
+                  icon="💵"
+                />
+              </div>
+              {!data.macro.cpi && !data.macro.m2 && (
+                <div className="mt-3 p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+                  <p>
+                    💡 CPI와 M2 데이터를 보려면 FRED API 키가 필요합니다.
+                    <a
+                      href="https://fred.stlouisfed.org/docs/api/api_key.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline ml-1"
+                    >
+                      API 키 발급 →
+                    </a>
+                  </p>
+                </div>
+              )}
+            </section>
+
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <DollarSign className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-medium text-foreground">🇺🇸 원자재</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <IndicatorCard
+                  indicator={data.commodities.wti_oil || null}
+                  showChart={false}
+                  formatType="currency"
+                  icon="🛢️"
+                />
+                <IndicatorCard
+                  indicator={data.commodities.gold || null}
+                  showChart={false}
+                  formatType="currency"
+                  icon="💰"
+                />
+              </div>
+            </section>
+
+            {data.last_updated && (
+              <div className="text-center text-xs text-muted-foreground">
+                마지막 업데이트: {new Date(data.last_updated).toLocaleString('ko-KR')}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* 한국 지표 */}
+        {country === 'kr' && krData && (
+          <>
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-medium text-foreground">🇰🇷 금리</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <IndicatorCard
+                  indicator={krData.rates.bond_10y || null}
+                  showChart={false}
+                  formatType="percent"
+                  icon="🏛️"
+                />
+                <IndicatorCard
+                  indicator={krData.rates.base_rate || null}
+                  showChart={false}
+                  formatType="percent"
+                  icon="🏛️"
+                />
+              </div>
+            </section>
+
+            {krData.rates.credit_spread && (
+              <section>
+                <div className="flex items-center gap-2 mb-4">
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  <h3 className="text-lg font-medium text-foreground">🇰🇷 신용 스프레드</h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <IndicatorCard
+                    indicator={krData.rates.credit_spread}
+                    showChart={false}
+                    formatType="percent"
+                    icon="📊"
+                  />
+                </div>
+              </section>
+            )}
+
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-medium text-foreground">🇰🇷 거시경제</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <IndicatorCard
+                  indicator={krData.macro.leading_index || null}
+                  showChart={false}
+                  formatType="number"
+                  icon="🧭"
+                />
+                <IndicatorCard
+                  indicator={krData.macro.ccsi || null}
+                  showChart={false}
+                  formatType="number"
+                  icon="😊"
+                />
+                <IndicatorCard
+                  indicator={krData.macro.export || null}
+                  showChart={false}
+                  formatType="number"
+                  icon="🚢"
+                />
+              </div>
+              {!krData.macro.leading_index && !krData.macro.ccsi && !krData.macro.export && (
+                <div className="mt-3 p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
+                  <p>
+                    💡 한국 거시경제 지표를 보려면 ECOS API 키가 필요합니다.
+                    <a
+                      href="https://ecos.bok.or.kr/api/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline ml-1"
+                    >
+                      API 키 발급 →
+                    </a>
+                  </p>
+                </div>
+              )}
+            </section>
+
+            <section>
+              <div className="flex items-center gap-2 mb-4">
+                <DollarSign className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-medium text-foreground">🇰🇷 환율</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <IndicatorCard
+                  indicator={krData.fx.usd_krw || null}
+                  showChart={false}
+                  formatType="currency"
+                  icon="💱"
+                />
+              </div>
+            </section>
+
+            {krData.last_updated && (
+              <div className="text-center text-xs text-muted-foreground">
+                마지막 업데이트: {new Date(krData.last_updated).toLocaleString('ko-KR')}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
