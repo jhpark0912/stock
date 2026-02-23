@@ -26,6 +26,9 @@ if [ "$BRANCH" = "main" ] || [ "$BRANCH" = "master" ]; then
     fi
 fi
 
+# lint-staged 실행 (커밋 대상 파일만 린팅/포맷팅)
+npx lint-staged
+
 # PROJECT_STRUCTURE.md 업데이트 확인 (선택적)
 # 새 파일이 추가된 경우 알림
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=A)
@@ -39,5 +42,3 @@ if [ -n "$STAGED_FILES" ]; then
     echo "${YELLOW}💡 .claude/PROJECT_STRUCTURE.md 업데이트가 필요할 수 있습니다.${NC}"
     echo ""
 fi
-
-exit 0

@@ -11,8 +11,12 @@
 - CLI (n8n): `python stock_cli.py AAPL`
 - API (n8n): `node stock_api.js AAPL`
 - Test: `pytest tests/ -v`
-- Lint: `flake8 . --max-line-length=120`
-- Dependencies: `pip install -r requirements_enhanced.txt` / `npm install`
+- Lint (backend): `cd backend && ruff check .`
+- Lint (frontend): `cd frontend && npm run lint`
+- Format (frontend): `cd frontend && npm run format`
+- Dependencies (backend): `pip install -r backend/requirements.txt`
+- Dependencies (backend-dev): `pip install -r backend/requirements-dev.txt`
+- Dependencies (frontend): `cd frontend && npm install`
 
 # 🏗️ Architecture (반드시 먼저 읽을 것)
 - `.claude/PROJECT_STRUCTURE.md` — 디렉토리 구조, 모듈 의존 관계 (구조만)

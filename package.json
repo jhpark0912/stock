@@ -7,6 +7,15 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "husky": "^9.0.0"
+    "husky": "^9.0.0",
+    "lint-staged": "^16.2.7"
+  },
+  "lint-staged": {
+    "backend/**/*.py": "ruff check --fix",
+    "frontend/src/**/*.{ts,tsx}": [
+      "eslint --fix --config frontend/eslint.config.js",
+      "prettier --write --config frontend/.prettierrc"
+    ],
+    "frontend/src/**/*.{css,json}": "prettier --write --config frontend/.prettierrc"
   }
 }

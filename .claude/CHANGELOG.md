@@ -5,6 +5,44 @@
 
 ## 최근 변경 이력
 
+### 2026-02-23: S0 - 코드 품질 자동화 인프라 구축
+
+1. **S0-A: Backend ruff 도입**
+   - `backend/pyproject.toml` 생성 (ruff 설정: line-length=120, E/F/I/W 규칙)
+   - `backend/requirements-dev.txt` 생성 (ruff, pytest, httpx)
+   - 현재 715건 탐지 (559건 자동수정 가능, 대부분 공백/import 정렬)
+
+2. **S0-B: Frontend Prettier + ESLint 연동**
+   - `frontend/.prettierrc` 생성 (singleQuote, printWidth=100)
+   - `prettier`, `eslint-config-prettier` 설치
+   - `eslint.config.js`에 eslintConfigPrettier 추가 (ESLint↔Prettier 충돌 방지)
+   - `package.json`에 `format`, `format:check` 스크립트 추가
+   - 현재 62개 파일에서 포맷 차이 탐지
+
+3. **S0-C: lint-staged + Husky pre-commit 연동**
+   - 루트 `package.json`에 lint-staged 설치 + 설정
+   - `.husky/pre-commit`에 `npx lint-staged` 실행 추가
+   - 커밋 시 staged 파일만 자동 린팅/포맷팅
+
+4. **S0-D: 문서 갱신**
+   - `CLAUDE.md`: flake8 → ruff, requirements_enhanced.txt → requirements.txt 수정
+   - `MAINTENANCE_STRATEGY.md`: S0 체크리스트 완료 표시
+
+### 2026-02-23: P1+ - services/__init__.py 안전망 제거
+
+1. **구 경로 소비자 수정**
+   - `backend/init_database.py`: `from app.services.auth_service` → `from app.services.auth.auth_service`
+   - 프로젝트 전체 구 경로 import 0건 확인 후 제거
+
+2. **안전망 제거**
+   - `backend/app/services/__init__.py`: 15개 심볼 re-export → 주석 1줄만 남김
+
+3. **P3 사전 분석 + 유지보수 전략 수립**
+   - 9개 대상 컴포넌트 구조 분석 완료 → `.claude/plans/P3_COMPONENT_ANALYSIS.md`
+   - 크로스 컴포넌트 중복 패턴 4건 식별
+   - 품질 인프라 감사 (린팅/테스트/CI 현황) → `.claude/plans/MAINTENANCE_STRATEGY.md`
+   - 로드맵 경로 현행화, P3 2차 대상 3개 추가
+
 ### 2026-02-23: P2 - economic.py 라우터 4파일 분할 (리팩토링)
 
 1. **경제 지표 라우터 패키지화**

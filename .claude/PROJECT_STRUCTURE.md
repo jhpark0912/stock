@@ -1,6 +1,6 @@
 # 프로젝트 구조
 
-> 최종 업데이트: 2026-02-23 (P2 economic.py 라우터 4파일 분할)
+> 최종 업데이트: 2026-02-23 (S0 코드 품질 자동화 인프라 구축)
 
 ## 전체 아키텍처
 
@@ -116,7 +116,9 @@ frontend/
 ├── index.html               # HTML 템플릿
 ├── vite.config.ts           # Vite 설정
 ├── tailwind.config.js       # Tailwind 설정
-└── package.json             # npm 의존성
+├── .prettierrc              # Prettier 포맷팅 설정
+├── eslint.config.js         # ESLint + Prettier 통합 설정
+└── package.json             # npm 의존성 (prettier, eslint-config-prettier 포함)
 ```
 
 **페이지 구조** (TopNav 기반):
@@ -200,7 +202,7 @@ backend/
 │   │   ├── portfolio.py     # 포트폴리오 스키마
 │   │   └── economic.py      # 경제 지표 스키마
 │   ├── services/            # 비즈니스 로직 (도메인 서브패키지 구조)
-│   │   ├── __init__.py      # re-export 안전망 (구 경로 하위호환)
+│   │   ├── __init__.py      # 패키지 초기화 (안전망 제거 완료)
 │   │   ├── auth/
 │   │   │   └── auth_service.py      # JWT 인증, 비밀번호 해싱, 의존성 주입
 │   │   ├── common/
@@ -229,7 +231,9 @@ backend/
 │   ├── main.py              # FastAPI 앱 엔트리
 │   └── __init__.py
 ├── migrations/              # 데이터베이스 마이그레이션
-├── requirements.txt         # Python 의존성
+├── requirements.txt         # Python 의존성 (프로덕션)
+├── requirements-dev.txt     # 개발 의존성 (ruff, pytest, httpx)
+├── pyproject.toml           # ruff 린터 설정
 └── Dockerfile               # Docker 이미지
 ```
 
