@@ -113,13 +113,18 @@ frontend/
 │   │   │   └── chartUtils.ts         # 공용 유틸 (formatPrice, AXIS_STYLE)
 │   │   ├── Sidebar.tsx      # 티커 목록 사이드바
 │   │   └── ...
-│   ├── hooks/               # 커스텀 훅
-│   │   ├── usePortfolio.ts      # 포트폴리오 데이터 관리 훅
-│   │   ├── useEconomicData.ts   # 경제지표 데이터 훅 (EconomicIndicators용)
-│   │   ├── useStealthHome.ts    # 스텔스 홈 데이터 훅 (3탭 상태 + fetch)
-│   │   ├── useMarketCycle.ts    # 시장 사이클 데이터 훅
-│   │   ├── useAnalysisSummary.ts # AI 분석 요약 생성/저장 훅
-│   │   └── index.ts
+│   ├── hooks/               # 커스텀 훅 (도메인 서브패키지)
+│   │   ├── economic/
+│   │   │   ├── useEconomicData.ts   # 경제지표 API 조회
+│   │   │   ├── useMarketCycle.ts    # 시장 사이클 데이터
+│   │   │   ├── useSectorHeatmap.ts  # 섹터 히트맵 데이터
+│   │   │   └── useSectorDetail.ts   # 섹터 보유종목 조회
+│   │   ├── portfolio/
+│   │   │   └── usePortfolio.ts      # 포트폴리오 데이터 관리
+│   │   ├── stealth/
+│   │   │   └── useStealthHome.ts    # 스텔스 홈 3탭 데이터
+│   │   └── common/
+│   │       └── useAnalysisSummary.ts # AI 분석 요약 생성/저장 (cross-domain)
 │   ├── contexts/            # React Context (테마, 인증, 스텔스 등)
 │   │   ├── AuthContext.tsx      # 인증 상태 관리
 │   │   └── StealthContext.tsx   # 스텔스 모드 상태 관리 (localStorage 기반)
@@ -170,14 +175,14 @@ App.tsx
   - `layout/TopNav.tsx` - 상단 네비게이션 (페이지 전환 + ThemeToggle + 로그아웃)
   - `layout/PageHeader.tsx` - 공통 페이지 헤더 (타이틀, 설명, 액션 버튼)
   - `layout/PageContainer.tsx` - 공통 콘텐츠 컨테이너 (스크롤, 패딩, 중앙 정렬)
-- **커스텀 훅** (`hooks/`):
-  - `usePortfolio.ts` - 포트폴리오 데이터 관리 (상태 + 액션 분리)
-  - `useEconomicData.ts` - 경제 지표 API 조회 (US/KR/All)
-  - `useMarketCycle.ts` - 시장 사이클 + AI 분석
-  - `useAnalysisSummary.ts` - AI 분석 요약 생성/저장
-  - `useStealthHome.ts` - 스텔스 홈 3탭 데이터 (회의록/사업현황/업무일지)
-  - `useSectorHeatmap.ts` - 섹터 히트맵 데이터 + 파생 treemapData
-  - `useSectorDetail.ts` - 섹터 보유 종목 조회 + treemapData
+- **커스텀 훅** (`hooks/{domain}/`, flat 구조 금지):
+  - `economic/useEconomicData.ts` - 경제 지표 API 조회 (US/KR/All)
+  - `economic/useMarketCycle.ts` - 시장 사이클 + AI 분석
+  - `economic/useSectorHeatmap.ts` - 섹터 히트맵 데이터 + treemapData
+  - `economic/useSectorDetail.ts` - 섹터 보유 종목 조회 + treemapData
+  - `portfolio/usePortfolio.ts` - 포트폴리오 데이터 관리 (상태 + 액션 분리)
+  - `stealth/useStealthHome.ts` - 스텔스 홈 3탭 데이터 (회의록/사업현황/업무일지)
+  - `common/useAnalysisSummary.ts` - AI 분석 요약 생성/저장 (cross-domain 공용)
 - **공용 컴포넌트**:
   - `StrategyBadge.tsx` - 투자 전략 배지 (buy/hold/sell)
 - **경제 지표 컴포넌트**:

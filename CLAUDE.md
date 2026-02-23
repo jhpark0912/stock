@@ -40,7 +40,8 @@ pip install -r backend/requirements-dev.txt    # 백엔드: FastAPI + ruff + pyt
   - 동일 로직 2회 이상 사용 → 공유 모듈 추출 (필수)
   - 선언적 템플릿(JSX/설정)만으로 초과 → 허용 (최대 500줄)
   - 로직 없는 순수 나열(카드 목록 등)은 별도 파일로 분리하지 않음
-- 도메인 기반 디렉토리: `services/{domain}/`, `components/{domain}/`. flat 구조 금지.
+- 도메인 기반 디렉토리: `services/{domain}/`, `components/{domain}/`, `hooks/{domain}/`. flat 구조 금지.
+  - hooks cross-domain 공용 → `hooks/common/`
 - 관심사 분리: UI(렌더링) / 훅(상태+API) / 상수·타입. 단, 로직 없는 템플릿은 인라인 허용.
 - Frontend import: `@/` 절대 경로만 사용. `../` 상대 경로 금지 (ESLint 강제).
 - Backend route: 라우터 1파일 = 1도메인. 단일 파일에 엔드포인트 누적 금지.
