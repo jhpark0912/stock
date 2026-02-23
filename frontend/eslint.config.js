@@ -20,6 +20,19 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../*'],
+              message: 'Use @/ absolute imports instead of relative parent imports.',
+            },
+          ],
+        },
+      ],
+    },
   },
   eslintConfigPrettier,
 ])

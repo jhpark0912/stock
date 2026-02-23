@@ -18,7 +18,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { usePortfolio } from '@/hooks/usePortfolio';
-import { LoadingSpinner } from '../LoadingSpinner';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 import {
   generateSummary,
   saveAnalysis,

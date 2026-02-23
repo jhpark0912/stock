@@ -17,7 +17,7 @@ import {
   ResponsiveContainer,
   Area,
 } from 'recharts';
-import type { ChartDataPoint } from '../types/stock';
+import type { ChartDataPoint } from '@/types/stock';
 
 interface StockChartProps {
   ticker?: string;

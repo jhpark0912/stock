@@ -9,7 +9,7 @@ import type {
   SaveAnalysisRequest,
   SaveAnalysisResponse,
   AnalysisListResponse,
-} from '../types/stock';
+} from '@/types/stock';
 
 /**
  * 요약 생성 (Gemini 호출)

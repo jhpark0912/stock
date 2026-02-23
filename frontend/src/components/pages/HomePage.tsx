@@ -3,7 +3,7 @@
  * EconomicIndicators 컴포넌트를 전체 화면으로 표시
  */
 
-import { EconomicIndicators } from '../EconomicIndicators';
+import { EconomicIndicators } from '@/components/EconomicIndicators';
 import { PageHeader } from '@/components/layout';
 
 export function HomePage() {

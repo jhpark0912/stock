@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { TrendingUp, TrendingDown, Pencil, Check, X } from 'lucide-react';
-import { calculateProfit, formatCurrency, formatLargeCurrency, isKoreanTicker } from '../lib/utils';
+import { calculateProfit, formatCurrency, formatLargeCurrency, isKoreanTicker } from '@/lib/utils';
 
 interface HeroSectionProps {
   ticker?: string;

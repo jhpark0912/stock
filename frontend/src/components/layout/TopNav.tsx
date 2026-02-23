@@ -18,8 +18,8 @@ import {
   EyeOff,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '../ui/button';
-import { ThemeToggle } from '../ThemeToggle';
+import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useStealthMode } from '@/contexts/StealthContext';
 
 // 페이지 타입 정의

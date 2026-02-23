@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { MetricCard } from './MetricCard';
-import type { StockFinancials } from '../types/stock';
+import type { StockFinancials } from '@/types/stock';
 
 interface MetricData {
   name: string;

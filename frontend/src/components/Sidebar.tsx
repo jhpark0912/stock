@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, X, Edit2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { UserTicker } from '../types/user';
+import type { UserTicker } from '@/types/user';
 
 // Sidebar에서 사용하는 Ticker 타입은 UserTicker를 그대로 사용
 
