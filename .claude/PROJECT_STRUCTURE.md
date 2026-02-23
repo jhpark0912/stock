@@ -90,18 +90,35 @@ frontend/
 │   │   │   ├── PortfolioPage.tsx  # 포트폴리오 페이지
 │   │   │   └── index.ts
 │   │   ├── stealth/         # 스텔스 모드 위장 페이지
-│   │   │   ├── StealthHomePage.tsx       # 경제지표 → 회의록/메모 위장
-│   │   │   └── StealthPortfolioPage.tsx  # 포트폴리오 → 프로젝트 관리 위장
+│   │   │   ├── StealthHomePage.tsx            # 오케스트레이터 (3탭)
+│   │   │   ├── StealthMemoTab.tsx             # 회의록 탭 (경제지표)
+│   │   │   ├── StealthStatusTab.tsx           # 사업현황 탭 (섹터)
+│   │   │   ├── StealthJournalTab.tsx          # 업무일지 탭 (마감리뷰)
+│   │   │   ├── StealthMemoComponents.tsx      # 공용 UI + 유틸 (MemoSection 등)
+│   │   │   ├── StealthPortfolioPage.tsx       # 오케스트레이터 (프로젝트 관리)
+│   │   │   ├── StealthAnalysisSection.tsx     # 분석 보고서 섹션
+│   │   │   ├── StealthAnalysisHistory.tsx     # 분석 이력 패널
+│   │   │   └── StealthPortfolioComponents.tsx # 공용 UI (NoteSection 등)
 │   │   ├── settings/        # 설정 페이지 컴포넌트
 │   │   ├── ui/              # 재사용 가능한 UI 컴포넌트 (shadcn/ui)
 │   │   ├── AppLayout.tsx    # 앱 레이아웃
 │   │   ├── Dashboard.tsx    # 대시보드 (레거시, PortfolioPage로 이동됨)
 │   │   ├── MainTabs.tsx     # 주식별 탭 (5개: Overview, AI, Chart, Technical, News)
-│   │   ├── StockChart.tsx   # 주식 차트
+│   │   ├── StockChart.tsx   # 주식 차트 오케스트레이터 (차트 4종 조합)
+│   │   ├── charts/          # 차트 서브컴포넌트
+│   │   │   ├── PriceVolumeChart.tsx  # 주가+거래량 차트
+│   │   │   ├── SMAChart.tsx          # 이동평균선 차트
+│   │   │   ├── BollingerChart.tsx    # 볼린저밴드 차트
+│   │   │   ├── ComprehensiveChart.tsx # 종합 분석 차트
+│   │   │   └── chartUtils.ts         # 공용 유틸 (formatPrice, AXIS_STYLE)
 │   │   ├── Sidebar.tsx      # 티커 목록 사이드바
 │   │   └── ...
 │   ├── hooks/               # 커스텀 훅
-│   │   ├── usePortfolio.ts  # 포트폴리오 데이터 관리 훅
+│   │   ├── usePortfolio.ts      # 포트폴리오 데이터 관리 훅
+│   │   ├── useEconomicData.ts   # 경제지표 데이터 훅 (EconomicIndicators용)
+│   │   ├── useStealthHome.ts    # 스텔스 홈 데이터 훅 (3탭 상태 + fetch)
+│   │   ├── useMarketCycle.ts    # 시장 사이클 데이터 훅
+│   │   ├── useAnalysisSummary.ts # AI 분석 요약 생성/저장 훅
 │   │   └── index.ts
 │   ├── contexts/            # React Context (테마, 인증, 스텔스 등)
 │   │   ├── AuthContext.tsx      # 인증 상태 관리
