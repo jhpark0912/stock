@@ -17,7 +17,7 @@ import type {
   Country,
 } from '@/types/economic';
 import type { MarketReviewData, MarketReviewResponse } from '@/types/marketReview';
-import type { SectorData, SectorResponse } from '@/components/stealth/StealthMemoComponents';
+import type { SectorData, SectorResponse } from '@/types/economic';
 
 export type StealthTab = 'memo' | 'status' | 'journal';
 

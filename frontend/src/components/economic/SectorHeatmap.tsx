@@ -1,36 +1,13 @@
-import { useState, useEffect, useCallback } from 'react';
 import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
 import { cn } from '@/lib/utils';
 import { TrendingUp, RefreshCw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { api } from '@/lib/api';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { SectorDetail } from './SectorDetail';
-import { getChangeColor, SECTOR_DETAIL } from './sectorConstants';
 import { TreemapLegend } from './TreemapLegend';
+import { useSectorHeatmap } from '@/hooks/useSectorHeatmap';
 import type { Country } from '@/types/economic';
-
-type Period = '1D' | '1W' | '1M';
-
-interface SectorData {
-  symbol: string;
-  name: string;
-  name_en: string;
-  description: string;
-  price: number;
-  change_1d: number;
-  change_1w: number;
-  change_1m: number;
-  market_cap: number;
-  top_holdings: string[]; // 상위 보유 종목 (API에서 동적 조회)
-}
-
-interface SectorResponse {
-  success: boolean;
-  data: SectorData[] | null;
-  last_updated: string | null;
-  error: string | null;
-}
+import type { Period } from '@/hooks/useSectorHeatmap';
 
 // 텍스트 색상 (항상 흰색으로 통일)
 const getTextColor = (): string => '#ffffff';
@@ -53,12 +30,10 @@ const CustomTreemapContent = (props: any) => {
     isKorea,
   } = props;
 
-  // root 노드는 렌더링하지 않음 (depth === 1이 실제 데이터)
   if (depth === 0 || !symbol) {
     return null;
   }
 
-  // 너무 작은 셀은 텍스트 생략
   const showFullInfo = width > 100 && height > 70;
   const showSymbol = width > 60 && height > 40;
   const textColor = getTextColor();
@@ -79,7 +54,6 @@ const CustomTreemapContent = (props: any) => {
       />
       {showSymbol && (
         <>
-          {/* 메인 텍스트: 한국은 종목명, 미국은 심볼 */}
           <text
             x={x + width / 2}
             y={y + (showFullInfo ? height / 2 - 18 : height / 2 - 6)}
@@ -96,7 +70,6 @@ const CustomTreemapContent = (props: any) => {
 
           {showFullInfo && (
             <>
-              {/* 서브 텍스트: 한국은 심볼, 미국은 한글명 */}
               <text
                 x={x + width / 2}
                 y={y + height / 2 + 2}
@@ -111,7 +84,6 @@ const CustomTreemapContent = (props: any) => {
                 {isKorea ? symbol : korName}
               </text>
 
-              {/* 변화율 */}
               <text
                 x={x + width / 2}
                 y={y + height / 2 + 22}
@@ -127,7 +99,6 @@ const CustomTreemapContent = (props: any) => {
                 {(change ?? 0).toFixed(2)}%
               </text>
 
-              {/* 가격 */}
               {width > 120 && height > 90 && price != null && (
                 <text
                   x={x + width / 2}
@@ -145,7 +116,6 @@ const CustomTreemapContent = (props: any) => {
             </>
           )}
 
-          {/* 작은 셀에서 변화율만 표시 */}
           {!showFullInfo && width > 70 && (
             <text
               x={x + width / 2}
@@ -168,95 +138,61 @@ const CustomTreemapContent = (props: any) => {
   );
 };
 
+// CustomTooltip - 섹터 히트맵 툴팁
+const CustomTooltip = ({ active, payload }: any) => {
+  if (!active || !payload || !payload.length) return null;
+  const data = payload[0].payload;
+  return (
+    <div className="bg-popover border rounded-lg shadow-lg p-3 max-w-xs">
+      <div className="font-semibold mb-1">{data.isKorea ? data.korName : data.symbol}</div>
+      <div className="space-y-1 text-xs">
+        {data.change !== null && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">변화율</span>
+            <span
+              className={cn('font-medium', data.change >= 0 ? 'text-green-600' : 'text-red-600')}
+            >
+              {data.change >= 0 ? '+' : ''}
+              {data.change.toFixed(2)}%
+            </span>
+          </div>
+        )}
+        {data.price != null && (
+          <div className="flex justify-between">
+            <span className="text-muted-foreground">가격</span>
+            <span className="font-medium">
+              {data.isKorea ? `₩${data.price.toLocaleString()}` : `$${data.price.toFixed(2)}`}
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="mt-2 pt-2 border-t text-xs text-muted-foreground">
+        클릭하여 상위 종목 확인
+      </div>
+    </div>
+  );
+};
+
 interface SectorHeatmapProps {
   country: Country;
 }
 
 export function SectorHeatmap({ country }: SectorHeatmapProps) {
-  const [period, setPeriod] = useState<Period>('1D');
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [sectors, setSectors] = useState<SectorData[]>([]);
-  const [lastUpdated, setLastUpdated] = useState<string | null>(null);
-  const [selectedSector, setSelectedSector] = useState<SectorData | null>(null);
+  const {
+    period,
+    setPeriod,
+    loading,
+    refreshing,
+    error,
+    lastUpdated,
+    selectedSector,
+    treemapData,
+    handleRefresh,
+    handleSectorClick,
+    handleCloseSectorDetail,
+    handleStockClick,
+  } = useSectorHeatmap(country);
 
-  const fetchData = useCallback(async () => {
-    if (country === null) return;
-    try {
-      setError(null);
-      const response = await api.get<SectorResponse>(`/api/economic/sectors?country=${country}`);
-
-      if (response.data.success && response.data.data) {
-        setSectors(response.data.data);
-        setLastUpdated(response.data.last_updated);
-      } else {
-        setError(response.data.error || '섹터 데이터를 불러올 수 없습니다.');
-      }
-    } catch (err) {
-      setError('섹터 데이터를 불러오는 중 오류가 발생했습니다.');
-    }
-  }, [country]);
-
-  useEffect(() => {
-    if (country === null) return;
-    const loadData = async () => {
-      setLoading(true);
-      await fetchData();
-      setLoading(false);
-    };
-    loadData();
-  }, [fetchData, country]);
-
-  // 기간에 따른 변화율
-  const getChange = (sector: SectorData): number => {
-    switch (period) {
-      case '1D':
-        return sector.change_1d;
-      case '1W':
-        return sector.change_1w;
-      case '1M':
-        return sector.change_1m;
-    }
-  };
-
-  // Treemap 데이터 생성
-  const treemapData = sectors.map((sector) => {
-    const change = getChange(sector);
-    // 한국 섹터인지 확인 (.KS 접미사)
-    const isKorea = sector.symbol.endsWith('.KS');
-    return {
-      name: sector.symbol,
-      symbol: sector.symbol,
-      korName: sector.name,
-      size: Math.max(sector.market_cap, 1000000000), // 최소 크기 보장
-      change,
-      price: sector.price,
-      color: getChangeColor(change),
-      data: sector,
-      isKorea,
-    };
-  });
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchData();
-    setRefreshing(false);
-  };
-
-  const handleSectorClick = (sector: SectorData) => {
-    setSelectedSector(sector);
-  };
-
-  const handleCloseSectorDetail = () => {
-    setSelectedSector(null);
-  };
-
-  const handleStockClick = (symbol: string) => {
-    window.open(`/stock/${symbol}`, '_blank');
-  };
-
-  // 국가 선택 안내
   if (country === null) {
     return (
       <div className="flex items-center justify-center h-[calc(100%-80px)]">
@@ -315,7 +251,6 @@ export function SectorHeatmap({ country }: SectorHeatmapProps) {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* 기간 선택 */}
           <div className="flex items-center bg-muted rounded-lg p-1">
             {(['1D', '1W', '1M'] as Period[]).map((p) => (
               <button
@@ -333,7 +268,6 @@ export function SectorHeatmap({ country }: SectorHeatmapProps) {
             ))}
           </div>
 
-          {/* 새로고침 */}
           <Button
             variant="outline"
             size="sm"

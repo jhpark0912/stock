@@ -6,22 +6,11 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import {
-  Key,
-  Play,
-  AlertCircle,
-  RefreshCw,
-  FileText,
-  Save,
-  History,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  Loader2,
-} from 'lucide-react';
+import { Key, Play, AlertCircle, RefreshCw, FileText, Save, History, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AnalysisHistory } from './AnalysisHistory';
-import type { StockData, AIAnalysis, InvestmentStrategy } from '@/types/stock';
+import { StrategyBadge } from '@/components/StrategyBadge';
+import type { StockData, AIAnalysis } from '@/types/stock';
 import type { UserResponse } from '@/types/auth';
 import { useAnalysisSummary } from '@/hooks/useAnalysisSummary';
 
@@ -33,38 +22,6 @@ interface AIAnalysisTabProps {
   onAnalyzeAI: () => void;
   onNavigateToSettings?: () => void;
   tickerCount: number;
-}
-
-/**
- * 투자 전략 배지
- */
-function StrategyBadge({ strategy }: { strategy: InvestmentStrategy }) {
-  const styles: Record<InvestmentStrategy, string> = {
-    buy: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-    hold: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-    sell: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-  };
-
-  const icons: Record<InvestmentStrategy, React.ReactNode> = {
-    buy: <TrendingUp className="h-4 w-4" />,
-    hold: <Minus className="h-4 w-4" />,
-    sell: <TrendingDown className="h-4 w-4" />,
-  };
-
-  const labels: Record<InvestmentStrategy, string> = {
-    buy: '매수',
-    hold: '보유',
-    sell: '매도',
-  };
-
-  return (
-    <span
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${styles[strategy]}`}
-    >
-      {icons[strategy]}
-      {labels[strategy]}
-    </span>
-  );
 }
 
 export function AIAnalysisTab({

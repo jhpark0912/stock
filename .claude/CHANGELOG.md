@@ -5,6 +5,39 @@
 
 ## 최근 변경 이력
 
+### 2026-02-23: P3 1차 - Frontend 거대 컴포넌트 분리 완료 (6개 파일)
+
+1. **StealthHomePage.tsx 928L → 176L (-81%)**
+   - `hooks/useStealthHome.ts` 생성 (186L): 3탭 데이터 조회 훅 (회의록/사업현황/업무일지)
+   - `components/stealth/StealthMemoComponents.tsx` 생성 (140L): 공용 UI + 타입 + 유틸 함수
+   - `components/stealth/StealthMemoTab.tsx` 생성 (214L): 회의록 탭
+   - `components/stealth/StealthStatusTab.tsx` 생성 (116L): 사업현황 탭
+   - `components/stealth/StealthJournalTab.tsx` 생성 (153L): 업무일지 탭
+   - StealthHomePage.tsx: 오케스트레이터만 (176L)
+
+2. **StealthPortfolioPage.tsx 584L → 305L (-48%)**
+   - `components/stealth/StealthPortfolioComponents.tsx` 생성 (34L): NoteSection, ProjectInfoLine, strategyToLabel
+   - `components/stealth/StealthAnalysisSection.tsx` 생성 (139L): 분석 보고서 섹션
+   - `components/stealth/StealthAnalysisHistory.tsx` 생성 (104L): 분석 이력 인라인 패널
+   - StealthPortfolioPage.tsx: 오케스트레이터 (305L)
+
+3. **이전 P3 1차 완료분** (MarketCycleSection, SettingsPage, StockChart, EconomicIndicators)
+   - `hooks/useMarketCycle.ts`, `hooks/useEconomicData.ts`, `hooks/useAnalysisSummary.ts` 추가
+   - 4개 컴포넌트 훅/서브컴포넌트 분리 완료
+
+4. **결과**
+   - 500L+ 파일: 7개 → 0개
+   - 대상 4,052L → 1,379L (-66%)
+   - TypeScript 컴파일 0 errors
+
+### 2026-02-23: S1-A - Frontend import 절대 경로 통일
+
+1. **상대 경로 `../` → `@/` 절대 경로 일괄 전환**
+   - 대상 19곳 (components/hooks/lib 전반)
+   - ESLint `import/no-relative-paths` 규칙 준수
+
+---
+
 ### 2026-02-23: S0 - 코드 품질 자동화 인프라 구축
 
 1. **S0-A: Backend ruff 도입**

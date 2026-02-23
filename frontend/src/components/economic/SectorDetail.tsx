@@ -1,30 +1,10 @@
-import { useState, useEffect } from 'react';
 import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
 import { cn } from '@/lib/utils';
 import { X, Loader2, AlertCircle, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { api } from '@/lib/api';
 import { getChangeColor, SECTOR_INFO } from './sectorConstants';
 import { TreemapLegend } from './TreemapLegend';
-
-interface SectorHolding {
-  symbol: string;
-  name: string;
-  weight: number;
-  price: number | null;
-  change_1d: number | null;
-}
-
-interface SectorHoldingsResponse {
-  success: boolean;
-  sector_symbol: string | null;
-  sector_name: string | null;
-  holdings: SectorHolding[] | null;
-  last_updated: string | null;
-  error: string | null;
-  note?: string | null;
-  requires_kis_key?: boolean;
-}
+import { useSectorDetail } from '@/hooks/useSectorDetail';
 
 interface SectorDetailProps {
   symbol: string;
@@ -77,17 +57,15 @@ const CustomTooltip = ({ active, payload }: any) => {
   );
 };
 
-// 커스텀 Treemap 셀 (섹터 히트맵과 동일한 스타일)
+// 커스텀 Treemap 셀
 const CustomTreemapContent = (props: any) => {
   const { x, y, width, height, depth, symbol, name, weight, change, color, onStockClick, isKorea } =
     props;
 
-  // root 노드는 렌더링하지 않음 (depth === 1이 실제 데이터)
   if (depth === 0 || !symbol) {
     return null;
   }
 
-  // 섹터 히트맵과 동일한 조건
   const showFullInfo = width > 100 && height > 70;
   const showSymbol = width > 60 && height > 40;
 
@@ -107,7 +85,6 @@ const CustomTreemapContent = (props: any) => {
       />
       {showSymbol && (
         <>
-          {/* 메인 텍스트: 한국은 종목명, 미국은 심볼 */}
           <text
             x={x + width / 2}
             y={y + (showFullInfo ? height / 2 - 12 : height / 2 - 4)}
@@ -124,7 +101,6 @@ const CustomTreemapContent = (props: any) => {
 
           {showFullInfo && (
             <>
-              {/* 비중 (weight가 있을 때만) */}
               {weight !== null && (
                 <text
                   x={x + width / 2}
@@ -141,7 +117,6 @@ const CustomTreemapContent = (props: any) => {
                 </text>
               )}
 
-              {/* 변화율 */}
               {change !== null && (
                 <text
                   x={x + width / 2}
@@ -161,7 +136,6 @@ const CustomTreemapContent = (props: any) => {
             </>
           )}
 
-          {/* 작은 셀에서 변화율만 표시 */}
           {!showFullInfo && width > 70 && change !== null && (
             <text
               x={x + width / 2}
@@ -185,61 +159,14 @@ const CustomTreemapContent = (props: any) => {
 };
 
 export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDetailProps) {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [holdings, setHoldings] = useState<SectorHolding[]>([]);
-  const [requiresKisKey, setRequiresKisKey] = useState(false);
-
-  useEffect(() => {
-    const fetchHoldings = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        setRequiresKisKey(false);
-
-        const response = await api.get<SectorHoldingsResponse>(
-          `/api/economic/sectors/${symbol}/holdings`,
-        );
-
-        if (response.data.success && response.data.holdings) {
-          setHoldings(response.data.holdings);
-          // pykrx fallback인 경우 KIS 키 안내 배너 표시
-          if (response.data.requires_kis_key) {
-            setRequiresKisKey(true);
-          }
-        } else {
-          setError(response.data.error || '보유 종목을 불러올 수 없습니다.');
-        }
-      } catch (err) {
-        setError('보유 종목을 불러오는 중 오류가 발생했습니다.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHoldings();
-  }, [symbol]);
+  const { loading, error, holdings, requiresKisKey, isKorea, treemapData } =
+    useSectorDetail(symbol);
 
   const handleStockClick = (stockSymbol: string) => {
     if (onStockClick) {
       onStockClick(stockSymbol);
     }
   };
-
-  // 한국 섹터인지 확인
-  const isKorea = symbol.endsWith('.KS');
-
-  // Treemap 데이터 생성
-  const treemapData = holdings.map((holding) => ({
-    symbol: holding.symbol,
-    name: holding.name,
-    weight: holding.weight,
-    size: Math.max(holding.weight, 0.5), // 최소 크기 보장
-    price: holding.price,
-    change: holding.change_1d,
-    color: getChangeColor(holding.change_1d),
-    isKorea,
-  }));
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -252,7 +179,6 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
               <span className="text-muted-foreground">|</span>
               <span>{name}</span>
             </h3>
-            {/* 초보자 친화 비유 설명 */}
             {SECTOR_INFO[symbol] && (
               <p className="text-sm text-muted-foreground/80 italic mt-1">
                 {SECTOR_INFO[symbol].metaphor}
@@ -286,7 +212,6 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
             </div>
           ) : (
             <div className="space-y-4">
-              {/* KIS API 키 안내 배너 (pykrx fallback 시) */}
               {requiresKisKey && (
                 <div className="flex items-start gap-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
                   <Key className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
@@ -310,6 +235,7 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
                   </Button>
                 </div>
               )}
+
               {/* 트리맵 */}
               <div className="h-[300px] w-full rounded-lg overflow-hidden border bg-gray-900">
                 <ResponsiveContainer width="100%" height="100%">

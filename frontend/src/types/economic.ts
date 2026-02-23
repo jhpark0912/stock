@@ -111,6 +111,49 @@ export interface AllEconomicResponse {
 }
 
 // ============================================
+// 섹터 ETF 타입
+// ============================================
+
+export interface SectorData {
+  symbol: string;
+  name: string;
+  name_en: string;
+  description: string;
+  price: number;
+  change_1d: number;
+  change_1w: number;
+  change_1m: number;
+  market_cap: number;
+  top_holdings: string[];
+}
+
+export interface SectorResponse {
+  success: boolean;
+  data: SectorData[] | null;
+  last_updated: string | null;
+  error: string | null;
+}
+
+export interface SectorHolding {
+  symbol: string;
+  name: string;
+  weight: number;
+  price: number | null;
+  change_1d: number | null;
+}
+
+export interface SectorHoldingsResponse {
+  success: boolean;
+  sector_symbol: string | null;
+  sector_name: string | null;
+  holdings: SectorHolding[] | null;
+  last_updated: string | null;
+  error: string | null;
+  note?: string | null;
+  requires_kis_key?: boolean;
+}
+
+// ============================================
 // 시장 사이클 타입
 // ============================================
 

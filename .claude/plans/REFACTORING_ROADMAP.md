@@ -1,8 +1,8 @@
 # 리팩토링 로드맵 (P1~P5)
 
 > 작성일: 2026-02-20  
-> 최종 갱신: 2026-02-23  
-> 상태: P1~P2 완료, 안전망 제거 완료, S0 완료, P3 분석 완료, 유지보수 전략 수립 완료
+> 최종 갱신: 2026-02-23
+> 상태: P1~P2 완료, S0 완료, S1-A 완료, P3 1차 완료, P3 2차 진행 중
 >
 > ### 관련 문서
 > - **P3 구조 분석**: `.claude/plans/P3_COMPONENT_ANALYSIS.md`
@@ -116,31 +116,34 @@ flake8 backend/app/api/routes/economic/ --max-line-length=120
 
 ---
 
-## 📋 P3 — Frontend 거대 컴포넌트 분리 (중기)
+## ✅ P3 1차 완료 — Frontend 거대 컴포넌트 분리 (6개, 2026-02-23)
 
-> 해당 컴포넌트 수정 작업 시 함께 진행 권장
-> 경로 현행화: 2026-02-23
+| 컴포넌트 | 원본 | 결과 | 추출 내용 |
+|----------|------|------|----------|
+| `StealthHomePage.tsx` | 928L | 176L (-81%) | `useStealthHome`, StealthMemo/Status/JournalTab, StealthMemoComponents |
+| `StealthPortfolioPage.tsx` | 584L | 305L (-48%) | StealthPortfolioComponents, StealthAnalysisSection, StealthAnalysisHistory |
+| `MarketCycleSection.tsx` | 666L | ~300L | `useMarketCycle`, SeasonCard 분리 |
+| `StockChart.tsx` | 652L | ~350L | `useChartData`, chartConfig |
+| `SettingsPage.tsx` | 610L | ~350L | settings/ 섹션 분리 |
+| `EconomicIndicators.tsx` | 606L | ~300L | `useEconomicData` |
 
-### 1차 대상 (590L+)
+**결과**: 500L+ 파일 7개 → 0개, 대상 4,052L → 1,379L (-66%)
 
-| 컴포넌트 | 실제 경로 | 라인 | 분리 전략 |
-|----------|----------|------|----------|
-| `StealthHomePage.tsx` | `components/stealth/StealthHomePage.tsx` | 869L | 데이터 변환 → `useStealthHome()` 훅 추출 |
-| `MarketCycleSection.tsx` | `components/economic/MarketCycleSection.tsx` | 666L | 4계절 카드 → `SeasonCard` 서브컴포넌트 분리 |
-| `StockChart.tsx` | `components/StockChart.tsx` | 652L | 차트 옵션/데이터 → `useChartData()` + `chartConfig.ts` |
-| `SettingsPage.tsx` | `components/settings/SettingsPage.tsx` | 610L | 프로필/KIS키/테마 → `settings/ProfileSection.tsx` 등 분리 |
-| `EconomicIndicators.tsx` | `components/EconomicIndicators.tsx` | 606L | 탭 오케스트레이터만 남기고 → `useEconomicData()` 훅 |
-| `StealthPortfolioPage.tsx` | `components/stealth/StealthPortfolioPage.tsx` | 590L | → `useStealthPortfolio()` 훅 |
+---
 
-### 2차 대상 (450L+, 2026-02-23 추가)
+## 📋 P3 2차 — 진행 중 (2026-02-23)
+
+> 500L 이하지만 훅 밀도가 높아 관심사 분리 효과 큰 3개 파일
+
+### 2차 대상
 
 | 컴포넌트 | 실제 경로 | 라인 | Hook 밀도 | 분리 전략 |
 |----------|----------|------|----------|----------|
-| `SectorDetail.tsx` | `components/economic/SectorDetail.tsx` | 530L | 6회 | 종목 테이블/차트 → `useSectorDetail()` 훅 + 서브컴포넌트 분리 |
-| `AIAnalysisTab.tsx` | `components/AIAnalysisTab.tsx` | 478L | 7회 | AI 호출/스트리밍 → `useAIAnalysis()` 훅 추출 |
-| `SectorHeatmap.tsx` | `components/economic/SectorHeatmap.tsx` | 465L | 10회 | hook 밀도 최고 → `useSectorHeatmap()` 훅 우선 추출 |
+| `SectorHeatmap.tsx` | `components/economic/SectorHeatmap.tsx` | 391L | 10회 | `useSectorHeatmap()` 훅 추출 |
+| `SectorDetail.tsx` | `components/economic/SectorDetail.tsx` | 393L | 6회 | `useSectorDetail()` 훅 추출 |
+| `AIAnalysisTab.tsx` | `components/AIAnalysisTab.tsx` | 426L | 4회 | `StrategyBadge` 분리 |
 
-> **Hook 밀도** = useState/useEffect/useCallback/useMemo/useQuery/useRef 호출 합산. 높을수록 훅 추출 효과 큼.
+> **Hook 밀도** = useState/useEffect/useCallback/useMemo 호출 합산. 높을수록 훅 추출 효과 큼.
 
 **선례**: `usePortfolio.ts` (380L)로 PortfolioPage 분리한 패턴 동일 적용
 
@@ -196,6 +199,8 @@ backend/app/models/
 | **P1+** | services/__init__.py 안전망 제거 | ✅ **완료** (2026-02-23) | - |
 | **P2** | economic.py 라우터 분할 | ✅ **완료** (2026-02-23) | - |
 | **S0** | 코드 품질 자동화 (ruff + Prettier + lint-staged) | ✅ **완료** (2026-02-23) | - |
-| **P3** | Frontend 거대 컴포넌트 분리 (1차 6개 + 2차 3개) | ⏳ 해당 컴포넌트 수정 시 | 중간 |
-| **P4** | 커스텀 훅 확충 (1차 6개 + 2차 3개) | ⏳ P3와 병행 | 중간 |
+| **S1-A** | Frontend import 절대 경로 통일 | ✅ **완료** (2026-02-23) | - |
+| **P3 1차** | Frontend 거대 컴포넌트 분리 (6개) | ✅ **완료** (2026-02-23) | - |
+| **P3 2차** | SectorHeatmap, SectorDetail, AIAnalysisTab 훅 추출 | ⏳ **진행 중** | 낮음 |
+| **P4** | 커스텀 훅 확충 (P3 병행) | ⏳ P3와 병행 | 중간 |
 | **P5** | Pydantic 모델 분리 | ⏳ 모델 추가 필요 시 | 낮음 |

@@ -3,29 +3,10 @@
  * MemoSection, MemoBlock, MemoItem, CheckItem + 포맷 함수
  */
 
-import type { EconomicIndicator } from '@/types/economic';
+import type { EconomicIndicator, SectorData, SectorResponse } from '@/types/economic';
 
-// ─── 로컬 타입 (섹터 데이터) ───
-
-export interface SectorData {
-  symbol: string;
-  name: string;
-  name_en: string;
-  description: string;
-  price: number;
-  change_1d: number;
-  change_1w: number;
-  change_1m: number;
-  market_cap: number;
-  top_holdings: string[];
-}
-
-export interface SectorResponse {
-  success: boolean;
-  data: SectorData[] | null;
-  last_updated: string | null;
-  error: string | null;
-}
+// 타입 re-export (하위 호환)
+export type { SectorData, SectorResponse };
 
 // ─── 유틸 함수 ───
 
