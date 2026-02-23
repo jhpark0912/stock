@@ -170,8 +170,16 @@ App.tsx
   - `layout/TopNav.tsx` - 상단 네비게이션 (페이지 전환 + ThemeToggle + 로그아웃)
   - `layout/PageHeader.tsx` - 공통 페이지 헤더 (타이틀, 설명, 액션 버튼)
   - `layout/PageContainer.tsx` - 공통 콘텐츠 컨테이너 (스크롤, 패딩, 중앙 정렬)
-- **커스텀 훅**:
-  - `hooks/usePortfolio.ts` - 포트폴리오 데이터 관리 (상태 + 액션 분리)
+- **커스텀 훅** (`hooks/`):
+  - `usePortfolio.ts` - 포트폴리오 데이터 관리 (상태 + 액션 분리)
+  - `useEconomicData.ts` - 경제 지표 API 조회 (US/KR/All)
+  - `useMarketCycle.ts` - 시장 사이클 + AI 분석
+  - `useAnalysisSummary.ts` - AI 분석 요약 생성/저장
+  - `useStealthHome.ts` - 스텔스 홈 3탭 데이터 (회의록/사업현황/업무일지)
+  - `useSectorHeatmap.ts` - 섹터 히트맵 데이터 + 파생 treemapData
+  - `useSectorDetail.ts` - 섹터 보유 종목 조회 + treemapData
+- **공용 컴포넌트**:
+  - `StrategyBadge.tsx` - 투자 전략 배지 (buy/hold/sell)
 - **경제 지표 컴포넌트**:
   - `EconomicIndicators.tsx` - 경제 지표 대시보드 (서브탭: 경제 지표/섹터 히트맵)
   - `economic/EconomicChartView.tsx` - Chart 뷰 메인 레이아웃
@@ -179,8 +187,8 @@ App.tsx
   - `economic/DetailChart.tsx` - 메인 차트 (기간 선택)
   - `economic/StatusGauge.tsx` - 판단 기준 (기준값 리스트, YoY 변화율 표시)
   - `economic/CompareSelector.tsx` - 비교 지표 선택 (멀티 차트)
-  - `economic/SectorHeatmap.tsx` - 섹터 히트맵 (GICS 11개 섹터, 1D/1W/1M)
-  - `economic/SectorDetail.tsx` - 섹터 상세 모달 (보유종목 트리맵, 초보자 설명)
+  - `economic/SectorHeatmap.tsx` - 섹터 히트맵 오케스트레이터 (useSectorHeatmap 사용)
+  - `economic/SectorDetail.tsx` - 섹터 상세 모달 (useSectorDetail 사용, 초보자 설명)
 - **주식 컴포넌트**:
   - `MainTabs.tsx` - 주식별 탭 (5개: Overview, AI, Chart, Technical, News)
   - `AIAnalysisTab.tsx` - AI 분석 탭 (요약 생성/저장, 이력 보기)
@@ -1131,6 +1139,7 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
      - Admin AI 코멘트 (클릭 시 요청)
    - `types/economic.ts`에 타입 추가
      - `MarketSeason`, `MarketCycleIndicator`, `MarketCycleData`, `MarketCycleResponse`
+     - `SectorData`, `SectorResponse`, `SectorHolding`, `SectorHoldingsResponse` (P3 2차에서 추가, 중복 제거)
 
 3. **판단 로직 (INDPRO 기반)**
    - **지표**: 산업생산지수(INDPRO) YoY, CPI, VIX, 금리차(10Y-3M)
