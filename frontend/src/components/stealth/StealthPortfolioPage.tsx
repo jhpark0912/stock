@@ -1,34 +1,15 @@
 /**
- * StealthPortfolioPage - 종목 조회 위장 페이지
+ * StealthPortfolioPage - 종목 조회 위장 페이지 (오케스트레이터)
  * 프로젝트 관리 노트 형태로 포트폴리오/주식 데이터를 표시
- * 차트/기술적 지표 완전 숨김, 모노톤 색상
  */
 
-import { useState, useEffect } from 'react';
-import {
-  Plus,
-  X,
-  ChevronRight,
-  ChevronLeft,
-  Menu,
-  RefreshCw,
-  FileText,
-  History,
-  Save,
-  Trash2,
-} from 'lucide-react';
+import { useState } from 'react';
+import { Plus, X, ChevronRight, ChevronLeft, Menu } from 'lucide-react';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { useAnalysisSummary } from '@/hooks/useAnalysisSummary';
-import { getAnalysisHistory, deleteAnalysis } from '@/lib/analysisApi';
-import type {
-  StockData,
-  AIAnalysis,
-  NewsItem,
-  AnalysisSummary,
-  SavedAnalysis,
-  InvestmentStrategy,
-} from '@/types/stock';
+import { NoteSection, ProjectInfoLine } from '@/components/stealth/StealthPortfolioComponents';
+import { StealthAnalysisSection } from '@/components/stealth/StealthAnalysisSection';
+import type { NewsItem } from '@/types/stock';
 
 export function StealthPortfolioPage() {
   const {
@@ -61,14 +42,13 @@ export function StealthPortfolioPage() {
 
   const handleSelect = (symbol: string) => {
     handleSelectTicker(symbol);
-    setSidebarOpen(false); // 모바일에서 선택 후 자동 닫기
+    setSidebarOpen(false);
   };
 
   const selectedTicker = userSettings.selectedTicker || sidebarTickers[0]?.symbol || null;
 
   return (
     <div className="h-full min-h-0 flex bg-background relative">
-      {/* 모바일 오버레이 배경 */}
       {sidebarOpen && (
         <div
           className="absolute inset-0 bg-black/30 z-20 md:hidden"
@@ -76,7 +56,7 @@ export function StealthPortfolioPage() {
         />
       )}
 
-      {/* 좌측: 프로젝트 목록 (데스크탑: 항상 표시, 모바일: 슬라이드) */}
+      {/* 좌측: 프로젝트 목록 */}
       <div
         className={`
           absolute inset-y-0 left-0 z-20 w-56 border-r border-border flex flex-col bg-card
@@ -124,7 +104,6 @@ export function StealthPortfolioPage() {
           ))}
         </div>
 
-        {/* 프로젝트 추가 */}
         <div className="border-t border-border p-1.5">
           {isAdding ? (
             <div className="space-y-1">
@@ -167,9 +146,8 @@ export function StealthPortfolioPage() {
         </div>
       </div>
 
-      {/* 우측: 프로젝트 상세 (메인 콘텐츠 대체) */}
+      {/* 우측: 프로젝트 상세 */}
       <div className="flex-1 overflow-auto min-w-0">
-        {/* 모바일 헤더: 사이드바 열기 버튼 */}
         <div className="flex items-center gap-2 px-4 py-2 border-b border-border md:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
@@ -203,7 +181,6 @@ export function StealthPortfolioPage() {
 
         {stockData && (
           <div className="p-6 space-y-6 max-w-2xl">
-            {/* 프로젝트 제목 */}
             <div className="border-b border-border pb-4">
               <h1 className="text-lg font-medium text-foreground">
                 프로젝트 {stockData.ticker} 현황 보고
@@ -214,7 +191,6 @@ export function StealthPortfolioPage() {
               </div>
             </div>
 
-            {/* 주요 지표 → 프로젝트 지표 */}
             <NoteSection title="프로젝트 현황">
               <div className="space-y-1">
                 <ProjectInfoLine
@@ -239,7 +215,6 @@ export function StealthPortfolioPage() {
               </div>
             </NoteSection>
 
-            {/* 재무 지표 → 세부 지표 */}
             <NoteSection title="세부 지표">
               <div className="space-y-1">
                 {stockData.financials.trailing_pe !== null && (
@@ -290,7 +265,6 @@ export function StealthPortfolioPage() {
               </div>
             </NoteSection>
 
-            {/* AI 분석 → 분석 보고서 */}
             <StealthAnalysisSection
               stockData={stockData}
               aiAnalysis={aiAnalysis}
@@ -299,7 +273,6 @@ export function StealthPortfolioPage() {
               onAnalyzeAI={handleAnalyzeAI}
             />
 
-            {/* 뉴스 → 관련 보고서 */}
             {newsData && newsData.length > 0 && (
               <NoteSection title="관련 보고서">
                 <div className="space-y-2">
@@ -325,260 +298,5 @@ export function StealthPortfolioPage() {
         )}
       </div>
     </div>
-  );
-}
-
-/** 노트 섹션 */
-function NoteSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <h2 className="text-xs font-medium text-muted-foreground mb-2">{title}</h2>
-      <div className="pl-3">{children}</div>
-    </div>
-  );
-}
-
-/** 프로젝트 정보 라인 */
-function ProjectInfoLine({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-baseline gap-2 text-sm">
-      <span className="text-muted-foreground">-</span>
-      <span className="text-muted-foreground min-w-[5rem]">{label}:</span>
-      <span className="text-foreground">{value}</span>
-    </div>
-  );
-}
-
-/** 투자 전략을 업무 용어로 변환 */
-function strategyToLabel(strategy: string): string {
-  const s = strategy.toLowerCase() as InvestmentStrategy;
-  const map: Record<InvestmentStrategy, string> = {
-    buy: '확대',
-    hold: '유지',
-    sell: '축소',
-  };
-  return map[s] || strategy;
-}
-
-/** 스텔스 모드 분석 보고서 섹션 (요약/저장/이력 포함) */
-function StealthAnalysisSection({
-  stockData,
-  aiAnalysis,
-  aiError,
-  loadingAI,
-  onAnalyzeAI,
-}: {
-  stockData: StockData;
-  aiAnalysis: AIAnalysis | null;
-  aiError: { type: string; message: string } | null;
-  loadingAI: boolean;
-  onAnalyzeAI: () => void;
-}) {
-  const { summary, summaryLoading, summaryError, saveLoading, saveSuccess, generate, save, reset } =
-    useAnalysisSummary(stockData.ticker, stockData.price.current);
-  const [showHistory, setShowHistory] = useState(false);
-
-  // AI 분석이 변경되면 요약 상태 초기화
-  useEffect(() => {
-    reset();
-  }, [aiAnalysis]);
-
-  const handleGenerateSummary = () => {
-    if (aiAnalysis) generate(aiAnalysis.report);
-  };
-
-  const handleSaveAnalysis = () => {
-    save(aiAnalysis?.report);
-  };
-
-  const handleAnalyzeWithReset = () => {
-    reset();
-    onAnalyzeAI();
-  };
-
-  return (
-    <>
-      <NoteSection title="분석 보고서">
-        <div className="space-y-3">
-          {/* 보고서 내용 */}
-          {aiAnalysis ? (
-            <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
-              {aiAnalysis.report}
-            </div>
-          ) : aiError ? (
-            <p className="text-sm text-muted-foreground">{aiError.message}</p>
-          ) : (
-            <p className="text-sm text-muted-foreground">분석 보고서가 없습니다.</p>
-          )}
-
-          {/* 요약 섹션 */}
-          {aiAnalysis && (
-            <div className="border-t border-border pt-3 mt-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-muted-foreground">요약</span>
-                {!summary && !summaryLoading && (
-                  <button
-                    onClick={handleGenerateSummary}
-                    className="flex items-center gap-1 px-2 py-1 text-xs border border-border rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                  >
-                    <FileText className="h-3 w-3" />
-                    요약 생성
-                  </button>
-                )}
-              </div>
-
-              {summaryLoading && <p className="text-xs text-muted-foreground">요약 생성 중...</p>}
-
-              {summaryError && <p className="text-xs text-muted-foreground">{summaryError}</p>}
-
-              {summary && (
-                <div className="space-y-2">
-                  {summary.summary.split('\n').map((line, idx) => (
-                    <p key={idx} className="text-sm text-foreground">
-                      - {line}
-                    </p>
-                  ))}
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-xs text-muted-foreground">
-                      방향: {strategyToLabel(summary.strategy)}
-                    </span>
-                    <button
-                      onClick={handleSaveAnalysis}
-                      disabled={saveLoading || saveSuccess}
-                      className="flex items-center gap-1 px-2 py-1 text-xs border border-border rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground disabled:opacity-50"
-                    >
-                      <Save className="h-3 w-3" />
-                      {saveLoading ? '저장 중...' : saveSuccess ? '저장 완료' : '저장'}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 버튼 영역 */}
-          <div className="flex items-center gap-2 pt-1">
-            <button
-              onClick={aiAnalysis ? handleAnalyzeWithReset : onAnalyzeAI}
-              disabled={loadingAI}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground disabled:opacity-50"
-            >
-              {loadingAI ? (
-                <RefreshCw className="h-3 w-3 animate-spin" />
-              ) : (
-                <FileText className="h-3 w-3" />
-              )}
-              {loadingAI ? '분석 중...' : aiAnalysis ? '재분석' : 'AI 분석 요청'}
-            </button>
-            <button
-              onClick={() => setShowHistory(!showHistory)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded hover:bg-muted transition-colors ${
-                showHistory
-                  ? 'bg-muted text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <History className="h-3 w-3" />
-              이력
-            </button>
-          </div>
-        </div>
-      </NoteSection>
-
-      {/* 이력 패널 (인라인) */}
-      {showHistory && (
-        <StealthAnalysisHistory ticker={stockData.ticker} onClose={() => setShowHistory(false)} />
-      )}
-    </>
-  );
-}
-
-/** 스텔스 모드 분석 이력 (인라인 패널, 모달 아님) */
-function StealthAnalysisHistory({ ticker, onClose }: { ticker: string; onClose: () => void }) {
-  const [analyses, setAnalyses] = useState<SavedAnalysis[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-
-  useEffect(() => {
-    loadHistory();
-  }, [ticker]);
-
-  const loadHistory = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getAnalysisHistory(ticker);
-      setAnalyses(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '이력 조회 실패');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    setDeletingId(id);
-    try {
-      await deleteAnalysis(id);
-      setAnalyses((prev) => prev.filter((a) => a.id !== id));
-    } catch (e) {
-      setError(e instanceof Error ? e.message : '삭제 실패');
-    } finally {
-      setDeletingId(null);
-    }
-  };
-
-  return (
-    <NoteSection title="분석 이력">
-      <div className="space-y-3">
-        {loading ? (
-          <p className="text-xs text-muted-foreground">불러오는 중...</p>
-        ) : error ? (
-          <p className="text-xs text-muted-foreground">{error}</p>
-        ) : analyses.length === 0 ? (
-          <p className="text-xs text-muted-foreground">저장된 이력이 없습니다.</p>
-        ) : (
-          analyses.map((analysis) => (
-            <div key={analysis.id} className="border border-border rounded p-3 space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
-                  {new Date(analysis.created_at).toLocaleString('ko-KR', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                  {' / '}
-                  {strategyToLabel(analysis.strategy)}
-                </span>
-                <button
-                  onClick={() => handleDelete(analysis.id)}
-                  disabled={deletingId === analysis.id}
-                  className="p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-50"
-                  title="삭제"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </div>
-              {analysis.summary.split('\n').map((line, idx) => (
-                <p key={idx} className="text-sm text-foreground">
-                  - {line}
-                </p>
-              ))}
-              {analysis.current_price && (
-                <p className="text-xs text-muted-foreground pt-1">
-                  기록 시점: ${analysis.current_price.toFixed(2)}
-                </p>
-              )}
-            </div>
-          ))
-        )}
-        <button onClick={onClose} className="text-xs text-muted-foreground hover:text-foreground">
-          닫기
-        </button>
-      </div>
-    </NoteSection>
   );
 }
