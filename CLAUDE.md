@@ -1,67 +1,29 @@
 # 🛡️ SECURITY (CRITICAL)
-- NEVER read, edit, grep, or cat `.env` files. No exceptions.
-- ONLY READ `.env.example` for environment variable references.
-- MASK all API keys, tokens, secrets in output with `********`.
-- Never commit secrets to git. Use environment variables only.
-- SQL queries must use parameterized statements. No string concatenation.
-- 모든 도구 사용은 `.claude/audit.log`에 자동 기록됨.
-
-# 🔧 Initial Setup (Fresh Clone)
-```bash
-npm install                                    # 루트: husky + lint-staged + prettier
-cd frontend && npm install && cd ..            # 프론트엔드: React + 의존성
-pip install -r backend/requirements-dev.txt    # 백엔드: FastAPI + ruff + pytest
-```
-> `npm install` 시 husky가 자동으로 git hooks를 등록합니다.
-> 커밋 시 lint-staged가 변경 파일에 대해 ruff(backend) / prettier(frontend) 자동 실행.
+- NEVER read/edit/grep `.env`. ONLY `.env.example`.
+- MASK all credentials with `********`.
+- SQL: parameterized statements only. No string concatenation.
 
 # 🚀 Commands
-- Run: `run.bat` or `python stock_info.py`
-- CLI (n8n): `python stock_cli.py AAPL`
-- API (n8n): `node stock_api.js AAPL`
-- Test: `pytest tests/ -v`
-- Lint (backend): `cd backend && ruff check .`
-- Lint (frontend): `cd frontend && npm run lint`
-- Format (frontend): `cd frontend && npm run format`
-- Dependencies (backend): `pip install -r backend/requirements.txt`
-- Dependencies (backend-dev): `pip install -r backend/requirements-dev.txt`
-- Dependencies (frontend): `cd frontend && npm install`
+- Run: `run.bat` | Test: `pytest tests/ -v`
+- Lint: `cd backend && ruff check .` | `cd frontend && npm run lint`
+- Format: `cd frontend && npm run format`
 
-# 🏗️ Architecture (반드시 먼저 읽을 것)
-- `.claude/PROJECT_STRUCTURE.md` — 디렉토리 구조, 모듈 의존 관계 (구조만)
-- `.claude/CHANGELOG.md` — 기능 변경 이력, 마이그레이션 기록
-- `docs/ARCHITECTURE.md` — n8n 연동 워크플로우, API 설계
-- `docs/DESIGN_SYSTEM.md` — Indigo #6366F1, Lucide React icons
-- `docs/UX_GUIDELINES.md` — 초보자용 메타포 작성 규칙
+# 🏗️ Architecture
+> 상세 구조: `.claude/PROJECT_STRUCTURE.md` / 변경 이력: `.claude/CHANGELOG.md`
+- `docs/ARCHITECTURE.md` — API 설계, n8n 연동
+- `docs/DESIGN_SYSTEM.md` — Indigo #6366F1, Lucide React
+- `docs/UX_GUIDELINES.md` — 초보자용 메타포 규칙
 
-# 🧱 Code Structure Rules
-- 단일 파일 **300줄 목표**. 초과 시 아래 기준으로 분리 판단:
-  - 독립된 관심사 2개 이상 → 분리 (필수)
-  - 동일 로직 2회 이상 사용 → 공유 모듈 추출 (필수)
-  - 선언적 템플릿(JSX/설정)만으로 초과 → 허용 (최대 500줄)
-  - 로직 없는 순수 나열(카드 목록 등)은 별도 파일로 분리하지 않음
-- 도메인 기반 디렉토리: `services/{domain}/`, `components/{domain}/`, `hooks/{domain}/`. flat 구조 금지.
-  - hooks cross-domain 공용 → `hooks/common/`
-- 관심사 분리: UI(렌더링) / 훅(상태+API) / 상수·타입. 단, 로직 없는 템플릿은 인라인 허용.
-- Frontend import: `@/` 절대 경로만 사용. `../` 상대 경로 금지 (ESLint 강제).
-- Backend route: 라우터 1파일 = 1도메인. 단일 파일에 엔드포인트 누적 금지.
+# 🧱 Code Rules
+- 파일 300줄 목표. 독립 관심사 2개+ → 분리 / 동일 로직 2회+ → 추출 / JSX 선언적 나열 → 최대 500줄 허용.
+- 도메인 기반: `services/{domain}/`, `components/{domain}/`, `hooks/{domain}/`. flat 금지.
+  - cross-domain 훅 → `hooks/common/`
+- Frontend: `@/` 절대 경로만. Backend: 라우터 1파일 = 1도메인.
 
 # 📏 Conventions
-- Git: `.claude/COMMIT_CONVENTION.md` (예: `:sparkles: [feat]`)
-- Logging: `logger.debug()` only. No `print()` or `console.log` in production.
-- Error handling: 커스텀 예외 사용. bare `except:` 금지.
-- Type hints: 모든 함수 시그니처에 필수.
-
-# 🔄 Documentation Maintenance
-- **구조 변경** (파일/폴더 추가·삭제·이동, 엔드포인트 추가, 의존성 변경):
-  → `.claude/PROJECT_STRUCTURE.md` 업데이트
-- **기능 변경** (새 기능, 버그 수정, 리팩토링, 마이그레이션):
-  → `.claude/CHANGELOG.md`에 날짜와 함께 기록
-- **DB 스키마 변경**: → `docs/SCHEMA.md` 동기화
-- 두 문서의 역할을 혼재하지 말 것. 구조는 구조만, 이력은 이력만.
+- Git: `.claude/COMMIT_CONVENTION.md` | Logging: `logger.debug()` only | Type hints 필수.
+- 구조 변경 → `PROJECT_STRUCTURE.md` 업데이트 / 기능 변경 → `CHANGELOG.md` 기록.
 
 # 📖 Response Rules
-- 한국어로 답변. 시니어 백엔드 엔지니어 수준의 용어 사용.
-- 코드 전체 출력 금지. 변경된 부분의 스니펫만 제공.
-- 변경 제안 시 이유(why)와 트레이드오프를 먼저 설명.
-- OWASP Top 10, 성능(DB 커넥션, 메모리) 관점의 조언 포함.
+- 한국어. 코드 전체 출력 금지 (변경 스니펫만). 변경 시 why + 트레이드오프 먼저.
+- OWASP Top 10, 성능(DB 커넥션, 메모리) 관점 포함.
