@@ -9,7 +9,7 @@ import remarkGfm from 'remark-gfm';
 import { Key, Play, AlertCircle, RefreshCw, FileText, Save, History, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AnalysisHistory } from './AnalysisHistory';
-import { StrategyBadge } from '@/components/StrategyBadge';
+import { StrategyBadge } from '@/components/common/StrategyBadge';
 import type { StockData, AIAnalysis } from '@/types/stock';
 import type { UserResponse } from '@/types/auth';
 import { useAnalysisSummary } from '@/hooks/common/useAnalysisSummary';

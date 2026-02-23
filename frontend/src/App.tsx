@@ -14,7 +14,7 @@ import { AdminPage } from './components/admin/AdminPage';
 import { SettingsPage } from './components/settings/SettingsPage';
 import { StealthHomePage } from './components/stealth/StealthHomePage';
 import { StealthPortfolioPage } from './components/stealth/StealthPortfolioPage';
-import { LoadingSpinner } from './components/LoadingSpinner';
+import { LoadingSpinner } from './components/common/LoadingSpinner';
 
 /**
  * 인증된 앱 컨테이너

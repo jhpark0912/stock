@@ -5,7 +5,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Minus, Info, X } from 'lucide-react';
 import type { EconomicIndicator, IndicatorStatus } from '@/types/economic';
-import { MiniSparkline } from './MiniSparkline';
+import { MiniSparkline } from '@/components/common/MiniSparkline';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 

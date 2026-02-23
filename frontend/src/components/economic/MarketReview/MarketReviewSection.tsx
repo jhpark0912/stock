@@ -12,7 +12,7 @@ import { TopMoversCard } from './TopMoversCard';
 import { MajorStocksCard } from './MajorStocksCard';
 import { SectorSummary } from './SectorSummary';
 import { AIInsightCard } from './AIInsightCard';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { api } from '@/lib/api';
 import type {
   MarketReviewData,

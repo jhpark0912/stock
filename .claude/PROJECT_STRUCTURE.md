@@ -62,10 +62,18 @@ stock/
 ```
 frontend/
 ├── src/
-│   ├── components/           # React 컴포넌트
+│   ├── components/           # React 컴포넌트 (도메인별 서브패키지, 루트 파일 없음)
 │   │   ├── admin/           # 관리자 페이지 컴포넌트
 │   │   ├── auth/            # 인증 관련 컴포넌트
+│   │   ├── common/          # 2개+ 도메인 공유 UI (S1-B 신규)
+│   │   │   ├── LoadingSpinner.tsx   # 로딩 스피너
+│   │   │   ├── GaugeBar.tsx         # 게이지 바
+│   │   │   ├── MetricCard.tsx       # 메트릭 카드 (GaugeBar 사용)
+│   │   │   ├── MiniSparkline.tsx    # 미니 스파크라인 차트
+│   │   │   └── StrategyBadge.tsx    # 투자 전략 배지 (buy/hold/sell)
 │   │   ├── economic/        # 경제 지표 관련 컴포넌트
+│   │   │   ├── EconomicIndicators.tsx   # 경제 지표 대시보드 (S1-B 이동)
+│   │   │   ├── IndicatorCard.tsx        # 지표 카드 (S1-B 이동)
 │   │   │   ├── EconomicChartView.tsx    # Chart 뷰 메인 레이아웃
 │   │   │   ├── IndicatorListPanel.tsx   # 좌측 지표 목록
 │   │   │   ├── DetailChart.tsx          # 메인 차트 (기간 선택)
@@ -73,7 +81,7 @@ frontend/
 │   │   │   ├── CompareSelector.tsx      # 비교 지표 선택
 │   │   │   ├── SectorHeatmap.tsx        # 섹터 히트맵 (GICS 11개 섹터)
 │   │   │   ├── SectorDetail.tsx         # 섹터 상세 모달 (보유종목 트리맵)
-│   │   │   └── MarketReview/            # 증시 마감 리뷰 (신규)
+│   │   │   └── MarketReview/            # 증시 마감 리뷰
 │   │   │       ├── MarketReviewSection.tsx  # 메인 컨테이너
 │   │   │       ├── IndexSummary.tsx         # 지수 마감 카드
 │   │   │       ├── TopMoversCard.tsx        # 급등/급락 종목
@@ -81,14 +89,25 @@ frontend/
 │   │   │       ├── SectorSummary.tsx        # 섹터 등락 요약
 │   │   │       └── AIInsightCard.tsx        # AI 분석 카드
 │   │   ├── layout/          # 레이아웃 컴포넌트
-│   │   │   ├── TopNav.tsx       # 상단 네비게이션 (ThemeToggle 포함)
-│   │   │   ├── PageHeader.tsx   # 공통 페이지 헤더
+│   │   │   ├── TopNav.tsx        # 상단 네비게이션
+│   │   │   ├── PageHeader.tsx    # 공통 페이지 헤더
 │   │   │   ├── PageContainer.tsx # 공통 콘텐츠 컨테이너
+│   │   │   ├── ThemeProvider.tsx # 테마 프로바이더 (S1-B 이동)
+│   │   │   ├── ThemeToggle.tsx   # 테마 토글 버튼 (S1-B 이동)
+│   │   │   ├── AppLayout.tsx     # 앱 레이아웃 (S1-B 이동)
 │   │   │   └── index.ts
-│   │   ├── pages/           # 페이지 컴포넌트 (신규)
+│   │   ├── pages/           # 페이지 컴포넌트
 │   │   │   ├── HomePage.tsx       # Economic 페이지 (기본)
 │   │   │   ├── PortfolioPage.tsx  # 포트폴리오 페이지
 │   │   │   └── index.ts
+│   │   ├── portfolio/       # 포트폴리오 도메인 컴포넌트 (S1-B 신규)
+│   │   │   ├── AIAnalysisTab.tsx    # AI 분석 탭
+│   │   │   ├── AnalysisHistory.tsx  # AI 분석 이력 모달
+│   │   │   ├── CategoryMetrics.tsx  # 카테고리별 메트릭
+│   │   │   ├── HeroSection.tsx      # 종목 히어로 섹션
+│   │   │   ├── MainTabs.tsx         # 주식별 탭 (5개)
+│   │   │   ├── Sidebar.tsx          # 티커 목록 사이드바
+│   │   │   └── StockChart.tsx       # 주식 차트 오케스트레이터
 │   │   ├── stealth/         # 스텔스 모드 위장 페이지
 │   │   │   ├── StealthHomePage.tsx            # 오케스트레이터 (3탭)
 │   │   │   ├── StealthMemoTab.tsx             # 회의록 탭 (경제지표)
@@ -183,8 +202,12 @@ App.tsx
   - `portfolio/usePortfolio.ts` - 포트폴리오 데이터 관리 (상태 + 액션 분리)
   - `stealth/useStealthHome.ts` - 스텔스 홈 3탭 데이터 (회의록/사업현황/업무일지)
   - `common/useAnalysisSummary.ts` - AI 분석 요약 생성/저장 (cross-domain 공용)
-- **공용 컴포넌트**:
-  - `StrategyBadge.tsx` - 투자 전략 배지 (buy/hold/sell)
+- **공용 컴포넌트** (`common/`):
+  - `common/LoadingSpinner.tsx` - 로딩 스피너
+  - `common/GaugeBar.tsx` - 게이지 바
+  - `common/MetricCard.tsx` - 메트릭 카드
+  - `common/MiniSparkline.tsx` - 미니 스파크라인
+  - `common/StrategyBadge.tsx` - 투자 전략 배지 (buy/hold/sell)
 - **경제 지표 컴포넌트**:
   - `EconomicIndicators.tsx` - 경제 지표 대시보드 (서브탭: 경제 지표/섹터 히트맵)
   - `economic/EconomicChartView.tsx` - Chart 뷰 메인 레이아웃
@@ -194,13 +217,14 @@ App.tsx
   - `economic/CompareSelector.tsx` - 비교 지표 선택 (멀티 차트)
   - `economic/SectorHeatmap.tsx` - 섹터 히트맵 오케스트레이터 (useSectorHeatmap 사용)
   - `economic/SectorDetail.tsx` - 섹터 상세 모달 (useSectorDetail 사용, 초보자 설명)
-- **주식 컴포넌트**:
-  - `MainTabs.tsx` - 주식별 탭 (5개: Overview, AI, Chart, Technical, News)
-  - `AIAnalysisTab.tsx` - AI 분석 탭 (요약 생성/저장, 이력 보기)
-  - `AnalysisHistory.tsx` - AI 분석 이력 모달
-  - `StockChart.tsx` - 주식 차트 (Recharts 사용)
-  - `CategoryMetrics.tsx` - 카테고리별 메트릭
-  - `Sidebar.tsx` - 티커 목록 사이드바 (Portfolio 페이지에서 사용)
+- **주식/포트폴리오 컴포넌트** (`portfolio/`):
+  - `portfolio/MainTabs.tsx` - 주식별 탭 (5개: Overview, AI, Chart, Technical, News)
+  - `portfolio/AIAnalysisTab.tsx` - AI 분석 탭 (요약 생성/저장, 이력 보기)
+  - `portfolio/AnalysisHistory.tsx` - AI 분석 이력 모달
+  - `portfolio/StockChart.tsx` - 주식 차트 (Recharts 사용)
+  - `portfolio/CategoryMetrics.tsx` - 카테고리별 메트릭
+  - `portfolio/HeroSection.tsx` - 종목 히어로 섹션 (한글 이름 편집 UI)
+  - `portfolio/Sidebar.tsx` - 티커 목록 사이드바
 
 ### Backend
 

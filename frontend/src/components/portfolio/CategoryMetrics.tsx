@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import { MetricCard } from './MetricCard';
+import { MetricCard } from '@/components/common/MetricCard';
 import type { StockFinancials } from '@/types/stock';
 
 interface MetricData {

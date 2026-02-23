@@ -2,7 +2,7 @@ import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
 import { cn } from '@/lib/utils';
 import { TrendingUp, RefreshCw, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { SectorDetail } from './SectorDetail';
 import { TreemapLegend } from './TreemapLegend';
 import { useSectorHeatmap } from '@/hooks/economic/useSectorHeatmap';

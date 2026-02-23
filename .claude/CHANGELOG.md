@@ -5,6 +5,25 @@
 
 ## 최근 변경 이력
 
+### 2026-02-23: S1-B - components/ 루트 파일 도메인별 재배치
+
+1. **components/ 루트 17개 파일 → 4개 도메인 디렉토리로 재배치**
+   - `portfolio/` (신규): AIAnalysisTab, AnalysisHistory, CategoryMetrics, HeroSection, Sidebar, StockChart, MainTabs (7개)
+   - `common/` (신규): LoadingSpinner, GaugeBar, MetricCard, MiniSparkline, StrategyBadge (5개)
+   - `layout/` (기존): ThemeProvider, ThemeToggle, AppLayout 추가 (3개)
+   - `economic/` (기존): EconomicIndicators, IndicatorCard 추가 (2개)
+
+2. **import 경로 수정 (13개 파일)**
+   - `App.tsx`, `main.tsx` — 상대 경로 수정
+   - `pages/PortfolioPage.tsx` — 8개 import 일괄 수정
+   - `layout/TopNav.tsx`, `pages/HomePage.tsx` — 1개씩
+   - `admin/AdminPage.tsx`, `economic/SectorHeatmap.tsx`, `economic/MarketReview/MarketReviewSection.tsx`, `stealth/StealthPortfolioPage.tsx` — LoadingSpinner
+   - 이동된 파일 내부: `portfolio/CategoryMetrics.tsx`, `portfolio/AIAnalysisTab.tsx`, `economic/IndicatorCard.tsx`
+
+3. **결과**
+   - components/ 루트 파일: 17개 → 0개
+   - TypeScript 컴파일 0 errors
+
 ### 2026-02-23: P3 1차 - Frontend 거대 컴포넌트 분리 완료 (6개 파일)
 
 1. **StealthHomePage.tsx 928L → 176L (-81%)**

@@ -5,14 +5,14 @@
 
 import { useState } from 'react';
 import { PanelLeft } from 'lucide-react';
-import { Sidebar } from '@/components/Sidebar';
-import { HeroSection } from '@/components/HeroSection';
-import { MainTabs } from '@/components/MainTabs';
-import { CategoryMetrics } from '@/components/CategoryMetrics';
-import { StockChart } from '@/components/StockChart';
-import { GaugeBar } from '@/components/GaugeBar';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { AIAnalysisTab } from '@/components/AIAnalysisTab';
+import { Sidebar } from '@/components/portfolio/Sidebar';
+import { HeroSection } from '@/components/portfolio/HeroSection';
+import { MainTabs } from '@/components/portfolio/MainTabs';
+import { CategoryMetrics } from '@/components/portfolio/CategoryMetrics';
+import { StockChart } from '@/components/portfolio/StockChart';
+import { GaugeBar } from '@/components/common/GaugeBar';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { AIAnalysisTab } from '@/components/portfolio/AIAnalysisTab';
 import { usePortfolio } from '@/hooks/portfolio/usePortfolio';
 import { formatCurrency } from '@/lib/utils';
 
