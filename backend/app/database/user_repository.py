@@ -1,10 +1,13 @@
 """
 사용자 데이터베이스 Repository
 """
-from typing import Optional, List
+
+from typing import List, Optional
+
 from sqlalchemy.orm import Session
+
 from app.database.models import UserDB
-from app.utils.crypto import encrypt_api_key, decrypt_api_key
+from app.utils.crypto import decrypt_api_key, encrypt_api_key
 
 
 class UserRepository:
@@ -15,12 +18,7 @@ class UserRepository:
 
     def create(self, username: str, password_hash: str, role: str = "user", is_approved: bool = False) -> UserDB:
         """사용자 생성"""
-        user = UserDB(
-            username=username,
-            password_hash=password_hash,
-            role=role,
-            is_approved=is_approved
-        )
+        user = UserDB(username=username, password_hash=password_hash, role=role, is_approved=is_approved)
         self.db.add(user)
         self.db.commit()
         self.db.refresh(user)
@@ -40,10 +38,12 @@ class UserRepository:
 
     def get_pending(self) -> List[UserDB]:
         """승인 대기 사용자 목록 조회"""
-        return self.db.query(UserDB).filter(
-            UserDB.is_approved == False,
-            UserDB.is_active == True
-        ).order_by(UserDB.created_at.desc()).all()
+        return (
+            self.db.query(UserDB)
+            .filter(not UserDB.is_approved, UserDB.is_active)
+            .order_by(UserDB.created_at.desc())
+            .all()
+        )
 
     def approve(self, user_id: int) -> Optional[UserDB]:
         """사용자 승인"""
@@ -85,7 +85,6 @@ class UserRepository:
         """username 중복 체크"""
         return self.db.query(UserDB).filter(UserDB.username == username).first() is not None
 
-
     # ==================== Gemini API 키 관리 ====================
 
     def update_gemini_key(self, user_id: int, api_key: str) -> Optional[UserDB]:
@@ -119,12 +118,7 @@ class UserRepository:
 
     # ==================== 한국투자증권 API 키 관리 ====================
 
-    def update_kis_credentials(
-        self,
-        user_id: int,
-        app_key: str,
-        app_secret: str
-    ) -> Optional[UserDB]:
+    def update_kis_credentials(self, user_id: int, app_key: str, app_secret: str) -> Optional[UserDB]:
         """한국투자증권 API 인증정보 업데이트 (암호화 저장)"""
         user = self.get_by_id(user_id)
         if user:

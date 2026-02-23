@@ -23,12 +23,7 @@ const heightClasses = {
   lg: 'h-2',
 };
 
-export function GaugeBar({
-  percent,
-  colorType,
-  height = 'md',
-  animated = true,
-}: GaugeBarProps) {
+export function GaugeBar({ percent, colorType, height = 'md', animated = true }: GaugeBarProps) {
   // percent를 0-100 범위로 제한
   const clampedPercent = Math.min(Math.max(percent, 0), 100);
 

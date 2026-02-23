@@ -15,38 +15,38 @@ import type {
   GeminiKeyStatus,
   KISCredentialsUpdate,
   KISCredentialsStatus,
-} from '@/types/auth'
+} from '@/types/auth';
 
 /**
  * API 기본 URL
  * Vite 프록시 설정에 따라 /api 경로 사용
  */
-const API_BASE = '/api/auth'
+const API_BASE = '/api/auth';
 
 /**
  * Pydantic validation 에러를 한글 메시지로 변환
  */
 function formatValidationError(error: ValidationErrorItem): string {
-  const field = error.loc[error.loc.length - 1] as string
+  const field = error.loc[error.loc.length - 1] as string;
   const fieldNameMap: Record<string, string> = {
     username: '사용자명',
     password: '비밀번호',
-  }
-  const fieldName = fieldNameMap[field] || field
+  };
+  const fieldName = fieldNameMap[field] || field;
 
   switch (error.type) {
     case 'string_too_short':
-      const minLength = (error.ctx?.min_length as number) || 0
-      return `${fieldName}은 최소 ${minLength}자 이상이어야 합니다`
+      const minLength = (error.ctx?.min_length as number) || 0;
+      return `${fieldName}은 최소 ${minLength}자 이상이어야 합니다`;
     case 'string_too_long':
-      const maxLength = (error.ctx?.max_length as number) || 0
-      return `${fieldName}은 최대 ${maxLength}자 이하여야 합니다`
+      const maxLength = (error.ctx?.max_length as number) || 0;
+      return `${fieldName}은 최대 ${maxLength}자 이하여야 합니다`;
     case 'missing':
-      return `${fieldName}을 입력해주세요`
+      return `${fieldName}을 입력해주세요`;
     case 'value_error':
-      return error.msg || `${fieldName} 값이 올바르지 않습니다`
+      return error.msg || `${fieldName} 값이 올바르지 않습니다`;
     default:
-      return error.msg || '입력 값이 올바르지 않습니다'
+      return error.msg || '입력 값이 올바르지 않습니다';
   }
 }
 
@@ -57,18 +57,18 @@ async function handleResponse<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const errorData: ApiError = await response.json().catch(() => ({
       detail: '서버와 통신 중 오류가 발생했습니다',
-    }))
+    }));
 
     // Validation 에러 배열인 경우
     if (Array.isArray(errorData.detail)) {
-      const messages = errorData.detail.map(formatValidationError)
-      throw new Error(messages.join('\n'))
+      const messages = errorData.detail.map(formatValidationError);
+      throw new Error(messages.join('\n'));
     }
 
     // 단순 문자열 에러인 경우
-    throw new Error(errorData.detail)
+    throw new Error(errorData.detail);
   }
-  return response.json()
+  return response.json();
 }
 
 /**
@@ -84,9 +84,9 @@ export async function login(credentials: UserLogin): Promise<Token> {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(credentials),
-  })
+  });
 
-  return handleResponse<Token>(response)
+  return handleResponse<Token>(response);
 }
 
 /**
@@ -102,9 +102,9 @@ export async function register(userData: UserCreate): Promise<RegisterResponse> 
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(userData),
-  })
+  });
 
-  return handleResponse<RegisterResponse>(response)
+  return handleResponse<RegisterResponse>(response);
 }
 
 /**
@@ -120,9 +120,9 @@ export async function getCurrentUser(token: string): Promise<UserResponse> {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 
-  return handleResponse<UserResponse>(response)
+  return handleResponse<UserResponse>(response);
 }
 
 /**
@@ -132,10 +132,7 @@ export async function getCurrentUser(token: string): Promise<UserResponse> {
  * @returns API 키 상태 (has_key, key_preview)
  * @throws 인증 실패 등의 오류
  */
-export async function updateGeminiKey(
-  token: string,
-  apiKey: string
-): Promise<GeminiKeyStatus> {
+export async function updateGeminiKey(token: string, apiKey: string): Promise<GeminiKeyStatus> {
   const response = await fetch(`${API_BASE}/gemini-key`, {
     method: 'PUT',
     headers: {
@@ -143,9 +140,9 @@ export async function updateGeminiKey(
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ api_key: apiKey } as GeminiKeyUpdate),
-  })
+  });
 
-  return handleResponse<GeminiKeyStatus>(response)
+  return handleResponse<GeminiKeyStatus>(response);
 }
 
 /**
@@ -161,9 +158,9 @@ export async function deleteGeminiKey(token: string): Promise<{ message: string 
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 
-  return handleResponse<{ message: string }>(response)
+  return handleResponse<{ message: string }>(response);
 }
 
 /**
@@ -179,9 +176,9 @@ export async function getGeminiKeyStatus(token: string): Promise<GeminiKeyStatus
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 
-  return handleResponse<GeminiKeyStatus>(response)
+  return handleResponse<GeminiKeyStatus>(response);
 }
 
 /**
@@ -195,7 +192,7 @@ export async function getGeminiKeyStatus(token: string): Promise<GeminiKeyStatus
 export async function updateKISCredentials(
   token: string,
   appKey: string,
-  appSecret: string
+  appSecret: string,
 ): Promise<KISCredentialsStatus> {
   const response = await fetch(`${API_BASE}/kis-credentials`, {
     method: 'PUT',
@@ -204,9 +201,9 @@ export async function updateKISCredentials(
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ app_key: appKey, app_secret: appSecret } as KISCredentialsUpdate),
-  })
+  });
 
-  return handleResponse<KISCredentialsStatus>(response)
+  return handleResponse<KISCredentialsStatus>(response);
 }
 
 /**
@@ -222,9 +219,9 @@ export async function deleteKISCredentials(token: string): Promise<{ message: st
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 
-  return handleResponse<{ message: string }>(response)
+  return handleResponse<{ message: string }>(response);
 }
 
 /**
@@ -240,7 +237,7 @@ export async function getKISCredentialsStatus(token: string): Promise<KISCredent
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-  })
+  });
 
-  return handleResponse<KISCredentialsStatus>(response)
+  return handleResponse<KISCredentialsStatus>(response);
 }

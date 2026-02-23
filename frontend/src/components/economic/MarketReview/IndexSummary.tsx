@@ -35,10 +35,12 @@ export function IndexSummary({ indices, country }: IndexSummaryProps) {
   };
 
   return (
-    <div className={cn(
-      'grid gap-4',
-      indices.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3'
-    )}>
+    <div
+      className={cn(
+        'grid gap-4',
+        indices.length === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1 md:grid-cols-3',
+      )}
+    >
       {indices.map((index) => {
         const isPositive = index.change_percent > 0;
         const isNegative = index.change_percent < 0;
@@ -57,10 +59,7 @@ export function IndexSummary({ indices, country }: IndexSummaryProps) {
             : 'bg-muted/30';
 
         return (
-          <div
-            key={index.symbol}
-            className="bg-card border rounded-lg overflow-hidden"
-          >
+          <div key={index.symbol} className="bg-card border rounded-lg overflow-hidden">
             {/* 헤더 */}
             <div className={cn('px-4 py-3 flex items-center gap-2', headerBg)}>
               <Icon className={cn('h-5 w-5', iconColor)} />
@@ -77,12 +76,14 @@ export function IndexSummary({ indices, country }: IndexSummaryProps) {
               </div>
 
               {/* 등락폭/등락률 */}
-              <div className={cn(
-                'flex items-center gap-2 text-sm font-medium',
-                isPositive && 'text-emerald-600 dark:text-emerald-400',
-                isNegative && 'text-red-600 dark:text-red-400',
-                isNeutral && 'text-muted-foreground'
-              )}>
+              <div
+                className={cn(
+                  'flex items-center gap-2 text-sm font-medium',
+                  isPositive && 'text-emerald-600 dark:text-emerald-400',
+                  isNegative && 'text-red-600 dark:text-red-400',
+                  isNeutral && 'text-muted-foreground',
+                )}
+              >
                 <span>{formatChange(index.change)}</span>
                 <span>({formatPercent(index.change_percent)})</span>
               </div>
@@ -105,9 +106,7 @@ export function IndexSummary({ indices, country }: IndexSummaryProps) {
                   {index.volume && (
                     <div>
                       <div className="text-muted-foreground/60">거래량</div>
-                      <div className="font-medium">
-                        {(index.volume / 1000000).toFixed(0)}M
-                      </div>
+                      <div className="font-medium">{(index.volume / 1000000).toFixed(0)}M</div>
                     </div>
                   )}
                 </div>

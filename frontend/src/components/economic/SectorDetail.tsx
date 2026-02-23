@@ -1,12 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
 import { cn } from '@/lib/utils';
-import {
-  X,
-  Loader2,
-  AlertCircle,
-  Key
-} from 'lucide-react';
+import { X, Loader2, AlertCircle, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 
@@ -41,19 +36,23 @@ const SECTOR_INFO: Record<string, { metaphor: string; description: string }> = {
   // 미국 섹터
   XLK: {
     metaphor: '💻 "미래를 만드는 기업들의 집합소"',
-    description: '애플, 마이크로소프트, 엔비디아 등 IT 기업들이 모여있어요. 금리가 오르면 주가가 빠지는 경향이 있어요.',
+    description:
+      '애플, 마이크로소프트, 엔비디아 등 IT 기업들이 모여있어요. 금리가 오르면 주가가 빠지는 경향이 있어요.',
   },
   XLF: {
     metaphor: '🏦 "돈이 흐르는 곳"',
-    description: '은행, 보험사, 증권사 등이 포함돼요. 금리가 오르면 이자 수익이 늘어나 좋아지는 편이에요.',
+    description:
+      '은행, 보험사, 증권사 등이 포함돼요. 금리가 오르면 이자 수익이 늘어나 좋아지는 편이에요.',
   },
   XLV: {
     metaphor: '💊 "건강은 불황도 이긴다"',
-    description: '제약, 의료기기 회사들이에요. 경기가 나빠도 사람들은 아프면 병원에 가야 해서 안정적이에요.',
+    description:
+      '제약, 의료기기 회사들이에요. 경기가 나빠도 사람들은 아프면 병원에 가야 해서 안정적이에요.',
   },
   XLE: {
     metaphor: '⛽ "세상을 움직이는 연료"',
-    description: '석유, 가스 회사들이에요. 유가가 오르면 함께 오르고, 유가가 떨어지면 함께 떨어져요.',
+    description:
+      '석유, 가스 회사들이에요. 유가가 오르면 함께 오르고, 유가가 떨어지면 함께 떨어져요.',
   },
   XLI: {
     metaphor: '🏗️ "경제가 잘 돌아가면 바빠지는 곳"',
@@ -69,11 +68,13 @@ const SECTOR_INFO: Record<string, { metaphor: string; description: string }> = {
   },
   XLP: {
     metaphor: '🧴 "매일 쓰는 생필품"',
-    description: '식품, 음료, 생활용품 회사들이에요. 경기가 나빠도 사람들은 밥은 먹어야 해서 안정적이에요.',
+    description:
+      '식품, 음료, 생활용품 회사들이에요. 경기가 나빠도 사람들은 밥은 먹어야 해서 안정적이에요.',
   },
   XLRE: {
     metaphor: '🏠 "땅과 건물의 힘"',
-    description: '부동산 투자 회사(리츠)들이에요. 금리가 오르면 부담이 커져서 주가가 빠지는 편이에요.',
+    description:
+      '부동산 투자 회사(리츠)들이에요. 금리가 오르면 부담이 커져서 주가가 빠지는 편이에요.',
   },
   XLU: {
     metaphor: '💡 "전기와 물은 언제나 필요해"',
@@ -86,7 +87,8 @@ const SECTOR_INFO: Record<string, { metaphor: string; description: string }> = {
   // 한국 섹터
   '091160.KS': {
     metaphor: '🇰🇷 "세계 반도체 공장"',
-    description: '삼성전자, SK하이닉스 등 메모리 반도체 세계 1위 기업들이에요. AI와 IT 수요에 민감해요.',
+    description:
+      '삼성전자, SK하이닉스 등 메모리 반도체 세계 1위 기업들이에요. AI와 IT 수요에 민감해요.',
   },
   '091170.KS': {
     metaphor: '🏦 "한국의 금융 중심"',
@@ -94,7 +96,8 @@ const SECTOR_INFO: Record<string, { metaphor: string; description: string }> = {
   },
   '266420.KS': {
     metaphor: '🧬 "K-바이오의 힘"',
-    description: '삼성바이오, 셀트리온 등 바이오시밀러 강자들이에요. 글로벌 제약시장 진출이 특징이에요.',
+    description:
+      '삼성바이오, 셀트리온 등 바이오시밀러 강자들이에요. 글로벌 제약시장 진출이 특징이에요.',
   },
   '117460.KS': {
     metaphor: '🔋 "에너지와 화학의 융합"',
@@ -129,12 +132,12 @@ const SECTOR_INFO: Record<string, { metaphor: string; description: string }> = {
 // 변화율에 따른 색상 반환 (섹터 히트맵과 동일)
 const getChangeColor = (change: number | null): string => {
   if (change === null) return '#6b7280'; // gray-500
-  if (change >= 3) return '#15803d';      // green-700
-  if (change >= 1) return '#16a34a';      // green-600
-  if (change >= 0) return '#22c55e';      // green-500
-  if (change >= -1) return '#ef4444';     // red-500
-  if (change >= -3) return '#dc2626';     // red-600
-  return '#b91c1c';                        // red-700
+  if (change >= 3) return '#15803d'; // green-700
+  if (change >= 1) return '#16a34a'; // green-600
+  if (change >= 0) return '#22c55e'; // green-500
+  if (change >= -1) return '#ef4444'; // red-500
+  if (change >= -3) return '#dc2626'; // red-600
+  return '#b91c1c'; // red-700
 };
 
 // 커스텀 툴팁 (섹터 히트맵과 동일한 스타일)
@@ -145,9 +148,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 
   return (
     <div className="bg-popover border rounded-lg shadow-lg p-3 max-w-xs">
-      <div className="font-semibold mb-1">
-        {data.isKorea ? data.name : data.symbol}
-      </div>
+      <div className="font-semibold mb-1">{data.isKorea ? data.name : data.symbol}</div>
       <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
         {data.isKorea ? data.symbol : data.name}
       </p>
@@ -167,11 +168,11 @@ const CustomTooltip = ({ active, payload }: any) => {
         {data.change !== null && (
           <div className="flex justify-between">
             <span className="text-muted-foreground">변화율</span>
-            <span className={cn(
-              'font-medium',
-              data.change >= 0 ? 'text-green-600' : 'text-red-600'
-            )}>
-              {data.change >= 0 ? '+' : ''}{data.change.toFixed(2)}%
+            <span
+              className={cn('font-medium', data.change >= 0 ? 'text-green-600' : 'text-red-600')}
+            >
+              {data.change >= 0 ? '+' : ''}
+              {data.change.toFixed(2)}%
             </span>
           </div>
         )}
@@ -185,7 +186,8 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 // 커스텀 Treemap 셀 (섹터 히트맵과 동일한 스타일)
 const CustomTreemapContent = (props: any) => {
-  const { x, y, width, height, depth, symbol, name, weight, change, color, onStockClick, isKorea } = props;
+  const { x, y, width, height, depth, symbol, name, weight, change, color, onStockClick, isKorea } =
+    props;
 
   // root 노드는 렌더링하지 않음 (depth === 1이 실제 데이터)
   if (depth === 0 || !symbol) {
@@ -259,7 +261,8 @@ const CustomTreemapContent = (props: any) => {
                   style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
                   className="pointer-events-none select-none"
                 >
-                  {change >= 0 ? '+' : ''}{change.toFixed(2)}%
+                  {change >= 0 ? '+' : ''}
+                  {change.toFixed(2)}%
                 </text>
               )}
             </>
@@ -278,7 +281,8 @@ const CustomTreemapContent = (props: any) => {
               style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
               className="pointer-events-none select-none"
             >
-              {change >= 0 ? '+' : ''}{change.toFixed(1)}%
+              {change >= 0 ? '+' : ''}
+              {change.toFixed(1)}%
             </text>
           )}
         </>
@@ -301,7 +305,7 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
         setRequiresKisKey(false);
 
         const response = await api.get<SectorHoldingsResponse>(
-          `/api/economic/sectors/${symbol}/holdings`
+          `/api/economic/sectors/${symbol}/holdings`,
         );
 
         if (response.data.success && response.data.holdings) {
@@ -362,12 +366,7 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
               </p>
             )}
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="h-8 w-8"
-          >
+          <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8">
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -375,9 +374,7 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
         {/* 섹터 설명 */}
         {SECTOR_INFO[symbol] && (
           <div className="px-4 py-3 bg-muted/20 border-b">
-            <p className="text-sm text-muted-foreground">
-              {SECTOR_INFO[symbol].description}
-            </p>
+            <p className="text-sm text-muted-foreground">{SECTOR_INFO[symbol].description}</p>
           </div>
         )}
 
@@ -401,11 +398,10 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
                 <div className="flex items-start gap-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
                   <Key className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-foreground font-medium">
-                      마감 데이터로 표시 중
-                    </p>
+                    <p className="text-sm text-foreground font-medium">마감 데이터로 표시 중</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      한국투자증권 API 키를 설정하면 실시간 상세 정보(비중 포함)를 확인할 수 있습니다.
+                      한국투자증권 API 키를 설정하면 실시간 상세 정보(비중 포함)를 확인할 수
+                      있습니다.
                     </p>
                   </div>
                   <Button
@@ -469,9 +465,7 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
 
               {/* 상위 5개 종목 상세 */}
               <div className="border rounded-lg overflow-hidden">
-                <div className="bg-muted/50 px-3 py-2 text-sm font-medium">
-                  상위 5개 보유 종목
-                </div>
+                <div className="bg-muted/50 px-3 py-2 text-sm font-medium">상위 5개 보유 종목</div>
                 <div className="divide-y">
                   {holdings.slice(0, 5).map((holding, index) => (
                     <div
@@ -500,11 +494,14 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
                           </div>
                         )}
                         {holding.change_1d !== null && (
-                          <div className={cn(
-                            'text-sm font-medium min-w-[60px] text-right',
-                            holding.change_1d >= 0 ? 'text-green-600' : 'text-red-600'
-                          )}>
-                            {holding.change_1d >= 0 ? '+' : ''}{holding.change_1d.toFixed(2)}%
+                          <div
+                            className={cn(
+                              'text-sm font-medium min-w-[60px] text-right',
+                              holding.change_1d >= 0 ? 'text-green-600' : 'text-red-600',
+                            )}
+                          >
+                            {holding.change_1d >= 0 ? '+' : ''}
+                            {holding.change_1d.toFixed(2)}%
                           </div>
                         )}
                       </div>

@@ -1,8 +1,11 @@
 """
 AI 분석 요약 Repository (CRUD)
 """
-from sqlalchemy.orm import Session
+
 from typing import List, Optional
+
+from sqlalchemy.orm import Session
+
 from app.database.models import StockAnalysisDB
 from app.models.stock import StockAnalysisCreate
 
@@ -31,41 +34,50 @@ class AnalysisRepository:
     @staticmethod
     def get_by_ticker(db: Session, user_id: int, ticker: str) -> List[StockAnalysisDB]:
         """티커별 분석 이력 조회 (최신순)"""
-        return db.query(StockAnalysisDB).filter(
-            StockAnalysisDB.user_id == user_id,
-            StockAnalysisDB.ticker == ticker.upper()
-        ).order_by(StockAnalysisDB.created_at.desc()).all()
+        return (
+            db.query(StockAnalysisDB)
+            .filter(StockAnalysisDB.user_id == user_id, StockAnalysisDB.ticker == ticker.upper())
+            .order_by(StockAnalysisDB.created_at.desc())
+            .all()
+        )
 
     @staticmethod
     def get_latest_by_ticker(db: Session, user_id: int, ticker: str) -> Optional[StockAnalysisDB]:
         """티커별 최신 분석 조회"""
-        return db.query(StockAnalysisDB).filter(
-            StockAnalysisDB.user_id == user_id,
-            StockAnalysisDB.ticker == ticker.upper()
-        ).order_by(StockAnalysisDB.created_at.desc()).first()
+        return (
+            db.query(StockAnalysisDB)
+            .filter(StockAnalysisDB.user_id == user_id, StockAnalysisDB.ticker == ticker.upper())
+            .order_by(StockAnalysisDB.created_at.desc())
+            .first()
+        )
 
     @staticmethod
     def get_all_by_user(db: Session, user_id: int) -> List[StockAnalysisDB]:
         """사용자의 모든 분석 조회 (최신순)"""
-        return db.query(StockAnalysisDB).filter(
-            StockAnalysisDB.user_id == user_id
-        ).order_by(StockAnalysisDB.created_at.desc()).all()
+        return (
+            db.query(StockAnalysisDB)
+            .filter(StockAnalysisDB.user_id == user_id)
+            .order_by(StockAnalysisDB.created_at.desc())
+            .all()
+        )
 
     @staticmethod
     def get_by_id(db: Session, user_id: int, analysis_id: int) -> Optional[StockAnalysisDB]:
         """ID로 분석 조회 (권한 확인 포함)"""
-        return db.query(StockAnalysisDB).filter(
-            StockAnalysisDB.id == analysis_id,
-            StockAnalysisDB.user_id == user_id
-        ).first()
+        return (
+            db.query(StockAnalysisDB)
+            .filter(StockAnalysisDB.id == analysis_id, StockAnalysisDB.user_id == user_id)
+            .first()
+        )
 
     @staticmethod
     def delete_by_ticker(db: Session, user_id: int, ticker: str) -> int:
         """티커별 분석 전체 삭제 (삭제된 개수 반환)"""
-        count = db.query(StockAnalysisDB).filter(
-            StockAnalysisDB.user_id == user_id,
-            StockAnalysisDB.ticker == ticker.upper()
-        ).delete()
+        count = (
+            db.query(StockAnalysisDB)
+            .filter(StockAnalysisDB.user_id == user_id, StockAnalysisDB.ticker == ticker.upper())
+            .delete()
+        )
         db.commit()
         return count
 
@@ -75,7 +87,7 @@ class AnalysisRepository:
         db_analysis = AnalysisRepository.get_by_id(db, user_id, analysis_id)
         if not db_analysis:
             return False
-        
+
         db.delete(db_analysis)
         db.commit()
         return True

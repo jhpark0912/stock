@@ -49,7 +49,7 @@ interface SectorResponse {
 /** 지표를 메모 텍스트로 포맷 */
 function formatIndicatorLine(
   indicator: EconomicIndicator | null,
-  formatType: 'percent' | 'currency' | 'number' | 'trillion'
+  formatType: 'percent' | 'currency' | 'number' | 'trillion',
 ): string {
   if (!indicator || indicator.value === null) return '데이터 없음';
 
@@ -65,12 +65,16 @@ function formatIndicatorLine(
       valueStr = `${(indicator.value / 1e12).toFixed(2)}T`;
       break;
     default:
-      valueStr = indicator.value.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+      valueStr = indicator.value.toLocaleString('en-US', {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 2,
+      });
   }
 
-  const changeStr = indicator.change_percent !== null
-    ? ` (${indicator.change_percent >= 0 ? '+' : ''}${indicator.change_percent.toFixed(1)}%)`
-    : '';
+  const changeStr =
+    indicator.change_percent !== null
+      ? ` (${indicator.change_percent >= 0 ? '+' : ''}${indicator.change_percent.toFixed(1)}%)`
+      : '';
 
   return `${valueStr}${changeStr}`;
 }
@@ -128,7 +132,7 @@ function StealthCountryTab({
             'px-1.5 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap',
             selected === value
               ? 'bg-background text-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
+              : 'text-muted-foreground hover:text-foreground',
           )}
         >
           {label}
@@ -181,10 +185,18 @@ export function StealthHomePage() {
       if (krRes.status === 'fulfilled' && krRes.value.data.success && krRes.value.data.data) {
         setKrData(krRes.value.data.data);
       }
-      if (usCycleRes.status === 'fulfilled' && usCycleRes.value.data.success && usCycleRes.value.data.data) {
+      if (
+        usCycleRes.status === 'fulfilled' &&
+        usCycleRes.value.data.success &&
+        usCycleRes.value.data.data
+      ) {
         setUsCycle(usCycleRes.value.data.data);
       }
-      if (krCycleRes.status === 'fulfilled' && krCycleRes.value.data.success && krCycleRes.value.data.data) {
+      if (
+        krCycleRes.status === 'fulfilled' &&
+        krCycleRes.value.data.success &&
+        krCycleRes.value.data.data
+      ) {
         setKrCycle(krCycleRes.value.data.data);
       }
     } catch {
@@ -222,7 +234,9 @@ export function StealthHomePage() {
     setReviewLoading(true);
     setReviewError(null);
     try {
-      const response = await api.get<MarketReviewResponse>(`/api/economic/market-review/${country}`);
+      const response = await api.get<MarketReviewResponse>(
+        `/api/economic/market-review/${country}`,
+      );
       if (response.data.success && response.data.data) {
         setReviewData(response.data.data);
       } else {
@@ -270,9 +284,8 @@ export function StealthHomePage() {
     else if (activeTab === 'journal') fetchReviewData(reviewCountry, true);
   };
 
-  const isLoading = activeTab === 'memo' ? memoLoading
-    : activeTab === 'status' ? sectorLoading
-    : reviewLoading;
+  const isLoading =
+    activeTab === 'memo' ? memoLoading : activeTab === 'status' ? sectorLoading : reviewLoading;
 
   return (
     <div className="h-full min-h-0 flex flex-col bg-background">
@@ -316,7 +329,7 @@ export function StealthHomePage() {
                 'px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap',
                 activeTab === 'memo'
                   ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
               )}
             >
               회의록
@@ -327,7 +340,7 @@ export function StealthHomePage() {
                 'px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap',
                 activeTab === 'status'
                   ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
               )}
             >
               사업현황
@@ -338,7 +351,7 @@ export function StealthHomePage() {
                 'px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap',
                 activeTab === 'journal'
                   ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
               )}
             >
               업무일지
@@ -430,9 +443,7 @@ function MemoTabContent({
         </div>
       )}
 
-      {loading && !hasData && (
-        <div className="text-sm text-muted-foreground">불러오는 중...</div>
-      )}
+      {loading && !hasData && <div className="text-sm text-muted-foreground">불러오는 중...</div>}
 
       {/* 주간 회의록 - 미국 데이터 */}
       {usData && matchesSearch('주간 회의록 금리 변동성 거시경제 원자재') && (
@@ -440,23 +451,44 @@ function MemoTabContent({
           <div className="space-y-4">
             {matchesSearch('금리 변동성 국채 vix') && (
               <MemoBlock heading="논의 사항: 금리/변동성">
-                <MemoItem label="국채 10Y" value={formatIndicatorLine(usData.rates.treasury_10y, 'percent')} />
-                <MemoItem label="국채 3M" value={formatIndicatorLine(usData.rates.treasury_3m, 'percent')} />
-                <MemoItem label="변동성지수" value={formatIndicatorLine(usData.rates.vix, 'number')} />
+                <MemoItem
+                  label="국채 10Y"
+                  value={formatIndicatorLine(usData.rates.treasury_10y, 'percent')}
+                />
+                <MemoItem
+                  label="국채 3M"
+                  value={formatIndicatorLine(usData.rates.treasury_3m, 'percent')}
+                />
+                <MemoItem
+                  label="변동성지수"
+                  value={formatIndicatorLine(usData.rates.vix, 'number')}
+                />
               </MemoBlock>
             )}
 
             {matchesSearch('거시경제 물가 통화량 cpi m2') && (
               <MemoBlock heading="거시경제 메모">
-                <MemoItem label="물가상승률" value={formatIndicatorLine(usData.macro.cpi, 'number')} />
-                <MemoItem label="통화량(M2)" value={formatIndicatorLine(usData.macro.m2, 'trillion')} />
+                <MemoItem
+                  label="물가상승률"
+                  value={formatIndicatorLine(usData.macro.cpi, 'number')}
+                />
+                <MemoItem
+                  label="통화량(M2)"
+                  value={formatIndicatorLine(usData.macro.m2, 'trillion')}
+                />
               </MemoBlock>
             )}
 
             {matchesSearch('자원 현황 원유 금') && (
               <MemoBlock heading="자원 현황">
-                <MemoItem label="원유(WTI)" value={formatIndicatorLine(usData.commodities.wti_oil, 'currency')} />
-                <MemoItem label="금" value={formatIndicatorLine(usData.commodities.gold, 'currency')} />
+                <MemoItem
+                  label="원유(WTI)"
+                  value={formatIndicatorLine(usData.commodities.wti_oil, 'currency')}
+                />
+                <MemoItem
+                  label="금"
+                  value={formatIndicatorLine(usData.commodities.gold, 'currency')}
+                />
               </MemoBlock>
             )}
 
@@ -503,19 +535,43 @@ function MemoTabContent({
           <div className="space-y-4">
             {matchesSearch('금리 국고채 기준금리') && (
               <MemoBlock heading="금리 확인">
-                <CheckItem label="국고채 10Y" value={formatIndicatorLine(krData.rates.bond_10y, 'percent')} checked />
-                <CheckItem label="기준금리" value={formatIndicatorLine(krData.rates.base_rate, 'percent')} checked />
+                <CheckItem
+                  label="국고채 10Y"
+                  value={formatIndicatorLine(krData.rates.bond_10y, 'percent')}
+                  checked
+                />
+                <CheckItem
+                  label="기준금리"
+                  value={formatIndicatorLine(krData.rates.base_rate, 'percent')}
+                  checked
+                />
                 {krData.rates.credit_spread && (
-                  <CheckItem label="신용 스프레드" value={formatIndicatorLine(krData.rates.credit_spread, 'percent')} checked />
+                  <CheckItem
+                    label="신용 스프레드"
+                    value={formatIndicatorLine(krData.rates.credit_spread, 'percent')}
+                    checked
+                  />
                 )}
               </MemoBlock>
             )}
 
             {matchesSearch('거시경제 선행지수 소비자심리 수출') && (
               <MemoBlock heading="거시지표 확인">
-                <CheckItem label="선행지수" value={formatIndicatorLine(krData.macro.leading_index, 'number')} checked={!!krData.macro.leading_index?.value} />
-                <CheckItem label="소비자심리" value={formatIndicatorLine(krData.macro.ccsi, 'number')} checked={!!krData.macro.ccsi?.value} />
-                <CheckItem label="수출액" value={formatIndicatorLine(krData.macro.export, 'number')} checked={!!krData.macro.export?.value} />
+                <CheckItem
+                  label="선행지수"
+                  value={formatIndicatorLine(krData.macro.leading_index, 'number')}
+                  checked={!!krData.macro.leading_index?.value}
+                />
+                <CheckItem
+                  label="소비자심리"
+                  value={formatIndicatorLine(krData.macro.ccsi, 'number')}
+                  checked={!!krData.macro.ccsi?.value}
+                />
+                <CheckItem
+                  label="수출액"
+                  value={formatIndicatorLine(krData.macro.export, 'number')}
+                  checked={!!krData.macro.export?.value}
+                />
               </MemoBlock>
             )}
 
@@ -547,9 +603,7 @@ function MemoTabContent({
       )}
 
       {!loading && !hasData && !error && (
-        <div className="text-sm text-muted-foreground text-center py-12">
-          메모가 없습니다.
-        </div>
+        <div className="text-sm text-muted-foreground text-center py-12">메모가 없습니다.</div>
       )}
     </>
   );
@@ -571,11 +625,7 @@ function StatusTabContent({
   country: Country;
 }) {
   if (country === null) {
-    return (
-      <div className="text-sm text-muted-foreground text-center py-12">
-        팀을 선택하세요.
-      </div>
-    );
+    return <div className="text-sm text-muted-foreground text-center py-12">팀을 선택하세요.</div>;
   }
 
   if (loading) {
@@ -592,9 +642,7 @@ function StatusTabContent({
 
   if (sectors.length === 0) {
     return (
-      <div className="text-sm text-muted-foreground text-center py-12">
-        데이터가 없습니다.
-      </div>
+      <div className="text-sm text-muted-foreground text-center py-12">데이터가 없습니다.</div>
     );
   }
 
@@ -617,8 +665,13 @@ function StatusTabContent({
               </div>
               {/* 데이터 행 */}
               {sectors.map((sector) => (
-                <div key={sector.symbol} className="flex items-baseline gap-2 text-xs sm:text-sm py-0.5">
-                  <span className="flex-1 min-w-0 text-muted-foreground truncate">{sector.name}</span>
+                <div
+                  key={sector.symbol}
+                  className="flex items-baseline gap-2 text-xs sm:text-sm py-0.5"
+                >
+                  <span className="flex-1 min-w-0 text-muted-foreground truncate">
+                    {sector.name}
+                  </span>
                   <span className="w-14 sm:w-16 text-right shrink-0 text-foreground font-mono text-[10px] sm:text-xs">
                     {formatChange(sector.change_1d)}
                   </span>
@@ -678,11 +731,7 @@ function JournalTabContent({
   country: Country;
 }) {
   if (country === null || country === 'all') {
-    return (
-      <div className="text-sm text-muted-foreground text-center py-12">
-        팀을 선택하세요.
-      </div>
-    );
+    return <div className="text-sm text-muted-foreground text-center py-12">팀을 선택하세요.</div>;
   }
 
   if (loading) {
@@ -699,9 +748,7 @@ function JournalTabContent({
 
   if (!data) {
     return (
-      <div className="text-sm text-muted-foreground text-center py-12">
-        데이터가 없습니다.
-      </div>
+      <div className="text-sm text-muted-foreground text-center py-12">데이터가 없습니다.</div>
     );
   }
 
@@ -840,7 +887,9 @@ function MemoSection({ title, children }: { title: string; children: React.React
 function MemoBlock({ heading, children }: { heading: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-1.5 sm:mb-2">{heading}</h3>
+      <h3 className="text-[10px] sm:text-xs font-medium text-muted-foreground mb-1.5 sm:mb-2">
+        {heading}
+      </h3>
       <div className="space-y-1 pl-2 sm:pl-3">{children}</div>
     </div>
   );
@@ -858,10 +907,20 @@ function MemoItem({ label, value }: { label: string; value: string }) {
 }
 
 /** 체크리스트 항목 */
-function CheckItem({ label, value, checked = false }: { label: string; value: string; checked?: boolean }) {
+function CheckItem({
+  label,
+  value,
+  checked = false,
+}: {
+  label: string;
+  value: string;
+  checked?: boolean;
+}) {
   return (
     <div className="flex items-baseline gap-1.5 sm:gap-2 text-xs sm:text-sm">
-      <span className="text-muted-foreground font-mono text-[10px] sm:text-xs shrink-0">{checked ? '[v]' : '[ ]'}</span>
+      <span className="text-muted-foreground font-mono text-[10px] sm:text-xs shrink-0">
+        {checked ? '[v]' : '[ ]'}
+      </span>
       <span className="text-muted-foreground shrink-0">{label}</span>
       <span className="text-foreground break-all">{value}</span>
     </div>

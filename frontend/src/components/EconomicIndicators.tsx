@@ -7,12 +7,21 @@ import { RefreshCw, TrendingUp, BarChart3, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IndicatorCard } from './IndicatorCard';
 import { LoadingSpinner } from './LoadingSpinner';
-import { EconomicChartView, SectorHeatmap, MarketCycleSection, CountryTab, MarketReviewSection } from './economic';
+import {
+  EconomicChartView,
+  SectorHeatmap,
+  MarketCycleSection,
+  CountryTab,
+  MarketReviewSection,
+} from './economic';
 import { api } from '@/lib/api';
 import type {
-  EconomicData, EconomicViewMode, EconomicResponse,
-  KoreaEconomicData, KoreaEconomicResponse,
-  Country
+  EconomicData,
+  EconomicViewMode,
+  EconomicResponse,
+  KoreaEconomicData,
+  KoreaEconomicResponse,
+  Country,
 } from '@/types/economic';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -26,8 +35,8 @@ interface EconomicIndicatorsProps {
 export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
   const { user } = useAuth();
   const [country, setCountry] = useState<Country>(null);
-  const [sectorCountry, setSectorCountry] = useState<Country>(null);  // 섹터 히트맵용 국가
-  const [reviewCountry, setReviewCountry] = useState<Country>(null);  // 마감 리뷰용 국가
+  const [sectorCountry, setSectorCountry] = useState<Country>(null); // 섹터 히트맵용 국가
+  const [reviewCountry, setReviewCountry] = useState<Country>(null); // 마감 리뷰용 국가
   const [data, setData] = useState<EconomicData | null>(null);
   const [krData, setKrData] = useState<KoreaEconomicData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -74,8 +83,8 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
   // 경제 지표 탭 선택 시 데이터 로드 (국가별)
   useEffect(() => {
     if (activeTab === 'indicators' && !loading && country !== null) {
-      const needsLoad = (country === 'us' && !indicatorsLoaded) ||
-                        (country === 'kr' && !krIndicatorsLoaded);
+      const needsLoad =
+        (country === 'us' && !indicatorsLoaded) || (country === 'kr' && !krIndicatorsLoaded);
       if (needsLoad) {
         const loadData = async () => {
           setLoading(true);
@@ -90,8 +99,8 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
   // 뷰 모드 변경 시 히스토리 데이터 로드
   useEffect(() => {
     if (activeTab === 'indicators' && viewMode === 'chart' && country !== null) {
-      const needsHistoryLoad = (country === 'us' && !historyLoaded) ||
-                               (country === 'kr' && !krHistoryLoaded);
+      const needsHistoryLoad =
+        (country === 'us' && !historyLoaded) || (country === 'kr' && !krHistoryLoaded);
       if (needsHistoryLoad) {
         const loadHistoryData = async () => {
           setRefreshing(true);
@@ -131,7 +140,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
               'px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap',
               activeTab === 'indicators'
                 ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
+                : 'text-muted-foreground hover:text-foreground',
             )}
           >
             경제지표
@@ -142,7 +151,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
               'px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap',
               activeTab === 'sectors'
                 ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
+                : 'text-muted-foreground hover:text-foreground',
             )}
           >
             섹터
@@ -153,7 +162,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
               'px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium rounded-md transition-colors whitespace-nowrap',
               activeTab === 'review'
                 ? 'bg-background text-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
+                : 'text-muted-foreground hover:text-foreground',
             )}
           >
             리뷰
@@ -262,11 +271,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
           <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-6 text-center">
             <p className="text-destructive font-medium mb-2">오류 발생</p>
             <p className="text-sm text-muted-foreground mb-4">{error}</p>
-            <Button
-              onClick={handleRefresh}
-              variant="outline"
-              className="gap-2"
-            >
+            <Button onClick={handleRefresh} variant="outline" className="gap-2">
               <RefreshCw className="h-4 w-4" />
               다시 시도
             </Button>
@@ -298,7 +303,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
       <div className={cn('h-full', className)}>
         <SubTabHeader />
         <EconomicChartView
-          data={krData as any}  // 타입 호환을 위해 임시로 any 사용
+          data={krData as any} // 타입 호환을 위해 임시로 any 사용
           onRefresh={handleRefresh}
           refreshing={refreshing}
           onViewModeChange={handleViewModeChange}
@@ -330,7 +335,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
                   'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
                   viewMode === 'simple'
                     ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 Simple
@@ -341,7 +346,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
                   'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
                   viewMode === 'chart'
                     ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 Chart
@@ -349,12 +354,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
             </div>
 
             {/* 새로고침 버튼 */}
-            <Button
-              onClick={handleRefresh}
-              variant="outline"
-              size="icon"
-              disabled={refreshing}
-            >
+            <Button onClick={handleRefresh} variant="outline" size="icon" disabled={refreshing}>
               <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
             </Button>
           </div>
@@ -362,9 +362,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
 
         {/* 로딩 오버레이 */}
         {refreshing && (
-          <div className="text-center text-sm text-muted-foreground">
-            데이터 업데이트 중...
-          </div>
+          <div className="text-center text-sm text-muted-foreground">데이터 업데이트 중...</div>
         )}
 
         {/* 시장 사이클 섹션 */}
@@ -441,7 +439,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
                 />
               </div>
               {/* FRED API 안내 */}
-              {(!data?.macro.cpi && !data?.macro.m2) && (
+              {!data?.macro.cpi && !data?.macro.m2 && (
                 <div className="mt-3 p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
                   <p>
                     💡 CPI와 M2 데이터를 보려면 FRED API 키가 필요합니다.
@@ -559,7 +557,7 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
                 />
               </div>
               {/* ECOS API 안내 */}
-              {(!krData?.macro.leading_index && !krData?.macro.ccsi && !krData?.macro.export) && (
+              {!krData?.macro.leading_index && !krData?.macro.ccsi && !krData?.macro.export && (
                 <div className="mt-3 p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground">
                   <p>
                     💡 한국 거시경제 지표를 보려면 ECOS API 키가 필요합니다.

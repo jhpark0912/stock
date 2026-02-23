@@ -66,9 +66,8 @@ export function MainTabs({ children }: MainTabsProps) {
           <div key={tab.id} className={activeTab === tab.id ? '' : 'hidden'}>
             {children(tab.id)}
           </div>
-        ) : null
+        ) : null,
       )}
     </div>
   );
 }
-

@@ -7,12 +7,13 @@
 - market_cycle: 시장 사이클 (GET /economic/market-cycle, .../analysis)
 - market_review: 증시 마감 리뷰 (GET .../market-review/{country}, POST .../ai)
 """
+
 from fastapi import APIRouter
 
 from .indicators import router as indicators_router
-from .sectors import router as sectors_router
 from .market_cycle import router as market_cycle_router
 from .market_review import router as market_review_router
+from .sectors import router as sectors_router
 
 router = APIRouter()
 router.include_router(indicators_router)

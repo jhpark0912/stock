@@ -7,12 +7,7 @@ import { TrendingUp, TrendingDown, Minus, Info, X } from 'lucide-react';
 import type { EconomicIndicator, IndicatorStatus } from '@/types/economic';
 import { MiniSparkline } from './MiniSparkline';
 import { cn } from '@/lib/utils';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface IndicatorCardProps {
   indicator: EconomicIndicator | null;
@@ -51,7 +46,7 @@ export function IndicatorCard({
   indicator,
   showChart = false,
   formatType = 'number',
-  icon = '📊'
+  icon = '📊',
 }: IndicatorCardProps) {
   const [showDetail, setShowDetail] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -91,7 +86,10 @@ export function IndicatorCard({
         return `$${trillion.toFixed(2)}T`;
       }
       default:
-        return value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return value.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
     }
   };
 
@@ -102,8 +100,12 @@ export function IndicatorCard({
 
       return {
         value: `YoY ${isPositive ? '+' : ''}${indicator.yoy_change.toFixed(1)}%`,
-        color: isNeutral ? 'text-muted-foreground' : isPositive ? 'text-success' : 'text-destructive',
-        Icon: isNeutral ? Minus : isPositive ? TrendingUp : TrendingDown
+        color: isNeutral
+          ? 'text-muted-foreground'
+          : isPositive
+            ? 'text-success'
+            : 'text-destructive',
+        Icon: isNeutral ? Minus : isPositive ? TrendingUp : TrendingDown,
       };
     }
 
@@ -113,8 +115,12 @@ export function IndicatorCard({
 
       return {
         value: `${isPositive ? '+' : ''}${indicator.change_percent.toFixed(2)}%`,
-        color: isNeutral ? 'text-muted-foreground' : isPositive ? 'text-success' : 'text-destructive',
-        Icon: isNeutral ? Minus : isPositive ? TrendingUp : TrendingDown
+        color: isNeutral
+          ? 'text-muted-foreground'
+          : isPositive
+            ? 'text-success'
+            : 'text-destructive',
+        Icon: isNeutral ? Minus : isPositive ? TrendingUp : TrendingDown,
       };
     }
 
@@ -140,10 +146,14 @@ export function IndicatorCard({
 
   return (
     <div ref={cardRef} className="relative">
-      <div className={cn(
-        'bg-card border rounded-lg p-4 transition-colors',
-        showDetail ? 'border-primary/50 ring-1 ring-primary/20' : 'border-border hover:border-primary/50'
-      )}>
+      <div
+        className={cn(
+          'bg-card border rounded-lg p-4 transition-colors',
+          showDetail
+            ? 'border-primary/50 ring-1 ring-primary/20'
+            : 'border-border hover:border-primary/50',
+        )}
+      >
         {/* 헤더: 아이콘 + 이름 + 상태 배지 */}
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -158,7 +168,7 @@ export function IndicatorCard({
                   'flex-shrink-0 p-0.5 rounded-full transition-colors',
                   showDetail
                     ? 'text-primary bg-primary/10'
-                    : 'text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted'
+                    : 'text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted',
                 )}
                 aria-label="상세 설명 보기"
               >
@@ -171,20 +181,19 @@ export function IndicatorCard({
             <TooltipProvider delayDuration={200}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className={cn(
-                    'px-2 py-0.5 text-xs font-medium rounded-full border flex-shrink-0 cursor-help',
-                    statusStyle.bg,
-                    statusStyle.text,
-                    statusStyle.border
-                  )}>
+                  <span
+                    className={cn(
+                      'px-2 py-0.5 text-xs font-medium rounded-full border flex-shrink-0 cursor-help',
+                      statusStyle.bg,
+                      statusStyle.text,
+                      statusStyle.border,
+                    )}
+                  >
                     {indicator.status_label}
                   </span>
                 </TooltipTrigger>
                 {indicator.status_criteria && (
-                  <TooltipContent
-                    side="top"
-                    className="max-w-xs whitespace-pre-line text-left"
-                  >
+                  <TooltipContent side="top" className="max-w-xs whitespace-pre-line text-left">
                     <p className="font-medium mb-1">{indicator.name} 판단 기준</p>
                     <p className="text-xs">{indicator.status_criteria}</p>
                   </TooltipContent>
@@ -196,9 +205,7 @@ export function IndicatorCard({
 
         {/* 비유 문구 (Simple 모드에서만) */}
         {!showChart && indicator.metaphor && (
-          <p className="text-xs text-muted-foreground/70 mb-2 italic">
-            "{indicator.metaphor}"
-          </p>
+          <p className="text-xs text-muted-foreground/70 mb-2 italic">"{indicator.metaphor}"</p>
         )}
 
         {/* 현재 값 */}
@@ -217,18 +224,15 @@ export function IndicatorCard({
         {/* 스파크라인 (Chart 모드) */}
         {showChart && indicator.history && indicator.history.length > 0 && (
           <div className="mt-3">
-            <MiniSparkline
-              data={indicator.history}
-              height={80}
-              color={getSparklineColor()}
-            />
+            <MiniSparkline data={indicator.history} height={80} color={getSparklineColor()} />
           </div>
         )}
       </div>
 
       {/* 플로팅 상세 설명 패널 — 카드 바깥, 레이아웃에 영향 없음 */}
       {showDetail && hasDetail && (
-        <div className="absolute left-0 right-0 top-full mt-2 z-50
+        <div
+          className="absolute left-0 right-0 top-full mt-2 z-50
           bg-card border border-primary/30 rounded-lg p-4 shadow-lg
           text-xs leading-relaxed space-y-2.5
           animate-in fade-in-0 zoom-in-95 duration-150"
@@ -249,9 +253,7 @@ export function IndicatorCard({
 
           {/* 비유 문구 */}
           {indicator.metaphor && (
-            <p className="text-primary/80 font-medium italic">
-              "{indicator.metaphor}"
-            </p>
+            <p className="text-primary/80 font-medium italic">"{indicator.metaphor}"</p>
           )}
 
           {indicator.description && (
@@ -269,7 +271,9 @@ export function IndicatorCard({
           {indicator.status_criteria && (
             <div>
               <p className="font-semibold text-foreground mb-0.5">판독기</p>
-              <p className="text-muted-foreground whitespace-pre-line">{indicator.status_criteria}</p>
+              <p className="text-muted-foreground whitespace-pre-line">
+                {indicator.status_criteria}
+              </p>
             </div>
           )}
         </div>

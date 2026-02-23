@@ -36,17 +36,17 @@ const indicatorIcons: Record<string, string> = {
   '^VIX': '📊',
   'CL=F': '🛢️',
   'GC=F': '💰',
-  'CPIAUCSL': '📊',
-  'M2SL': '💵',
-  'PHILLY_FED_SPREAD': '🏭',
-  'CFNAIMA3': '📋',
-  'UMCSENT': '👛',
+  CPIAUCSL: '📊',
+  M2SL: '💵',
+  PHILLY_FED_SPREAD: '🏭',
+  CFNAIMA3: '📋',
+  UMCSENT: '👛',
   // 한국
-  'KR_BOND_10Y': '🏛️',
-  'KR_BASE_RATE': '🏛️',
-  'KR_CREDIT_SPREAD': '📊',
-  'KR_CPI': '📊',
-  'KR_M2': '💵',
+  KR_BOND_10Y: '🏛️',
+  KR_BASE_RATE: '🏛️',
+  KR_CREDIT_SPREAD: '📊',
+  KR_CPI: '📊',
+  KR_M2: '💵',
   'KRW=X': '💱',
 };
 
@@ -61,16 +61,19 @@ const statusColors: Record<string, string> = {
 export function IndicatorListPanel({
   indicators,
   selectedSymbol,
-  onSelect
+  onSelect,
 }: IndicatorListPanelProps) {
   // 카테고리별로 그룹화
-  const grouped = indicators.reduce((acc, item) => {
-    if (!acc[item.category]) {
-      acc[item.category] = [];
-    }
-    acc[item.category].push(item);
-    return acc;
-  }, {} as Record<string, IndicatorItem[]>);
+  const grouped = indicators.reduce(
+    (acc, item) => {
+      if (!acc[item.category]) {
+        acc[item.category] = [];
+      }
+      acc[item.category].push(item);
+      return acc;
+    },
+    {} as Record<string, IndicatorItem[]>,
+  );
 
   // 값 포맷팅
   const formatValue = (indicator: EconomicIndicator): string => {
@@ -117,26 +120,30 @@ export function IndicatorListPanel({
                   'w-full px-4 py-3 text-left transition-colors',
                   'hover:bg-muted/50',
                   'focus:outline-none focus:bg-muted/50',
-                  isSelected && 'bg-primary/10 border-l-2 border-primary'
+                  isSelected && 'bg-primary/10 border-l-2 border-primary',
                 )}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="text-base flex-shrink-0">{icon}</span>
-                    <span className={cn(
-                      'text-sm font-medium truncate',
-                      isSelected ? 'text-foreground' : 'text-muted-foreground'
-                    )}>
+                    <span
+                      className={cn(
+                        'text-sm font-medium truncate',
+                        isSelected ? 'text-foreground' : 'text-muted-foreground',
+                      )}
+                    >
                       {indicator.name}
                     </span>
                   </div>
                 </div>
 
                 <div className="mt-1 flex items-center justify-between">
-                  <span className={cn(
-                    'text-lg font-bold',
-                    isSelected ? 'text-foreground' : 'text-foreground/80'
-                  )}>
+                  <span
+                    className={cn(
+                      'text-lg font-bold',
+                      isSelected ? 'text-foreground' : 'text-foreground/80',
+                    )}
+                  >
                     {formatValue(indicator)}
                   </span>
 

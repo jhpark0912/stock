@@ -1,18 +1,20 @@
 """
 인증 서비스 (JWT, 비밀번호 해싱)
 """
+
 from datetime import datetime, timedelta
 from typing import Optional
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database.connection import get_db
-from app.database.user_repository import UserRepository
 from app.database.models import UserDB
+from app.database.user_repository import UserRepository
 from app.models.user import TokenData
 
 # 비밀번호 해싱 컨텍스트
@@ -71,8 +73,7 @@ class AuthService:
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+    credentials: HTTPAuthorizationCredentials = Depends(security), db: Session = Depends(get_db)
 ) -> UserDB:
     """현재 로그인한 사용자 조회 (의존성)"""
     token = credentials.credentials
@@ -89,16 +90,10 @@ def get_current_user(
         )
 
     if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="비활성화된 사용자입니다"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="비활성화된 사용자입니다")
 
     if not user.is_approved:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="승인되지 않은 사용자입니다"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="승인되지 않은 사용자입니다")
 
     return user
 
@@ -106,10 +101,7 @@ def get_current_user(
 def get_current_admin(current_user: UserDB = Depends(get_current_user)) -> UserDB:
     """현재 로그인한 Admin 사용자 조회 (의존성)"""
     if current_user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="관리자 권한이 필요합니다"
-        )
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="관리자 권한이 필요합니다")
     return current_user
 
 
@@ -118,27 +110,26 @@ optional_security = HTTPBearer(auto_error=False)
 
 
 def get_current_user_optional(
-    credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security),
-    db: Session = Depends(get_db)
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(optional_security), db: Session = Depends(get_db)
 ) -> Optional[UserDB]:
     """현재 로그인한 사용자 조회 (선택적 인증)
-    
+
     토큰이 없거나 유효하지 않으면 None 반환.
     토큰이 유효하면 사용자 정보 반환.
     """
     if credentials is None:
         return None
-    
+
     try:
         token = credentials.credentials
         token_data = AuthService.decode_token(token)
-        
+
         user_repo = UserRepository(db)
         user = user_repo.get_by_id(token_data.user_id)
-        
+
         if user is None or not user.is_active or not user.is_approved:
             return None
-        
+
         return user
     except HTTPException:
         return None

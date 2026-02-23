@@ -50,17 +50,13 @@ export function AppLayout({ sidebar, children, headerActions }: AppLayoutProps) 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar - 조건부 렌더링 */}
         <div
-          className={`transition-all duration-300 ${
-            sidebarOpen ? 'w-60' : 'w-0'
-          } overflow-hidden`}
+          className={`transition-all duration-300 ${sidebarOpen ? 'w-60' : 'w-0'} overflow-hidden`}
         >
           {sidebar}
         </div>
 
         {/* Main Content Area - 메인 영역만 스크롤 */}
-        <main className="flex-1 overflow-y-auto">
-          {children}
-        </main>
+        <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>
   );

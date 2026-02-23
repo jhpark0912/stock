@@ -1,10 +1,11 @@
 """
 FRED API 서비스 - CPI, M2 통화량 조회
 """
+
 import logging
-from typing import Optional, Dict, Any, List
-from datetime import datetime, timedelta
 import time
+from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
 
 from app.config import settings
 from app.models.economic import EconomicIndicator, HistoryPoint, MacroData
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 # FRED API 사용 가능 여부 확인
 try:
     from fredapi import Fred
+
     FRED_AVAILABLE = True
 except ImportError:
     FRED_AVAILABLE = False
@@ -29,9 +31,9 @@ def _get_cache(key: str) -> Optional[Any]:
     """캐시에서 데이터 조회"""
     if key in _cache:
         cached = _cache[key]
-        if time.time() < cached['expires']:
+        if time.time() < cached["expires"]:
             logger.debug(f"FRED 캐시 히트: {key}")
-            return cached['data']
+            return cached["data"]
         else:
             logger.debug(f"FRED 캐시 만료: {key}")
             del _cache[key]
@@ -40,10 +42,7 @@ def _get_cache(key: str) -> Optional[Any]:
 
 def _set_cache(key: str, data: Any, ttl: int = CACHE_TTL_FRED):
     """캐시에 데이터 저장"""
-    _cache[key] = {
-        'data': data,
-        'expires': time.time() + ttl
-    }
+    _cache[key] = {"data": data, "expires": time.time() + ttl}
     logger.debug(f"FRED 캐시 저장: {key} (TTL: {ttl}s)")
 
 
@@ -53,38 +52,38 @@ FRED_METADATA = {
         "name": "CPI (소비자물가지수)",
         "metaphor": "연준(Fed)의 금리 브레이크 페달",
         "description": "작년보다 물가가 얼마나 올랐는지 보여줍니다. 연준의 목표는 2.0%입니다.",
-        "impact": "2%대면 골디락스(이상적)로 금리 인하 기대감이 올라갑니다. 3% 이상이면 인플레이션 고착화로 연준이 긴축을 계속해 주식 악재입니다."
+        "impact": "2%대면 골디락스(이상적)로 금리 인하 기대감이 올라갑니다. 3% 이상이면 인플레이션 고착화로 연준이 긴축을 계속해 주식 악재입니다.",
     },
     "M2SL": {
         "name": "M2 통화량",
         "metaphor": "주식 시장의 연료 (유동성)",
         "description": "시중에 풀린 현금, 예금 등 바로 쓸 수 있는 돈의 총량입니다.",
-        "impact": "기업 실적이 안 좋아도 돈을 엄청나게 풀면(M2 증가) 주가는 오를 수 있습니다(유동성 장세). 반대로 M2가 줄면 자산 가격 하락 압력이 커집니다."
+        "impact": "기업 실적이 안 좋아도 돈을 엄청나게 풀면(M2 증가) 주가는 오를 수 있습니다(유동성 장세). 반대로 M2가 줄면 자산 가격 하락 압력이 커집니다.",
     },
     "INDPRO": {
         "name": "산업생산지수",
         "metaphor": "미국 공장의 심장 박동",
         "description": "제조업, 광업, 유틸리티의 실질 생산량 지수입니다. 매달 15일에 발표됩니다.",
-        "impact": "YoY 변화율이 양수(+)면 공장이 더 바쁘게 돌아가는 것이고, 음수(-)면 생산이 줄어 경기 수축 신호입니다."
+        "impact": "YoY 변화율이 양수(+)면 공장이 더 바쁘게 돌아가는 것이고, 음수(-)면 생산이 줄어 경기 수축 신호입니다.",
     },
     "PHILLY_FED_SPREAD": {
         "name": "필라델피아 연준 스프레드",
         "metaphor": "기업들의 미래 일감 (신규주문 - 재고)",
         "description": "공장에 새로 들어온 주문량에서 창고에 쌓인 재고량을 뺀 값입니다. 주가보다 6개월 먼저 움직이는 선행지표입니다.",
-        "impact": "양수(+)면 주문 폭주로 공장 풀가동(경기 확장 → 주식 매수). 음수(-)면 주문은 없는데 재고만 쌓여 공장 가동 중단(경기 침체 → 주식 매도)."
+        "impact": "양수(+)면 주문 폭주로 공장 풀가동(경기 확장 → 주식 매수). 음수(-)면 주문은 없는데 재고만 쌓여 공장 가동 중단(경기 침체 → 주식 매도).",
     },
     "CFNAIMA3": {
         "name": "시카고 연준 국가활동지수",
         "metaphor": "미국 경제 종합 건강검진표",
         "description": "생산, 고용, 소비 등 85개 경제 지표를 믹서기에 갈아서 만든 단 하나의 숫자입니다(3개월 이동평균).",
-        "impact": "개별 뉴스(고용 쇼크 등)에 일희일비하지 않고 큰 흐름을 볼 때 씁니다. -0.7 아래면 '경기 침체(Recession) 확정'으로 주식 시장 폭락 경보입니다."
+        "impact": "개별 뉴스(고용 쇼크 등)에 일희일비하지 않고 큰 흐름을 볼 때 씁니다. -0.7 아래면 '경기 침체(Recession) 확정'으로 주식 시장 폭락 경보입니다.",
     },
     "UMCSENT": {
         "name": "미시간대 소비자심리지수",
         "metaphor": "미국인들의 지갑 여는 기분",
         "description": "미국 일반 시민들에게 '요즘 먹고살 만합니까?'라고 설문 조사한 점수입니다. 미국 GDP의 70%는 소비입니다.",
-        "impact": "심리가 얼어붙으면 기업 물건이 안 팔립니다. 80 이상이면 자신감 뿜뿜, 60 이하면 지갑 닫음으로 심각한 불황 공포입니다."
-    }
+        "impact": "심리가 얼어붙으면 기업 물건이 안 팔립니다. 80 이상이면 자신감 뿜뿜, 60 이하면 지갑 닫음으로 심각한 불황 공포입니다.",
+    },
 }
 
 
@@ -92,12 +91,12 @@ def _get_fred_client() -> Optional["Fred"]:
     """FRED API 클라이언트 생성"""
     if not FRED_AVAILABLE:
         return None
-    
+
     api_key = settings.fred_api_key
     if not api_key:
         logger.warning("FRED_API_KEY가 설정되지 않았습니다")
         return None
-    
+
     try:
         return Fred(api_key=api_key)
     except Exception as e:
@@ -105,17 +104,14 @@ def _get_fred_client() -> Optional["Fred"]:
         return None
 
 
-def get_fred_indicator(
-    series_id: str, 
-    include_history: bool = False
-) -> Optional[EconomicIndicator]:
+def get_fred_indicator(series_id: str, include_history: bool = False) -> Optional[EconomicIndicator]:
     """
     FRED에서 개별 시리즈 조회
-    
+
     Args:
         series_id: FRED 시리즈 ID (예: CPIAUCSL, M2SL)
         include_history: 히스토리 포함 여부
-    
+
     Returns:
         EconomicIndicator 또는 None
     """
@@ -123,36 +119,27 @@ def get_fred_indicator(
     cached = _get_cache(cache_key)
     if cached:
         return cached
-    
+
     fred = _get_fred_client()
     if not fred:
         return None
-    
-    metadata = FRED_METADATA.get(series_id, {
-        "name": series_id,
-        "metaphor": "",
-        "description": "",
-        "impact": ""
-    })
-    
+
+    metadata = FRED_METADATA.get(series_id, {"name": series_id, "metaphor": "", "description": "", "impact": ""})
+
     try:
         # 최근 2년 데이터 조회 (YoY 계산용)
         end_date = datetime.now()
         start_date = end_date - timedelta(days=365 * 2)
-        
-        data = fred.get_series(
-            series_id,
-            observation_start=start_date,
-            observation_end=end_date
-        )
-        
+
+        data = fred.get_series(series_id, observation_start=start_date, observation_end=end_date)
+
         if data is None or data.empty:
             logger.warning(f"FRED 데이터 없음: {series_id}")
             return None
-        
+
         # 최신값
         current_value = float(data.iloc[-1])
-        
+
         # YoY 변화율 계산 (12개월 전 대비)
         yoy_change = None
         if len(data) >= 12:
@@ -160,7 +147,7 @@ def get_fred_indicator(
             year_ago_value = float(data.iloc[-13]) if len(data) >= 13 else float(data.iloc[0])
             if year_ago_value != 0:
                 yoy_change = ((current_value - year_ago_value) / year_ago_value) * 100
-        
+
         # 히스토리 데이터 (최근 30개 데이터 포인트)
         history_list = None
         if include_history:
@@ -168,14 +155,11 @@ def get_fred_indicator(
             recent_data = data.tail(30)
             for date, value in recent_data.items():
                 if value is not None and not (isinstance(value, float) and value != value):  # NaN 체크
-                    history_list.append(HistoryPoint(
-                        date=date.strftime('%Y-%m-%d'),
-                        value=float(value)
-                    ))
-        
+                    history_list.append(HistoryPoint(date=date.strftime("%Y-%m-%d"), value=float(value)))
+
         # 상태 판단 (FRED는 YoY 변화율 기반)
         status, status_label, status_criteria = get_indicator_status(series_id, current_value, yoy_change)
-        
+
         indicator = EconomicIndicator(
             symbol=series_id,
             name=metadata["name"],
@@ -189,12 +173,12 @@ def get_fred_indicator(
             history=history_list,
             status=status.value,
             status_label=status_label,
-            status_criteria=status_criteria
+            status_criteria=status_criteria,
         )
-        
+
         _set_cache(cache_key, indicator)
         return indicator
-        
+
     except Exception as e:
         logger.error(f"FRED 시리즈 조회 실패 ({series_id}): {e}")
         return None
@@ -205,7 +189,6 @@ def _get_fred_raw_series(series_id: str):
     FRED에서 raw pandas Series를 반환 (EconomicIndicator 변환 없이)
     Philly Fed 스프레드 계산용
     """
-    import pandas as pd
 
     cache_key = f"fred_raw_{series_id}"
     cached = _get_cache(cache_key)
@@ -219,11 +202,7 @@ def _get_fred_raw_series(series_id: str):
     try:
         end_date = datetime.now()
         start_date = end_date - timedelta(days=365 * 2)
-        data = fred.get_series(
-            series_id,
-            observation_start=start_date,
-            observation_end=end_date
-        )
+        data = fred.get_series(series_id, observation_start=start_date, observation_end=end_date)
         if data is None or data.empty:
             logger.warning(f"FRED 데이터 없음: {series_id}")
             return None
@@ -235,7 +214,9 @@ def _get_fred_raw_series(series_id: str):
         return None
 
 
-def _calculate_philly_spread(new_orders_series, inventories_series, include_history: bool = False) -> Optional[EconomicIndicator]:
+def _calculate_philly_spread(
+    new_orders_series, inventories_series, include_history: bool = False
+) -> Optional[EconomicIndicator]:
     """
     Philly Fed 신규주문-재고 스프레드 계산 (날짜 기반 매핑)
     """
@@ -246,16 +227,16 @@ def _calculate_philly_spread(new_orders_series, inventories_series, include_hist
 
     try:
         # pandas Series → DataFrame으로 변환 후 날짜 기준 inner join
-        df_orders = pd.DataFrame({'new_orders': new_orders_series})
-        df_inv = pd.DataFrame({'inventories': inventories_series})
-        merged = df_orders.join(df_inv, how='inner').dropna()
+        df_orders = pd.DataFrame({"new_orders": new_orders_series})
+        df_inv = pd.DataFrame({"inventories": inventories_series})
+        merged = df_orders.join(df_inv, how="inner").dropna()
 
         if merged.empty:
             logger.warning("Philly Fed 스프레드: 매칭 데이터 없음")
             return None
 
-        merged = merged.assign(spread=merged['new_orders'] - merged['inventories'])
-        current_value = float(merged['spread'].iloc[-1])
+        merged = merged.assign(spread=merged["new_orders"] - merged["inventories"])
+        current_value = float(merged["spread"].iloc[-1])
 
         # 히스토리 데이터
         history_list = None
@@ -263,12 +244,9 @@ def _calculate_philly_spread(new_orders_series, inventories_series, include_hist
             history_list = []
             recent = merged.tail(30)
             for date, row in recent.iterrows():
-                spread_val = float(row['spread'])
+                spread_val = float(row["spread"])
                 if spread_val == spread_val:  # NaN 체크
-                    history_list.append(HistoryPoint(
-                        date=date.strftime('%Y-%m-%d'),
-                        value=spread_val
-                    ))
+                    history_list.append(HistoryPoint(date=date.strftime("%Y-%m-%d"), value=spread_val))
 
         metadata = FRED_METADATA["PHILLY_FED_SPREAD"]
         status, status_label, status_criteria = get_indicator_status("PHILLY_FED_SPREAD", current_value)
@@ -286,7 +264,7 @@ def _calculate_philly_spread(new_orders_series, inventories_series, include_hist
             history=history_list,
             status=status.value,
             status_label=status_label,
-            status_criteria=status_criteria
+            status_criteria=status_criteria,
         )
     except Exception as e:
         logger.error(f"Philly Fed 스프레드 계산 실패: {e}")
@@ -298,14 +276,14 @@ def get_macro_data(include_history: bool = False) -> MacroData:
     return MacroData(
         cpi=get_fred_indicator("CPIAUCSL", include_history),
         m2=get_fred_indicator("M2SL", include_history),
-        indpro=get_fred_indicator("INDPRO", include_history)
+        indpro=get_fred_indicator("INDPRO", include_history),
     )
 
 
 def get_macro_data_parallel(include_history: bool = False) -> MacroData:
     """거시경제 지표 병렬 조회 (CPI, M2, INDPRO, CFNAI, UMCSENT + Philly Fed Spread)"""
-    from concurrent.futures import ThreadPoolExecutor, as_completed
     import time as time_module
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
     # 단일 시리즈 (get_fred_indicator로 조회)
     series_ids = ["CPIAUCSL", "M2SL", "INDPRO", "CFNAIMA3", "UMCSENT"]
@@ -336,9 +314,7 @@ def get_macro_data_parallel(include_history: bool = False) -> MacroData:
 
     # Philly Fed Spread 계산 (날짜 기반 매핑)
     philly_fed = _calculate_philly_spread(
-        results.get("NOCDFSA066MSFRBPHI"),
-        results.get("IVCDFSA066MSFRBPHI"),
-        include_history
+        results.get("NOCDFSA066MSFRBPHI"), results.get("IVCDFSA066MSFRBPHI"), include_history
     )
 
     elapsed = time_module.time() - start_time
@@ -358,5 +334,5 @@ def check_fred_availability() -> Dict[str, Any]:
     """FRED API 사용 가능 여부 확인"""
     return {
         "fredapi_installed": FRED_AVAILABLE,
-        "api_key_configured": bool(settings.fred_api_key) if hasattr(settings, 'fred_api_key') else False
+        "api_key_configured": bool(settings.fred_api_key) if hasattr(settings, "fred_api_key") else False,
     }

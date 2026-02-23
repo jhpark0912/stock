@@ -13,11 +13,7 @@ interface MiniSparklineProps {
   color?: 'primary' | 'success' | 'destructive';
 }
 
-export function MiniSparkline({
-  data,
-  height = 80,
-  color = 'primary'
-}: MiniSparklineProps) {
+export function MiniSparkline({ data, height = 80, color = 'primary' }: MiniSparklineProps) {
   // 색상 매핑 (Tailwind CSS 변수 사용)
   const strokeColor = useMemo(() => {
     switch (color) {
@@ -44,17 +40,17 @@ export function MiniSparkline({
 
   // 차트 데이터 정규화 (날짜 포맷팅)
   const chartData = useMemo(() => {
-    return data.map(point => ({
+    return data.map((point) => ({
       date: point.date,
       // X축 표시용 간단한 날짜 (MM/DD)
       shortDate: point.date.slice(5), // "2026-01-15" -> "01-15"
-      value: point.value
+      value: point.value,
     }));
   }, [data]);
 
   // Y축 도메인 계산 (약간의 여백 추가)
   const domain = useMemo(() => {
-    const values = chartData.map(d => d.value);
+    const values = chartData.map((d) => d.value);
     const min = Math.min(...values);
     const max = Math.max(...values);
     const padding = (max - min) * 0.15;
@@ -63,7 +59,7 @@ export function MiniSparkline({
 
   // Y축 틱 값 (최소, 최대만)
   const yTicks = useMemo(() => {
-    const values = chartData.map(d => d.value);
+    const values = chartData.map((d) => d.value);
     const min = Math.min(...values);
     const max = Math.max(...values);
     return [min, max];
@@ -85,10 +81,7 @@ export function MiniSparkline({
 
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <LineChart
-        data={chartData}
-        margin={{ top: 5, right: 5, bottom: 5, left: 5 }}
-      >
+      <LineChart data={chartData} margin={{ top: 5, right: 5, bottom: 5, left: 5 }}>
         {/* X축: 시작/끝 날짜만 표시 */}
         <XAxis
           dataKey="shortDate"

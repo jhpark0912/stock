@@ -58,7 +58,9 @@ function StrategyBadge({ strategy }: { strategy: InvestmentStrategy }) {
   };
 
   return (
-    <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${styles[strategy]}`}>
+    <span
+      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${styles[strategy]}`}
+    >
       {icons[strategy]}
       {labels[strategy]}
     </span>
@@ -141,9 +143,7 @@ export function AIAnalysisTab({
           {/* 헤더 - 이력 버튼 포함 */}
           {stockData && (
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg sm:text-xl font-semibold text-foreground">
-                AI 분석 (Gemini)
-              </h2>
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground">AI 분석 (Gemini)</h2>
               <Button
                 variant="outline"
                 size="sm"
@@ -163,12 +163,10 @@ export function AIAnalysisTab({
               </div>
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">
-                Gemini API 키가 필요합니다
-              </h3>
+              <h3 className="text-lg font-semibold text-foreground">Gemini API 키가 필요합니다</h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                AI 주식 분석 기능을 사용하려면 Google Gemini API 키를 설정해주세요.
-                설정 페이지에서 API 키를 등록할 수 있습니다.
+                AI 주식 분석 기능을 사용하려면 Google Gemini API 키를 설정해주세요. 설정 페이지에서
+                API 키를 등록할 수 있습니다.
               </p>
             </div>
             <Button onClick={onNavigateToSettings} className="gap-2">
@@ -198,9 +196,7 @@ export function AIAnalysisTab({
           {/* 헤더 - 이력 버튼 포함 */}
           {stockData && (
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg sm:text-xl font-semibold text-foreground">
-                AI 분석 (Gemini)
-              </h2>
+              <h2 className="text-lg sm:text-xl font-semibold text-foreground">AI 분석 (Gemini)</h2>
               <Button
                 variant="outline"
                 size="sm"
@@ -215,9 +211,11 @@ export function AIAnalysisTab({
 
           <div className="text-center py-12 space-y-4">
             <div className="flex justify-center">
-              <div className={`h-16 w-16 rounded-full flex items-center justify-center ${
-                aiError.type === 'no_key' ? 'bg-warning/10' : 'bg-destructive/10'
-              }`}>
+              <div
+                className={`h-16 w-16 rounded-full flex items-center justify-center ${
+                  aiError.type === 'no_key' ? 'bg-warning/10' : 'bg-destructive/10'
+                }`}
+              >
                 {aiError.type === 'no_key' ? (
                   <Key className="h-8 w-8 text-warning" />
                 ) : (
@@ -229,9 +227,7 @@ export function AIAnalysisTab({
               <h3 className="text-lg font-semibold text-foreground">
                 {aiError.type === 'no_key' ? 'API 키 오류' : 'AI 분석 실패'}
               </h3>
-              <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                {aiError.message}
-              </p>
+              <p className="text-sm text-muted-foreground max-w-md mx-auto">{aiError.message}</p>
             </div>
             {aiError.type === 'no_key' ? (
               <Button onClick={onNavigateToSettings} className="gap-2">
@@ -293,9 +289,7 @@ export function AIAnalysisTab({
           </div>
 
           <div className="markdown-content">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {aiAnalysis.report}
-            </ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{aiAnalysis.report}</ReactMarkdown>
           </div>
         </div>
 
@@ -410,9 +404,7 @@ export function AIAnalysisTab({
       <div className="p-3 sm:p-6">
         <div className="bg-card border border-border rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg sm:text-xl font-semibold text-foreground">
-              AI 분석 (Gemini)
-            </h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-foreground">AI 분석 (Gemini)</h2>
             <Button
               variant="outline"
               size="sm"
@@ -431,12 +423,10 @@ export function AIAnalysisTab({
               </div>
             </div>
             <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">
-                AI 분석 준비 완료
-              </h3>
+              <h3 className="text-lg font-semibold text-foreground">AI 분석 준비 완료</h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                <span className="font-medium text-foreground">{stockData.ticker}</span>에 대한
-                AI 기반 투자 분석을 시작하려면 아래 버튼을 클릭하세요.
+                <span className="font-medium text-foreground">{stockData.ticker}</span>에 대한 AI
+                기반 투자 분석을 시작하려면 아래 버튼을 클릭하세요.
               </p>
             </div>
             <Button onClick={onAnalyzeAI} className="gap-2">
@@ -462,9 +452,7 @@ export function AIAnalysisTab({
       <div className="bg-card border border-border rounded-lg p-6">
         <div className="text-center py-6">
           <p className="text-sm text-muted-foreground mb-1">
-            {tickerCount === 0
-              ? 'No tickers added yet.'
-              : 'No data loaded.'}
+            {tickerCount === 0 ? 'No tickers added yet.' : 'No data loaded.'}
           </p>
           <p className="text-xs text-muted-foreground">
             {tickerCount === 0

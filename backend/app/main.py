@@ -1,21 +1,24 @@
 """
 FastAPI 애플리케이션 진입점
 """
+
 import logging
-from fastapi import FastAPI, Request, status
+import time
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+
+from app.api.routes import admin, auth, economic, health, portfolio, secret_stats, stock
 from app.config import settings
-from app.api.routes import health, stock, portfolio, auth, admin, economic, secret_stats
-from app.database.connection import init_db, get_db
+from app.database.connection import get_db, init_db
 from app.database.user_repository import UserRepository
 from app.services.auth.auth_service import AuthService
-import time
 
 # 로거 설정
 logging.basicConfig(
     level=getattr(logging, settings.log_level, logging.INFO),
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
@@ -27,6 +30,7 @@ app = FastAPI(
     docs_url="/docs" if settings.is_development else None,
     redoc_url="/redoc" if settings.is_development else None,
 )
+
 
 # 요청 로깅 미들웨어
 @app.middleware("http")
@@ -56,6 +60,7 @@ async def log_requests(request: Request, call_next):
 
     return response
 
+
 # CORS 미들웨어 설정
 app.add_middleware(
     CORSMiddleware,
@@ -64,6 +69,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # 앱 시작 시 DB 초기화
 @app.on_event("startup")
@@ -78,14 +84,14 @@ async def startup_event():
     # Admin 계정 생성 또는 업데이트
     admin_user = user_repo.get_by_username(settings.admin_username)
     password_hash = AuthService.hash_password(settings.admin_password)
-    
+
     if not admin_user:
         # 계정이 없으면 생성
         user_repo.create(
             username=settings.admin_username,
             password_hash=password_hash,
             role="admin",
-            is_approved=True  # Admin은 자동 승인
+            is_approved=True,  # Admin은 자동 승인
         )
         logger.info(f"👤 Admin 계정 생성됨: {settings.admin_username}")
     else:
@@ -99,21 +105,23 @@ async def startup_event():
 
     db.close()
 
+
 # 404 에러 핸들러
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc):
     logger.debug(f"🚨 404 에러: {request.method} {request.url.path}")
-    
+
     return JSONResponse(
         status_code=404,
         content={
             "detail": f"경로를 찾을 수 없습니다: {request.method} {request.url.path}",
             "available_routes": [
-                {"path": route.path, "methods": list(route.methods) if hasattr(route, 'methods') else []}
+                {"path": route.path, "methods": list(route.methods) if hasattr(route, "methods") else []}
                 for route in app.routes
-            ]
-        }
+            ],
+        },
     )
+
 
 # 라우터 등록
 logger.debug("📦 라우터 등록 시작...")
@@ -135,7 +143,7 @@ logger.debug("   ✅ Secret Stats 라우터 등록 완료")
 # 등록된 라우트 출력 (DEBUG 레벨)
 logger.debug("📋 등록된 전체 라우트:")
 for route in app.routes:
-    if hasattr(route, 'methods'):
+    if hasattr(route, "methods"):
         logger.debug(f"   - {route.path} [{', '.join(route.methods)}]")
 
 
@@ -145,15 +153,11 @@ async def root():
     return {
         "message": "Stock Analysis API",
         "version": "1.0.0",
-        "docs": "/docs" if settings.is_development else "disabled"
+        "docs": "/docs" if settings.is_development else "disabled",
     }
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(
-        "app.main:app",
-        host=settings.host,
-        port=settings.port,
-        reload=settings.is_development
-    )
+
+    uvicorn.run("app.main:app", host=settings.host, port=settings.port, reload=settings.is_development)

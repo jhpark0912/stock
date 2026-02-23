@@ -62,7 +62,10 @@ export async function createPortfolio(data: CreatePortfolioRequest): Promise<Por
 /**
  * 포트폴리오 업데이트
  */
-export async function updatePortfolio(ticker: string, data: UpdatePortfolioRequest): Promise<PortfolioItem> {
+export async function updatePortfolio(
+  ticker: string,
+  data: UpdatePortfolioRequest,
+): Promise<PortfolioItem> {
   const response = await api.put<ApiResponse<PortfolioItem>>(`/api/portfolio/${ticker}`, data);
   return response.data.data;
 }
@@ -82,7 +85,7 @@ export async function deletePortfolio(ticker: string): Promise<void> {
 export async function updateProfitInfo(
   ticker: string,
   currentPrice: number,
-  purchasePrice: number | null
+  purchasePrice: number | null,
 ): Promise<PortfolioItem> {
   // 업데이트할 데이터 구성
   const updateData: { last_price: number; profit_percent?: number } = {
@@ -94,7 +97,10 @@ export async function updateProfitInfo(
     updateData.profit_percent = ((currentPrice - purchasePrice) / purchasePrice) * 100;
   }
 
-  const response = await api.put<ApiResponse<PortfolioItem>>(`/api/portfolio/${ticker}`, updateData);
+  const response = await api.put<ApiResponse<PortfolioItem>>(
+    `/api/portfolio/${ticker}`,
+    updateData,
+  );
 
   return response.data.data;
 }

@@ -93,7 +93,9 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
             purchasePrice={displayData.purchasePrice}
             quantity={displayData.quantity}
             hasData={displayData.hasData}
-            onUpdateDisplayName={(name) => displayData.ticker && handleUpdateDisplayName(displayData.ticker, name)}
+            onUpdateDisplayName={(name) =>
+              displayData.ticker && handleUpdateDisplayName(displayData.ticker, name)
+            }
           />
         )}
 
@@ -200,7 +202,9 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
                           {stockData?.technical_indicators ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               <div className="space-y-2">
-                                <h3 className="text-sm font-medium text-muted-foreground">RSI (14일)</h3>
+                                <h3 className="text-sm font-medium text-muted-foreground">
+                                  RSI (14일)
+                                </h3>
                                 <p className="text-2xl font-bold text-foreground">
                                   {stockData.technical_indicators.rsi?.rsi14?.toFixed(1) || 'N/A'}
                                 </p>
@@ -210,11 +214,13 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
                                   height="md"
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                  {stockData.technical_indicators.rsi?.rsi14 && stockData.technical_indicators.rsi.rsi14 > 70
+                                  {stockData.technical_indicators.rsi?.rsi14 &&
+                                  stockData.technical_indicators.rsi.rsi14 > 70
                                     ? '과매수'
-                                    : stockData.technical_indicators.rsi?.rsi14 && stockData.technical_indicators.rsi.rsi14 < 30
-                                    ? '과매도'
-                                    : '중립'}
+                                    : stockData.technical_indicators.rsi?.rsi14 &&
+                                        stockData.technical_indicators.rsi.rsi14 < 30
+                                      ? '과매도'
+                                      : '중립'}
                                 </p>
                               </div>
 
@@ -222,7 +228,8 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
                                 <h3 className="text-sm font-medium text-muted-foreground">MACD</h3>
                                 <p
                                   className={`text-2xl font-bold ${
-                                    stockData.technical_indicators.macd?.macd && stockData.technical_indicators.macd.macd > 0
+                                    stockData.technical_indicators.macd?.macd &&
+                                    stockData.technical_indicators.macd.macd > 0
                                       ? 'text-success'
                                       : 'text-destructive'
                                   }`}
@@ -233,41 +240,57 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
                                     : 'N/A'}
                                 </p>
                                 <GaugeBar
-                                  percent={Math.min(Math.abs(stockData.technical_indicators.macd?.macd || 0) * 10, 100)}
+                                  percent={Math.min(
+                                    Math.abs(stockData.technical_indicators.macd?.macd || 0) * 10,
+                                    100,
+                                  )}
                                   colorType={
-                                    stockData.technical_indicators.macd?.macd && stockData.technical_indicators.macd.macd > 0
+                                    stockData.technical_indicators.macd?.macd &&
+                                    stockData.technical_indicators.macd.macd > 0
                                       ? 'success'
                                       : 'destructive'
                                   }
                                   height="md"
                                 />
                                 <p className="text-xs text-muted-foreground">
-                                  {stockData.technical_indicators.macd?.macd && stockData.technical_indicators.macd.macd > 0
+                                  {stockData.technical_indicators.macd?.macd &&
+                                  stockData.technical_indicators.macd.macd > 0
                                     ? '상승 신호'
                                     : '하락 신호'}
                                 </p>
                               </div>
 
                               <div className="space-y-2">
-                                <h3 className="text-sm font-medium text-muted-foreground">SMA (20일)</h3>
+                                <h3 className="text-sm font-medium text-muted-foreground">
+                                  SMA (20일)
+                                </h3>
                                 <p className="text-2xl font-bold text-foreground">
                                   {stockData.technical_indicators.sma?.sma20
-                                    ? formatCurrency(stockData.technical_indicators.sma.sma20, stockData.ticker)
+                                    ? formatCurrency(
+                                        stockData.technical_indicators.sma.sma20,
+                                        stockData.ticker,
+                                      )
                                     : 'N/A'}
                                 </p>
                                 <GaugeBar percent={55} colorType="primary" height="md" />
                                 <p className="text-xs text-muted-foreground">
-                                  {stockData.price.current > (stockData.technical_indicators.sma?.sma20 || 0)
+                                  {stockData.price.current >
+                                  (stockData.technical_indicators.sma?.sma20 || 0)
                                     ? '현재가 상회'
                                     : '현재가 하회'}
                                 </p>
                               </div>
 
                               <div className="space-y-2">
-                                <h3 className="text-sm font-medium text-muted-foreground">볼린저밴드</h3>
+                                <h3 className="text-sm font-medium text-muted-foreground">
+                                  볼린저밴드
+                                </h3>
                                 <p className="text-2xl font-bold text-foreground">
                                   {stockData.technical_indicators.bollinger_bands?.middle
-                                    ? formatCurrency(stockData.technical_indicators.bollinger_bands.middle, stockData.ticker)
+                                    ? formatCurrency(
+                                        stockData.technical_indicators.bollinger_bands.middle,
+                                        stockData.ticker,
+                                      )
                                     : 'N/A'}
                                 </p>
                                 <GaugeBar percent={50} colorType="primary" height="md" />
@@ -316,7 +339,9 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
                                     {news.source && <span>{news.source}</span>}
                                     {news.source && news.published_at && <span>•</span>}
                                     {news.published_at && (
-                                      <span>{new Date(news.published_at).toLocaleDateString('ko-KR')}</span>
+                                      <span>
+                                        {new Date(news.published_at).toLocaleDateString('ko-KR')}
+                                      </span>
                                     )}
                                   </div>
                                 </div>
@@ -329,15 +354,15 @@ export function PortfolioPage({ onNavigateToSettings }: PortfolioPageProps) {
                               {userSettings.tickers.length === 0
                                 ? 'No tickers added yet.'
                                 : stockData
-                                ? 'No news available.'
-                                : 'No data loaded.'}
+                                  ? 'No news available.'
+                                  : 'No data loaded.'}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {userSettings.tickers.length === 0
                                 ? 'Add a ticker from the sidebar to get started.'
                                 : !stockData
-                                ? 'Click a ticker from the sidebar to load data.'
-                                : 'News will appear here when available.'}
+                                  ? 'Click a ticker from the sidebar to load data.'
+                                  : 'News will appear here when available.'}
                             </p>
                           </div>
                         )}

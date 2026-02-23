@@ -1,21 +1,34 @@
 """
 주식 데이터 조회 서비스
 """
-from yahooquery import Ticker
-from datetime import datetime, timedelta
-from deep_translator import GoogleTranslator
-from typing import Dict, Tuple, List, Optional
-import pandas as pd
+
 import asyncio
-from app.models.stock import (
-    StockData, PriceInfo, FinancialsInfo, CompanyInfo, TechnicalIndicators,
-    SMAInfo, EMAInfo, RSIInfo, MACDInfo, BollingerBandsInfo,
-    NewsItem, AIAnalysis, AnalysisSummary
-)
 import json
 import re
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Tuple
+
 import google.generativeai as genai
+import pandas as pd
+from deep_translator import GoogleTranslator
+from yahooquery import Ticker
+
 from app.config import settings
+from app.models.stock import (
+    AIAnalysis,
+    AnalysisSummary,
+    BollingerBandsInfo,
+    CompanyInfo,
+    EMAInfo,
+    FinancialsInfo,
+    MACDInfo,
+    NewsItem,
+    PriceInfo,
+    RSIInfo,
+    SMAInfo,
+    StockData,
+    TechnicalIndicators,
+)
 from app.services.stock.mock_data import get_mock_stock_data
 from app.services.stock.technical_indicators import calculate_all_indicators, calculate_chart_data
 
@@ -29,7 +42,9 @@ class StockService:
         self._cache: Dict[str, Tuple[StockData, datetime]] = {}
         self._cache_ttl = timedelta(minutes=5)  # 5분 캐시
 
-    def get_stock_data(self, ticker_symbol: str, include_technical: bool = False, include_chart: bool = False) -> StockData:
+    def get_stock_data(
+        self, ticker_symbol: str, include_technical: bool = False, include_chart: bool = False
+    ) -> StockData:
         """
         주식 실시간 데이터 조회 (캐싱 적용)
 
@@ -61,40 +76,39 @@ class StockService:
 
         # 새로운 데이터 조회
         try:
-
             # yahooquery Ticker 생성
             ticker = Ticker(ticker_upper)
-            
+
             # 여러 모듈 한 번에 요청
-            modules = 'financialData quoteType defaultKeyStatistics assetProfile summaryDetail'
+            modules = "financialData quoteType defaultKeyStatistics assetProfile summaryDetail"
             all_data = ticker.get_modules(modules)
-            
+
             # yahooquery는 데이터를 못찾으면 티커 키 아래에 문자열 메시지를 반환함
             if ticker_upper not in all_data or not isinstance(all_data.get(ticker_upper), dict):
                 raise ValueError(f"'{ticker_symbol}'에 대한 데이터를 찾을 수 없습니다. 유효한 티커인지 확인하세요.")
-            
+
             info = all_data[ticker_upper]
-            
+
             # 데이터 추출용 헬퍼 (중첩 딕셔너리 안전 접근)
-            fin_data = info.get('financialData', {})
-            stats = info.get('defaultKeyStatistics', {})
-            profile = info.get('assetProfile', {})
-            summary = info.get('summaryDetail', {})
+            fin_data = info.get("financialData", {})
+            stats = info.get("defaultKeyStatistics", {})
+            profile = info.get("assetProfile", {})
+            summary = info.get("summaryDetail", {})
 
             # 가격 정보 - current와 close 조회
-            current_price = fin_data.get('currentPrice') or summary.get('regularMarketPrice')
-            close_price = summary.get('regularMarketPreviousClose') or summary.get('previousClose')
-            
+            current_price = fin_data.get("currentPrice") or summary.get("regularMarketPrice")
+            close_price = summary.get("regularMarketPreviousClose") or summary.get("previousClose")
+
             # current가 없으면 history에서 가장 최근 종가 조회
             if current_price is None:
                 try:
-                    history_df = ticker.history(period='5d')  # 최근 5일
+                    history_df = ticker.history(period="5d")  # 최근 5일
                     if history_df is not None and not history_df.empty:
                         # 멀티인덱스 처리
                         if isinstance(history_df.index, pd.MultiIndex):
-                            history_df = history_df.reset_index(level='symbol', drop=True)
+                            history_df = history_df.reset_index(level="symbol", drop=True)
                         # 가장 최근 종가
-                        latest_close = history_df['close'].iloc[-1]
+                        latest_close = history_df["close"].iloc[-1]
                         if pd.notna(latest_close):
                             current_price = float(latest_close)
                             if close_price is None:
@@ -104,45 +118,45 @@ class StockService:
 
             price = PriceInfo(
                 current=current_price,
-                open=summary.get('regularMarketOpen') or summary.get('open'),
-                high=summary.get('regularMarketDayHigh') or summary.get('dayHigh'),
-                low=summary.get('regularMarketDayLow') or summary.get('dayLow'),
+                open=summary.get("regularMarketOpen") or summary.get("open"),
+                high=summary.get("regularMarketDayHigh") or summary.get("dayHigh"),
+                low=summary.get("regularMarketDayLow") or summary.get("dayLow"),
                 close=close_price,
-                volume=summary.get('regularMarketVolume') or summary.get('volume'),
+                volume=summary.get("regularMarketVolume") or summary.get("volume"),
             )
 
             # 재무 지표 (기본값)
-            trailing_pe = summary.get('trailingPE')
-            forward_pe = summary.get('forwardPE')
-            pbr = stats.get('priceToBook')
-            
+            trailing_pe = summary.get("trailingPE")
+            forward_pe = summary.get("forwardPE")
+            pbr = stats.get("priceToBook")
+
             # PE/PBR이 None인 경우 재무제표에서 직접 계산 (한국 주식 대응)
             if trailing_pe is None or pbr is None:
                 try:
-                    market_cap = summary.get('marketCap')
-                    
+                    market_cap = summary.get("marketCap")
+
                     if market_cap and market_cap > 0:
                         # PBR 계산: 시가총액 / 자본총계
                         if pbr is None:
                             balance_sheet = ticker.balance_sheet()
-                            if hasattr(balance_sheet, 'columns') and not balance_sheet.empty:
+                            if hasattr(balance_sheet, "columns") and not balance_sheet.empty:
                                 # StockholdersEquity 또는 TotalStockholderEquity
                                 equity = None
-                                for col in ['StockholdersEquity', 'TotalStockholderEquity']:
+                                for col in ["StockholdersEquity", "TotalStockholderEquity"]:
                                     if col in balance_sheet.columns:
                                         equity = balance_sheet[col].iloc[0]
                                         break
-                                
+
                                 if equity and pd.notna(equity) and equity > 0:
                                     pbr = round(market_cap / equity, 2)
-                        
+
                         # PER 계산: 시가총액 / 당기순이익 또는 현재가 / EPS
                         if trailing_pe is None:
                             income_stmt = ticker.income_statement()
-                            if hasattr(income_stmt, 'columns') and not income_stmt.empty:
+                            if hasattr(income_stmt, "columns") and not income_stmt.empty:
                                 # 방법 1: NetIncome으로 계산
                                 net_income = None
-                                for col in ['NetIncome', 'NetIncomeCommonStockholders']:
+                                for col in ["NetIncome", "NetIncomeCommonStockholders"]:
                                     if col in income_stmt.columns:
                                         net_income = income_stmt[col].iloc[0]
                                         if pd.notna(net_income):
@@ -154,7 +168,7 @@ class StockService:
                                 # 방법 2: EPS로 계산 (NetIncome이 없는 경우)
                                 if trailing_pe is None and current_price:
                                     eps = None
-                                    for col in ['BasicEPS', 'DilutedEPS']:
+                                    for col in ["BasicEPS", "DilutedEPS"]:
                                         if col in income_stmt.columns:
                                             eps = income_stmt[col].iloc[0]
                                             if pd.notna(eps):
@@ -164,35 +178,35 @@ class StockService:
                                         trailing_pe = round(current_price / eps, 2)
                 except Exception:
                     pass  # 계산 실패 시 None 유지
-            
+
             financials = FinancialsInfo(
                 # 밸류에이션
                 trailing_pe=trailing_pe,
                 forward_pe=forward_pe,
                 pbr=pbr,
-                roe=fin_data.get('returnOnEquity'),
-                opm=fin_data.get('operatingMargins'),
-                peg=stats.get('pegRatio'),
+                roe=fin_data.get("returnOnEquity"),
+                opm=fin_data.get("operatingMargins"),
+                peg=stats.get("pegRatio"),
                 # 재무 건전성
-                debt_to_equity=fin_data.get('debtToEquity'),
-                current_ratio=fin_data.get('currentRatio'),
-                quick_ratio=fin_data.get('quickRatio'),
+                debt_to_equity=fin_data.get("debtToEquity"),
+                current_ratio=fin_data.get("currentRatio"),
+                quick_ratio=fin_data.get("quickRatio"),
                 # 배당
-                dividend_yield=summary.get('dividendYield'),
-                payout_ratio=stats.get('payoutRatio'),
+                dividend_yield=summary.get("dividendYield"),
+                payout_ratio=stats.get("payoutRatio"),
                 # 성장성
-                revenue_growth=fin_data.get('revenueGrowth'),
-                earnings_growth=fin_data.get('earningsGrowth'),
+                revenue_growth=fin_data.get("revenueGrowth"),
+                earnings_growth=fin_data.get("earningsGrowth"),
             )
 
             # 회사 정보
-            summary_original = profile.get('longBusinessSummary', '')
+            summary_original = profile.get("longBusinessSummary", "")
             summary_translated = self._translate_text(summary_original)
 
             company = CompanyInfo(
-                name=info.get('longName') or info.get('shortName') or ticker_upper,
-                sector=profile.get('sector'),
-                industry=profile.get('industry'),
+                name=info.get("longName") or info.get("shortName") or ticker_upper,
+                sector=profile.get("sector"),
+                industry=profile.get("industry"),
                 summary_original=summary_original,
                 summary_translated=summary_translated,
             )
@@ -202,22 +216,22 @@ class StockService:
             if include_technical:
                 try:
                     # 과거 1년 데이터 조회
-                    history_df = ticker.history(period='1y')
+                    history_df = ticker.history(period="1y")
 
                     if history_df is not None and not history_df.empty:
                         # calculate_all_indicators 호출
                         indicators_result = calculate_all_indicators(history_df, ticker_upper)
 
-                        if 'error' not in indicators_result:
+                        if "error" not in indicators_result:
                             # Pydantic 모델로 변환
                             technical_indicators = TechnicalIndicators(
-                                sma=SMAInfo(**indicators_result['sma']),
-                                ema=EMAInfo(**indicators_result['ema']),
-                                rsi=RSIInfo(**indicators_result['rsi']),
-                                macd=MACDInfo(**indicators_result['macd']),
-                                bollinger_bands=BollingerBandsInfo(**indicators_result['bollinger_bands'])
+                                sma=SMAInfo(**indicators_result["sma"]),
+                                ema=EMAInfo(**indicators_result["ema"]),
+                                rsi=RSIInfo(**indicators_result["rsi"]),
+                                macd=MACDInfo(**indicators_result["macd"]),
+                                bollinger_bands=BollingerBandsInfo(**indicators_result["bollinger_bands"]),
                             )
-                except Exception as e:
+                except Exception:
                     pass
 
             # 차트 데이터 조회 (옵션)
@@ -225,14 +239,14 @@ class StockService:
             if include_chart:
                 try:
                     chart_data_list = self.get_chart_data(ticker_upper, period="1y")
-                except Exception as e:
+                except Exception:
                     pass
 
             # StockData 생성
             stock_data = StockData(
                 ticker=ticker_upper,
                 timestamp=datetime.now(),
-                market_cap=summary.get('marketCap'),
+                market_cap=summary.get("marketCap"),
                 price=price,
                 financials=financials,
                 company=company,
@@ -250,10 +264,7 @@ class StockService:
 
             # 429 에러 특별 처리
             if "429" in error_msg or "Too Many Requests" in error_msg:
-                raise ValueError(
-                    f"Yahoo Finance API 요청 제한 초과. "
-                    f"잠시 후 다시 시도하거나 다른 티커를 조회해주세요."
-                )
+                raise ValueError("Yahoo Finance API 요청 제한 초과. 잠시 후 다시 시도하거나 다른 티커를 조회해주세요.")
 
             raise ValueError(f"주식 데이터 조회 실패: {error_msg}")
 
@@ -278,7 +289,7 @@ class StockService:
 
             # 멀티인덱스 DataFrame인 경우 인덱스 리셋
             if isinstance(history_df.index, pd.MultiIndex):
-                history_df = history_df.reset_index(level='symbol', drop=True)
+                history_df = history_df.reset_index(level="symbol", drop=True)
 
             chart_data = calculate_chart_data(history_df)
 
@@ -286,12 +297,9 @@ class StockService:
 
         except Exception as e:
             error_msg = str(e)
-            
+
             if "429" in error_msg or "Too Many Requests" in error_msg:
-                raise ValueError(
-                    f"Yahoo Finance API 요청 제한 초과. "
-                    f"잠시 후 다시 시도하거나 다른 티커를 조회해주세요."
-                )
+                raise ValueError("Yahoo Finance API 요청 제한 초과. 잠시 후 다시 시도하거나 다른 티커를 조회해주세요.")
             raise ValueError(f"차트 데이터 조회 실패: {error_msg}")
 
     def get_news(self, ticker_symbol: str) -> List[NewsItem]:
@@ -321,25 +329,27 @@ class StockService:
             for item in news_items_raw:
                 if not isinstance(item, dict):
                     continue
-                    
-                published_at = None
-                if item.get('providerPublishTime'):
-                    try:
-                        published_at = datetime.fromtimestamp(item['providerPublishTime'])
-                    except (TypeError, ValueError):
-                        pass # 날짜 변환 실패 시 None
 
-                news_list.append(NewsItem(
-                    title=item.get('title', '제목 없음'),
-                    link=item.get('link', ''),
-                    published_at=published_at,
-                    source=item.get('publisher', '알 수 없음')
-                ))
+                published_at = None
+                if item.get("providerPublishTime"):
+                    try:
+                        published_at = datetime.fromtimestamp(item["providerPublishTime"])
+                    except (TypeError, ValueError):
+                        pass  # 날짜 변환 실패 시 None
+
+                news_list.append(
+                    NewsItem(
+                        title=item.get("title", "제목 없음"),
+                        link=item.get("link", ""),
+                        published_at=published_at,
+                        source=item.get("publisher", "알 수 없음"),
+                    )
+                )
             return news_list
 
-        except Exception as e:
+        except Exception:
             return []
-            
+
     @staticmethod
     def _translate_text(text: str) -> str:
         """
@@ -355,35 +365,36 @@ class StockService:
             return ""
 
         try:
-            translator = GoogleTranslator(source='auto', target='ko')
+            translator = GoogleTranslator(source="auto", target="ko")
             translated = translator.translate(text)
             return translated
-        except Exception as e:
+        except Exception:
             return text  # 번역 실패 시 원본 반환
 
     async def get_comprehensive_analysis(
-        self, 
+        self,
         stock_data: StockData,
         user_api_key: Optional[str] = None,  # 유저 API 키 추가
         user_avg_price: Optional[float] = None,  # 평균 매수 단가
         user_profit_loss_ratio: Optional[float] = None,  # 수익률
-        user_weight: Optional[float] = None  # 포트폴리오 비중
+        user_weight: Optional[float] = None,  # 포트폴리오 비중
     ) -> AIAnalysis:
         """
         Gemini AI를 사용하여 종합 주식 분석 보고서 생성
-        
+
         타임아웃: 없음 (완료될 때까지 대기)
-        
+
         Args:
             stock_data: 주식 데이터
             user_api_key: 유저의 Gemini API 키 (필수)
         """
         import logging
         import traceback
+
         logger = logging.getLogger(__name__)
-        
+
         logger.debug(f"[Gemini] 분석 시작: {stock_data.ticker}")
-        
+
         # 유저 API 키 필수 확인
         if not user_api_key:
             logger.error("[Gemini] 유저 API 키 없음")
@@ -394,18 +405,22 @@ class StockService:
             logger.debug("[Gemini] 유저 API 키로 초기화 시도...")
             genai.configure(api_key=user_api_key)
             logger.debug("[Gemini] 초기화 완료")
-            
+
             logger.debug("[Gemini] 모델 생성 중...")
-            model = genai.GenerativeModel('models/gemini-flash-latest')
+            model = genai.GenerativeModel("models/gemini-flash-latest")
             logger.debug("[Gemini] 모델 생성 완료")
 
             # 프롬프트에 필요한 데이터 포맷팅
             logger.debug("[Gemini] 프롬프트 생성 중...")
             price_data_str = f"현재가: {stock_data.price.current}, 시가총액: {stock_data.market_cap}"
-            financial_data_str = ", ".join([f"{k}: {v}" for k, v in stock_data.financials.dict().items() if v is not None])
+            financial_data_str = ", ".join(
+                [f"{k}: {v}" for k, v in stock_data.financials.dict().items() if v is not None]
+            )
             tech_data_str = "N/A"
             if stock_data.technical_indicators:
-                tech_data_str = ", ".join([f"{k}: {v}" for k, v in stock_data.technical_indicators.dict(exclude_none=True).items()])
+                tech_data_str = ", ".join(
+                    [f"{k}: {v}" for k, v in stock_data.technical_indicators.dict(exclude_none=True).items()]
+                )
 
             # 평단가 정보가 있으면 맞춤형 프롬프트 사용
             if user_avg_price is not None:
@@ -474,7 +489,7 @@ class StockService:
 반드시 한국어로 작성하고, 가독성을 위해 마크다운(Markdown) 형식을 사용해줘. 전문 용어를 사용하되 초보자도 이해할 수 있게 쉬운 비유를 곁들여줘.
 """
             logger.debug(f"[Gemini] 프롬프트 길이: {len(prompt)} 문자")
-            
+
             # 블로킹 호출을 비동기로 감싸기
             def _generate():
                 logger.debug("[Gemini] API 호출 시작")
@@ -486,13 +501,13 @@ class StockService:
                     logger.error(f"[Gemini] API 호출 실패: {type(e).__name__}: {str(e)}")
                     logger.error(f"[Gemini] Traceback: {traceback.format_exc()}")
                     raise
-            
+
             # 타임아웃 60초 설정
             logger.debug("[Gemini] asyncio.to_thread 시작 (타임아웃: 60초)")
             try:
                 response = await asyncio.wait_for(
                     asyncio.to_thread(_generate),
-                    timeout=60.0  # 1분 타임아웃
+                    timeout=60.0,  # 1분 타임아웃
                 )
                 logger.debug(f"[Gemini] 응답 받음, 길이: {len(response.text) if response.text else 0}")
                 return AIAnalysis(report=response.text)
@@ -512,46 +527,42 @@ class StockService:
             error_msg = str(e)
             logger.error(f"[Gemini] 예상치 못한 에러: {type(e).__name__}: {error_msg}")
             logger.error(f"[Gemini] Full traceback: {traceback.format_exc()}")
-            
+
             if "429" in error_msg or "quota" in error_msg.lower():
                 raise ValueError(f"Gemini API 요청 제한 초과: {error_msg}")
             if "403" in error_msg or "permission" in error_msg.lower():
                 raise ValueError(f"Gemini API 권한 오류: API 키를 확인해주세요. {error_msg}")
             if "401" in error_msg or "unauthorized" in error_msg.lower():
                 raise ValueError(f"Gemini API 인증 오류: API 키가 유효하지 않습니다. {error_msg}")
-            
+
             raise ValueError(f"Gemini AI 분석 중 오류 발생: {error_msg}")
 
-    async def generate_analysis_summary(
-        self,
-        ticker: str,
-        full_report: str,
-        user_api_key: str
-    ) -> AnalysisSummary:
+    async def generate_analysis_summary(self, ticker: str, full_report: str, user_api_key: str) -> AnalysisSummary:
         """
         전체 보고서에서 3줄 요약 + 투자 전략 추출 (Gemini 추가 호출)
-        
+
         Args:
             ticker: 종목 티커
             full_report: 전체 마크다운 보고서
             user_api_key: 유저의 Gemini API 키
-            
+
         Returns:
             AnalysisSummary: 3줄 요약과 투자 전략
         """
         import logging
         import traceback
+
         logger = logging.getLogger(__name__)
-        
+
         logger.debug(f"[Gemini Summary] 요약 생성 시작: {ticker}")
-        
+
         if not user_api_key:
             raise ValueError("Gemini API 키가 필요합니다.")
-        
+
         try:
             genai.configure(api_key=user_api_key)
-            model = genai.GenerativeModel('models/gemini-flash-latest')
-            
+            model = genai.GenerativeModel("models/gemini-flash-latest")
+
             prompt = f"""
 다음 {ticker} 주식 분석 보고서를 읽고 아래 형식에 맞춰 응답해주세요.
 
@@ -568,37 +579,34 @@ class StockService:
 ### 응답 형식 (반드시 JSON만 출력)
 {{"summary": "첫번째 요약 줄\\n두번째 요약 줄\\n세번째 요약 줄", "strategy": "buy|hold|sell"}}
 """
-            
+
             def _generate():
                 return model.generate_content(prompt)
-            
+
             response = await asyncio.wait_for(
                 asyncio.to_thread(_generate),
-                timeout=60.0  # 요약도 1분 타임아웃
+                timeout=60.0,  # 요약도 1분 타임아웃
             )
-            
+
             # JSON 파싱 (응답에서 JSON 추출)
             response_text = response.text.strip()
-            
+
             # 마크다운 코드 블록 제거
             if response_text.startswith("```"):
-                response_text = re.sub(r'^```(?:json)?\s*', '', response_text)
-                response_text = re.sub(r'\s*```$', '', response_text)
-            
+                response_text = re.sub(r"^```(?:json)?\s*", "", response_text)
+                response_text = re.sub(r"\s*```$", "", response_text)
+
             result = json.loads(response_text)
-            
+
             # 전략 유효성 검사
-            strategy = result.get('strategy', 'hold').lower()
-            if strategy not in ['buy', 'hold', 'sell']:
-                strategy = 'hold'
-            
+            strategy = result.get("strategy", "hold").lower()
+            if strategy not in ["buy", "hold", "sell"]:
+                strategy = "hold"
+
             logger.debug(f"[Gemini Summary] 요약 생성 완료: {ticker}, 전략: {strategy}")
-            
-            return AnalysisSummary(
-                summary=result.get('summary', ''),
-                strategy=strategy
-            )
-            
+
+            return AnalysisSummary(summary=result.get("summary", ""), strategy=strategy)
+
         except json.JSONDecodeError as e:
             logger.error(f"[Gemini Summary] JSON 파싱 실패: {e}, 응답: {response_text}")
             raise ValueError("요약 생성 결과 파싱에 실패했습니다. 다시 시도해주세요.")

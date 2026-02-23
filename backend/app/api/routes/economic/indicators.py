@@ -3,21 +3,29 @@
 - GET /economic
 - GET /economic/status
 """
+
 import logging
 import time
 from concurrent.futures import ThreadPoolExecutor
-from fastapi import APIRouter, Query
 from datetime import datetime
 from typing import Literal
 
+from fastapi import APIRouter, Query
+
 from app.models.economic import (
-    EconomicResponse, EconomicData,
-    KoreaEconomicResponse, KoreaEconomicData, KoreaRatesData, KoreaMacroData, KoreaFxData,
-    AllEconomicResponse, AllEconomicData,
+    AllEconomicData,
+    AllEconomicResponse,
+    EconomicData,
+    EconomicResponse,
+    KoreaEconomicData,
+    KoreaEconomicResponse,
+    KoreaFxData,
+    KoreaMacroData,
+    KoreaRatesData,
 )
 from app.services.economic.economic_service import get_all_yahoo_indicators_parallel
-from app.services.economic.fred_service import get_macro_data_parallel, check_fred_availability
-from app.services.economic.korea_economic_service import get_all_korea_indicators, check_ecos_availability
+from app.services.economic.fred_service import check_fred_availability, get_macro_data_parallel
+from app.services.economic.korea_economic_service import check_ecos_availability, get_all_korea_indicators
 
 logger = logging.getLogger(__name__)
 
@@ -27,13 +35,9 @@ router = APIRouter()
 @router.get("/economic")
 async def get_economic_indicators(
     country: Literal["us", "kr", "all"] = Query(
-        default="us",
-        description="조회할 국가 (us: 미국, kr: 한국, all: 전체)"
+        default="us", description="조회할 국가 (us: 미국, kr: 한국, all: 전체)"
     ),
-    include_history: bool = Query(
-        default=False,
-        description="30일 히스토리 데이터 포함 여부"
-    )
+    include_history: bool = Query(default=False, description="30일 히스토리 데이터 포함 여부"),
 ):
     """
     경제 지표 조회
@@ -95,27 +99,28 @@ async def _get_us_indicators(include_history: bool) -> EconomicResponse:
         rates=yahoo_data["rates"],
         macro=macro_data,
         commodities=yahoo_data["commodities"],
-        last_updated=datetime.now().isoformat()
+        last_updated=datetime.now().isoformat(),
     )
 
-    total_indicators = sum([
-        1 for ind in [
-            economic_data.rates.treasury_10y,
-            economic_data.rates.treasury_3m,
-            economic_data.rates.vix,
-            economic_data.macro.cpi,
-            economic_data.macro.m2,
-            economic_data.commodities.wti_oil,
-            economic_data.commodities.gold
-        ] if ind
-    ])
+    total_indicators = sum(
+        [
+            1
+            for ind in [
+                economic_data.rates.treasury_10y,
+                economic_data.rates.treasury_3m,
+                economic_data.rates.vix,
+                economic_data.macro.cpi,
+                economic_data.macro.m2,
+                economic_data.commodities.wti_oil,
+                economic_data.commodities.gold,
+            ]
+            if ind
+        ]
+    )
 
     logger.debug(f"미국 경제 지표 조회 완료: {total_indicators}개 지표")
 
-    return EconomicResponse(
-        success=True,
-        data=economic_data
-    )
+    return EconomicResponse(success=True, data=economic_data)
 
 
 async def _get_kr_indicators(include_history: bool) -> KoreaEconomicResponse:
@@ -131,37 +136,36 @@ async def _get_kr_indicators(include_history: bool) -> KoreaEconomicResponse:
         rates=KoreaRatesData(
             bond_10y=kr_data["rates"]["bond_10y"],
             base_rate=kr_data["rates"]["base_rate"],
-            credit_spread=kr_data["rates"]["credit_spread"]
+            credit_spread=kr_data["rates"]["credit_spread"],
         ),
         macro=KoreaMacroData(
             leading_index=kr_data["macro"]["leading_index"],
             ccsi=kr_data["macro"]["ccsi"],
-            export=kr_data["macro"]["export"]
+            export=kr_data["macro"]["export"],
         ),
-        fx=KoreaFxData(
-            usd_krw=kr_data["fx"]["usd_krw"]
-        ),
-        last_updated=datetime.now().isoformat()
+        fx=KoreaFxData(usd_krw=kr_data["fx"]["usd_krw"]),
+        last_updated=datetime.now().isoformat(),
     )
 
-    total_indicators = sum([
-        1 for ind in [
-            korea_data.rates.bond_10y,
-            korea_data.rates.base_rate,
-            korea_data.rates.credit_spread,
-            korea_data.macro.leading_index,
-            korea_data.macro.ccsi,
-            korea_data.macro.export,
-            korea_data.fx.usd_krw
-        ] if ind
-    ])
+    total_indicators = sum(
+        [
+            1
+            for ind in [
+                korea_data.rates.bond_10y,
+                korea_data.rates.base_rate,
+                korea_data.rates.credit_spread,
+                korea_data.macro.leading_index,
+                korea_data.macro.ccsi,
+                korea_data.macro.export,
+                korea_data.fx.usd_krw,
+            ]
+            if ind
+        ]
+    )
 
     logger.debug(f"한국 경제 지표 조회 완료: {total_indicators}개 지표")
 
-    return KoreaEconomicResponse(
-        success=True,
-        data=korea_data
-    )
+    return KoreaEconomicResponse(success=True, data=korea_data)
 
 
 async def _get_all_indicators(include_history: bool) -> AllEconomicResponse:
@@ -184,35 +188,27 @@ async def _get_all_indicators(include_history: bool) -> AllEconomicResponse:
         rates=yahoo_data["rates"],
         macro=macro_data,
         commodities=yahoo_data["commodities"],
-        last_updated=datetime.now().isoformat()
+        last_updated=datetime.now().isoformat(),
     )
 
     kr_economic_data = KoreaEconomicData(
         rates=KoreaRatesData(
             bond_10y=kr_data["rates"]["bond_10y"],
             base_rate=kr_data["rates"]["base_rate"],
-            credit_spread=kr_data["rates"]["credit_spread"]
+            credit_spread=kr_data["rates"]["credit_spread"],
         ),
         macro=KoreaMacroData(
             leading_index=kr_data["macro"]["leading_index"],
             ccsi=kr_data["macro"]["ccsi"],
-            export=kr_data["macro"]["export"]
+            export=kr_data["macro"]["export"],
         ),
-        fx=KoreaFxData(
-            usd_krw=kr_data["fx"]["usd_krw"]
-        ),
-        last_updated=datetime.now().isoformat()
+        fx=KoreaFxData(usd_krw=kr_data["fx"]["usd_krw"]),
+        last_updated=datetime.now().isoformat(),
     )
 
-    all_data = AllEconomicData(
-        us=us_data,
-        kr=kr_economic_data
-    )
+    all_data = AllEconomicData(us=us_data, kr=kr_economic_data)
 
-    return AllEconomicResponse(
-        success=True,
-        data=all_data
-    )
+    return AllEconomicResponse(success=True, data=all_data)
 
 
 @router.get("/economic/status")
@@ -230,10 +226,4 @@ async def get_economic_status():
     fred_status = check_fred_availability()
     ecos_status = check_ecos_availability()
 
-    return {
-        "yahoo": {
-            "available": YAHOOQUERY_AVAILABLE
-        },
-        "fred": fred_status,
-        "ecos": ecos_status
-    }
+    return {"yahoo": {"available": YAHOOQUERY_AVAILABLE}, "fred": fred_status, "ecos": ecos_status}

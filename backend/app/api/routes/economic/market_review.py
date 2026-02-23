@@ -3,15 +3,17 @@
 - GET /economic/market-review/{country}
 - POST /economic/market-review/{country}/ai
 """
+
 import logging
-from fastapi import APIRouter, Depends
 from typing import Literal, Optional
+
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from app.services.auth.auth_service import get_current_user, get_current_user_optional
 from app.database.connection import get_db
 from app.database.models import UserDB
 from app.database.user_repository import UserRepository
+from app.services.auth.auth_service import get_current_user, get_current_user_optional
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +73,7 @@ async def get_market_review_api(
             else:
                 if current_user.role == "admin":
                     from app.config import settings
+
                     if settings.kis_app_key and settings.kis_app_secret:
                         kis_app_key = settings.kis_app_key
                         kis_app_secret = settings.kis_app_secret
@@ -80,11 +83,7 @@ async def get_market_review_api(
                 else:
                     logger.debug(f"사용자 KIS 자격 증명 없음 (user_id={current_user.id})")
 
-        review_data = await get_market_review(
-            country,
-            kis_app_key=kis_app_key,
-            kis_app_secret=kis_app_secret
-        )
+        review_data = await get_market_review(country, kis_app_key=kis_app_key, kis_app_secret=kis_app_secret)
 
         logger.debug(f"증시 마감 리뷰 조회 완료 (country={country})")
 
@@ -123,9 +122,9 @@ async def generate_market_review_ai_api(
     - 로그인 필요
     - Gemini API 키 필요 (사용자 API 키 또는 환경변수)
     """
-    from app.models.economic import MarketReviewAIResponse
-    from app.services.market.market_review_service import get_market_review, generate_market_review_ai
     from app.config import settings
+    from app.models.economic import MarketReviewAIResponse
+    from app.services.market.market_review_service import generate_market_review_ai, get_market_review
 
     try:
         logger.debug(f"AI 마감 리뷰 분석 요청 (country={country}, user={current_user.username})")

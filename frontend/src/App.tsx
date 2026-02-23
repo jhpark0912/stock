@@ -3,47 +3,47 @@
  * TopNav 기반 페이지 아키텍처
  */
 
-import { useState, useEffect } from 'react'
-import { AuthProvider, useAuth } from './contexts/AuthContext'
-import { StealthProvider, useStealthMode } from './contexts/StealthContext'
-import { LoginPage } from './components/auth/LoginPage'
-import { TopNav, type PageType } from './components/layout/TopNav'
-import { HomePage } from './components/pages/HomePage'
-import { PortfolioPage } from './components/pages/PortfolioPage'
-import { AdminPage } from './components/admin/AdminPage'
-import { SettingsPage } from './components/settings/SettingsPage'
-import { StealthHomePage } from './components/stealth/StealthHomePage'
-import { StealthPortfolioPage } from './components/stealth/StealthPortfolioPage'
-import { LoadingSpinner } from './components/LoadingSpinner'
+import { useState, useEffect } from 'react';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { StealthProvider, useStealthMode } from './contexts/StealthContext';
+import { LoginPage } from './components/auth/LoginPage';
+import { TopNav, type PageType } from './components/layout/TopNav';
+import { HomePage } from './components/pages/HomePage';
+import { PortfolioPage } from './components/pages/PortfolioPage';
+import { AdminPage } from './components/admin/AdminPage';
+import { SettingsPage } from './components/settings/SettingsPage';
+import { StealthHomePage } from './components/stealth/StealthHomePage';
+import { StealthPortfolioPage } from './components/stealth/StealthPortfolioPage';
+import { LoadingSpinner } from './components/LoadingSpinner';
 
 /**
  * 인증된 앱 컨테이너
  */
 function AuthenticatedApp() {
-  const { user, logout, isLoading } = useAuth()
-  const { stealthMode } = useStealthMode()
-  const [currentPage, setCurrentPage] = useState<PageType>('economic')
+  const { user, logout, isLoading } = useAuth();
+  const { stealthMode } = useStealthMode();
+  const [currentPage, setCurrentPage] = useState<PageType>('economic');
 
   // 사용자 변경 시 페이지 리셋 (로그아웃 후 재로그인 시)
   useEffect(() => {
     if (user && user.role !== 'admin' && currentPage === 'admin') {
       // 일반 유저가 관리자 페이지에 있으면 economic으로 이동
-      setCurrentPage('economic')
+      setCurrentPage('economic');
     }
-  }, [user, currentPage])
+  }, [user, currentPage]);
 
   // 스텔스 모드에서 숨겨진 페이지에 있으면 economic으로 이동
   useEffect(() => {
     if (stealthMode && (currentPage === 'settings' || currentPage === 'admin')) {
-      setCurrentPage('economic')
+      setCurrentPage('economic');
     }
-  }, [stealthMode, currentPage])
+  }, [stealthMode, currentPage]);
 
   // 로그아웃 핸들러 (페이지 상태 리셋 포함)
   const handleLogout = () => {
-    setCurrentPage('economic') // 페이지 상태 리셋
-    logout()
-  }
+    setCurrentPage('economic'); // 페이지 상태 리셋
+    logout();
+  };
 
   // 초기 로딩 중
   if (isLoading) {
@@ -51,12 +51,12 @@ function AuthenticatedApp() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <LoadingSpinner message="로딩 중..." />
       </div>
-    )
+    );
   }
 
   // 미인증 - 로그인 페이지
   if (!user) {
-    return <LoginPage />
+    return <LoginPage />;
   }
 
   // 인증됨 - TopNav + 페이지 콘텐츠
@@ -73,19 +73,18 @@ function AuthenticatedApp() {
 
       {/* 페이지 콘텐츠 */}
       <main className="flex-1 min-h-0">
-        {currentPage === 'economic' && (
-          stealthMode ? <StealthHomePage /> : <HomePage />
-        )}
-        {currentPage === 'portfolio' && (
-          stealthMode
-            ? <StealthPortfolioPage />
-            : <PortfolioPage onNavigateToSettings={() => setCurrentPage('settings')} />
-        )}
+        {currentPage === 'economic' && (stealthMode ? <StealthHomePage /> : <HomePage />)}
+        {currentPage === 'portfolio' &&
+          (stealthMode ? (
+            <StealthPortfolioPage />
+          ) : (
+            <PortfolioPage onNavigateToSettings={() => setCurrentPage('settings')} />
+          ))}
         {currentPage === 'settings' && !stealthMode && <SettingsPage />}
         {currentPage === 'admin' && !stealthMode && user.role === 'admin' && <AdminPage />}
       </main>
     </div>
-  )
+  );
 }
 
 /**
@@ -98,7 +97,7 @@ function App() {
         <AuthenticatedApp />
       </StealthProvider>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;

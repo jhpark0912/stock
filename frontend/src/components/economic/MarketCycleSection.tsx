@@ -8,15 +8,15 @@ import { useState, useEffect } from 'react';
 import { Thermometer, Info, ChevronDown, ChevronUp, Sparkles, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
-import type { MarketCycleResponse, MarketCycleData, KrMarketCycleResponse, KrMarketCycleData } from '@/types/economic';
+import type {
+  MarketCycleResponse,
+  MarketCycleData,
+  KrMarketCycleResponse,
+  KrMarketCycleData,
+} from '@/types/economic';
 
 // ============================================================
 // Types
@@ -183,9 +183,10 @@ export function MarketCycleSection({ isAdmin = false, country = 'us' }: MarketCy
       setError(null);
 
       try {
-        const response = country === 'kr'
-          ? await api.get<KrMarketCycleResponse>(`/api/economic/market-cycle?country=kr`)
-          : await api.get<MarketCycleResponse>(`/api/economic/market-cycle?country=us`);
+        const response =
+          country === 'kr'
+            ? await api.get<KrMarketCycleResponse>(`/api/economic/market-cycle?country=kr`)
+            : await api.get<MarketCycleResponse>(`/api/economic/market-cycle?country=us`);
 
         if (response.data.success && response.data.data) {
           setCycleData(response.data.data);
@@ -211,9 +212,10 @@ export function MarketCycleSection({ isAdmin = false, country = 'us' }: MarketCy
     setError(null);
 
     try {
-      const response = country === 'kr'
-        ? await api.get<KrMarketCycleResponse>(`/api/economic/market-cycle?country=kr`)
-        : await api.get<MarketCycleResponse>(`/api/economic/market-cycle?country=us`);
+      const response =
+        country === 'kr'
+          ? await api.get<KrMarketCycleResponse>(`/api/economic/market-cycle?country=kr`)
+          : await api.get<MarketCycleResponse>(`/api/economic/market-cycle?country=us`);
 
       if (response.data.success && response.data.data) {
         setCycleData(response.data.data);
@@ -236,9 +238,10 @@ export function MarketCycleSection({ isAdmin = false, country = 'us' }: MarketCy
     setAiError(null);
 
     try {
-      const response = country === 'kr'
-        ? await api.get<KrMarketCycleResponse>(`/api/economic/market-cycle/analysis?country=kr`)
-        : await api.get<MarketCycleResponse>(`/api/economic/market-cycle/analysis?country=us`);
+      const response =
+        country === 'kr'
+          ? await api.get<KrMarketCycleResponse>(`/api/economic/market-cycle/analysis?country=kr`)
+          : await api.get<MarketCycleResponse>(`/api/economic/market-cycle/analysis?country=us`);
 
       if (response.data.success && response.data.data) {
         const { ai_comment, ai_recommendation, ai_risk } = response.data.data;
@@ -296,12 +299,7 @@ export function MarketCycleSection({ isAdmin = false, country = 'us' }: MarketCy
               <p className="text-sm text-destructive mb-2">
                 {error || '시장 사이클 데이터를 불러올 수 없습니다.'}
               </p>
-              <Button
-                onClick={handleRetry}
-                variant="outline"
-                size="sm"
-                className="w-full"
-              >
+              <Button onClick={handleRetry} variant="outline" size="sm" className="w-full">
                 다시 시도
               </Button>
             </div>
@@ -335,8 +333,7 @@ export function MarketCycleSection({ isAdmin = false, country = 'us' }: MarketCy
               <p className="text-xs text-muted-foreground">
                 {country === 'kr'
                   ? '수출액, CPI, 신용 스프레드 지표를 종합하여 현재 시장 사이클을 판단합니다.'
-                  : '산업생산, CPI, VIX 지표를 종합하여 현재 시장 사이클을 판단합니다.'
-                }
+                  : '산업생산, CPI, VIX 지표를 종합하여 현재 시장 사이클을 판단합니다.'}
               </p>
             </div>
           )}
@@ -363,8 +360,8 @@ export function MarketCycleSection({ isAdmin = false, country = 'us' }: MarketCy
                     isActive
                       ? cn(season.bgColor, season.borderColor, 'shadow-sm')
                       : isSelected && expanded
-                      ? 'bg-muted border-muted-foreground/30'
-                      : 'bg-muted/30 border-transparent hover:border-muted-foreground/20'
+                        ? 'bg-muted border-muted-foreground/30'
+                        : 'bg-muted/30 border-transparent hover:border-muted-foreground/20',
                   )}
                 >
                   {/* 현재 표시 */}
@@ -375,7 +372,7 @@ export function MarketCycleSection({ isAdmin = false, country = 'us' }: MarketCy
                   <span
                     className={cn(
                       'text-sm font-medium mt-1',
-                      isActive ? season.color : 'text-muted-foreground'
+                      isActive ? season.color : 'text-muted-foreground',
                     )}
                   >
                     {season.name}
@@ -421,13 +418,18 @@ export function MarketCycleSection({ isAdmin = false, country = 'us' }: MarketCy
                         <>
                           <p className="font-medium mb-1">🚢 수출액 - "세계 경제 체온계"</p>
                           <p className="text-xs mb-1">한국 상품 수출 금액 (YoY 변화율).</p>
-                          <p className="text-xs text-muted-foreground">0% 기준으로 경기 확장/수축 판단. 상승 시 경기 확장, 하락 시 수축 신호</p>
+                          <p className="text-xs text-muted-foreground">
+                            0% 기준으로 경기 확장/수축 판단. 상승 시 경기 확장, 하락 시 수축 신호
+                          </p>
                         </>
                       ) : (
                         <>
                           <p className="font-medium mb-1">🏭 산업생산지수 - "경제의 체온계"</p>
                           <p className="text-xs mb-1">공장·광산·전기 생산량을 측정하는 지표.</p>
-                          <p className="text-xs text-muted-foreground">YoY 0% 기준으로 경기 확장/수축 판단. 상승하면 경기 회복, 하락하면 둔화 신호</p>
+                          <p className="text-xs text-muted-foreground">
+                            YoY 0% 기준으로 경기 확장/수축 판단. 상승하면 경기 회복, 하락하면 둔화
+                            신호
+                          </p>
                         </>
                       )}
                     </TooltipContent>
@@ -448,7 +450,9 @@ export function MarketCycleSection({ isAdmin = false, country = 'us' }: MarketCy
                     <TooltipContent side="top" className="max-w-xs whitespace-pre-line text-left">
                       <p className="font-medium mb-1">🛒 소비자물가지수 - "장바구니 물가"</p>
                       <p className="text-xs mb-1">실제 구매하는 상품·서비스 가격 변화를 측정.</p>
-                      <p className="text-xs text-muted-foreground">2% 목표. 높으면 금리 인상 → 주식 하락 압력</p>
+                      <p className="text-xs text-muted-foreground">
+                        2% 목표. 높으면 금리 인상 → 주식 하락 압력
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -464,7 +468,10 @@ export function MarketCycleSection({ isAdmin = false, country = 'us' }: MarketCy
                           <>
                             <span className="text-muted-foreground">스프레드 </span>
                             <span className="font-medium">
-                              {'credit_spread' in cycleData ? cycleData.credit_spread.value.toFixed(0) : '0'}bp
+                              {'credit_spread' in cycleData
+                                ? cycleData.credit_spread.value.toFixed(0)
+                                : '0'}
+                              bp
                             </span>
                           </>
                         ) : (
@@ -482,13 +489,17 @@ export function MarketCycleSection({ isAdmin = false, country = 'us' }: MarketCy
                         <>
                           <p className="font-medium mb-1">📈 신용 스프레드 - "리스크 체감 온도"</p>
                           <p className="text-xs mb-1">회사채와 국고채 금리 차이 (basis point).</p>
-                          <p className="text-xs text-muted-foreground">60bp 이하=안정, 80bp 이상=위험. 높을수록 시장 불안</p>
+                          <p className="text-xs text-muted-foreground">
+                            60bp 이하=안정, 80bp 이상=위험. 높을수록 시장 불안
+                          </p>
                         </>
                       ) : (
                         <>
                           <p className="font-medium mb-1">📊 변동성지수 - "공포 지수"</p>
                           <p className="text-xs mb-1">투자자들의 불안감을 숫자로 표현한 지표.</p>
-                          <p className="text-xs text-muted-foreground">20 이하=안정, 30 이상=공포. 높을수록 변동성 크고 안전자산 선호</p>
+                          <p className="text-xs text-muted-foreground">
+                            20 이하=안정, 30 이상=공포. 높을수록 변동성 크고 안전자산 선호
+                          </p>
                         </>
                       )}
                     </TooltipContent>
@@ -522,7 +533,7 @@ export function MarketCycleSection({ isAdmin = false, country = 'us' }: MarketCy
                 className={cn(
                   'p-4 rounded-lg border-2',
                   selectedSeasonInfo.bgColor,
-                  selectedSeasonInfo.borderColor
+                  selectedSeasonInfo.borderColor,
                 )}
               >
                 <div className="flex items-center gap-2 mb-3">
@@ -638,9 +649,7 @@ export function MarketCycleSection({ isAdmin = false, country = 'us' }: MarketCy
                       {aiAnalysis.risk && (
                         <div className="p-3 mt-2 bg-destructive/5 rounded-lg border border-destructive/10">
                           <h6 className="text-xs font-medium text-destructive mb-1">⚠️ 리스크</h6>
-                          <p className="text-sm text-muted-foreground">
-                            {aiAnalysis.risk}
-                          </p>
+                          <p className="text-sm text-muted-foreground">{aiAnalysis.risk}</p>
                         </div>
                       )}
 

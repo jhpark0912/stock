@@ -41,7 +41,12 @@ export function DetailChart({ indicator, compareIndicators = [] }: DetailChartPr
     if (symbol === 'CPIAUCSL' || symbol === 'M2SL') return true;
 
     // ECOS 월간 데이터
-    if (symbol.startsWith('KR_') && !symbol.startsWith('KR_BOND') && !symbol.startsWith('KR_BASE') && !symbol.startsWith('KR_CREDIT')) {
+    if (
+      symbol.startsWith('KR_') &&
+      !symbol.startsWith('KR_BOND') &&
+      !symbol.startsWith('KR_BASE') &&
+      !symbol.startsWith('KR_CREDIT')
+    ) {
       return true;
     }
 
@@ -55,7 +60,11 @@ export function DetailChart({ indicator, compareIndicators = [] }: DetailChartPr
   const [period, setPeriod] = useState<Period>(isMonthly ? '1Y' : '1M');
 
   // 기간에 따라 데이터 필터링
-  const filterByPeriod = (data: { date: string; value: number }[], period: Period, isMonthly: boolean) => {
+  const filterByPeriod = (
+    data: { date: string; value: number }[],
+    period: Period,
+    isMonthly: boolean,
+  ) => {
     if (!data || data.length === 0) return [];
 
     // 전체 데이터 표시
@@ -107,7 +116,7 @@ export function DetailChart({ indicator, compareIndicators = [] }: DetailChartPr
 
     const cutoff = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
 
-    const filtered = data.filter(point => {
+    const filtered = data.filter((point) => {
       const pointDate = new Date(point.date);
       return pointDate >= cutoff;
     });
@@ -132,7 +141,7 @@ export function DetailChart({ indicator, compareIndicators = [] }: DetailChartPr
     const dateMap = new Map<string, Record<string, number>>();
 
     // 메인 지표 추가
-    filteredMain.forEach(point => {
+    filteredMain.forEach((point) => {
       dateMap.set(point.date, {
         date: new Date(point.date).getTime(),
         [indicator.symbol]: point.value,
@@ -140,12 +149,12 @@ export function DetailChart({ indicator, compareIndicators = [] }: DetailChartPr
     });
 
     // 비교 지표 추가
-    compareIndicators.forEach(comp => {
+    compareIndicators.forEach((comp) => {
       const compHistory = comp.history || [];
       const compIsMonthly = isMonthlyData(comp.symbol);
       const filteredComp = filterByPeriod(compHistory, period, compIsMonthly);
 
-      filteredComp.forEach(point => {
+      filteredComp.forEach((point) => {
         const existing = dateMap.get(point.date);
         if (existing) {
           existing[comp.symbol] = point.value;
@@ -162,7 +171,7 @@ export function DetailChart({ indicator, compareIndicators = [] }: DetailChartPr
     if (chartData.length === 0) return [0, 100];
 
     const allValues: number[] = [];
-    chartData.forEach(point => {
+    chartData.forEach((point) => {
       Object.entries(point).forEach(([key, value]) => {
         if (key !== 'date' && typeof value === 'number') {
           allValues.push(value);
@@ -224,7 +233,7 @@ export function DetailChart({ indicator, compareIndicators = [] }: DetailChartPr
                 'px-2.5 py-1 text-xs font-medium rounded-md transition-colors',
                 period === p
                   ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
               )}
             >
               {p}
@@ -272,7 +281,7 @@ export function DetailChart({ indicator, compareIndicators = [] }: DetailChartPr
               });
             }}
             formatter={(value: number, name: string) => {
-              const ind = allLines.find(i => i.symbol === name);
+              const ind = allLines.find((i) => i.symbol === name);
               return [formatValue(value), ind?.name || name];
             }}
           />
@@ -281,7 +290,7 @@ export function DetailChart({ indicator, compareIndicators = [] }: DetailChartPr
             <Legend
               wrapperStyle={{ fontSize: '12px' }}
               formatter={(value) => {
-                const ind = allLines.find(i => i.symbol === value);
+                const ind = allLines.find((i) => i.symbol === value);
                 return ind?.name || value;
               }}
             />

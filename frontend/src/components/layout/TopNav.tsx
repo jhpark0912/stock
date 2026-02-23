@@ -5,7 +5,18 @@
  */
 
 import { useState } from 'react';
-import { Globe, Briefcase, Settings, Shield, LogOut, User, Menu, X, Eye, EyeOff } from 'lucide-react';
+import {
+  Globe,
+  Briefcase,
+  Settings,
+  Shield,
+  LogOut,
+  User,
+  Menu,
+  X,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '../ui/button';
 import { ThemeToggle } from '../ThemeToggle';
@@ -24,10 +35,33 @@ interface PageConfig {
 }
 
 const pageConfigs: PageConfig[] = [
-  { id: 'economic', label: 'Economic', stealthLabel: '회의록', icon: <Globe className="h-4 w-4" /> },
-  { id: 'portfolio', label: 'Portfolio', stealthLabel: '프로젝트', icon: <Briefcase className="h-4 w-4" /> },
-  { id: 'settings', label: 'Settings', stealthLabel: 'Settings', icon: <Settings className="h-4 w-4" />, hideInStealth: true },
-  { id: 'admin', label: 'Admin', stealthLabel: 'Admin', icon: <Shield className="h-4 w-4" />, adminOnly: true, hideInStealth: true },
+  {
+    id: 'economic',
+    label: 'Economic',
+    stealthLabel: '회의록',
+    icon: <Globe className="h-4 w-4" />,
+  },
+  {
+    id: 'portfolio',
+    label: 'Portfolio',
+    stealthLabel: '프로젝트',
+    icon: <Briefcase className="h-4 w-4" />,
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    stealthLabel: 'Settings',
+    icon: <Settings className="h-4 w-4" />,
+    hideInStealth: true,
+  },
+  {
+    id: 'admin',
+    label: 'Admin',
+    stealthLabel: 'Admin',
+    icon: <Shield className="h-4 w-4" />,
+    adminOnly: true,
+    hideInStealth: true,
+  },
 ];
 
 interface TopNavProps {
@@ -92,7 +126,7 @@ export function TopNav({
                 'flex items-center gap-2 px-3 lg:px-4 py-2 rounded-md text-sm font-medium transition-all',
                 currentPage === page.id
                   ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
               )}
             >
               {!stealthMode && page.icon}
@@ -113,7 +147,7 @@ export function TopNav({
             'p-1.5 sm:p-2 rounded-md transition-colors',
             stealthMode
               ? 'text-primary bg-primary/10 hover:bg-primary/20'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted',
           )}
           title={stealthMode ? '스텔스 해제' : '스텔스 모드'}
         >
@@ -133,12 +167,7 @@ export function TopNav({
         </div>
 
         {/* 로그아웃 버튼 */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1 px-1.5 sm:px-3 h-8"
-          onClick={onLogout}
-        >
+        <Button variant="outline" size="sm" className="gap-1 px-1.5 sm:px-3 h-8" onClick={onLogout}>
           <LogOut className="h-4 w-4" />
           <span className="hidden sm:inline">로그아웃</span>
         </Button>
@@ -159,7 +188,7 @@ export function TopNav({
                   'flex items-center gap-3 px-4 py-3 rounded-md text-sm font-medium transition-all',
                   currentPage === page.id
                     ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                 )}
               >
                 {!stealthMode && page.icon}

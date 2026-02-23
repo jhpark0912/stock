@@ -1,8 +1,10 @@
 """
 SQLite Database 연결 설정
 """
+
 import os
 from pathlib import Path
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -37,10 +39,11 @@ def get_db():
 
 def init_db():
     """DB 초기화 (테이블 생성)"""
-    from app.database.models import Base
-
     # DB 경로 로그 출력 (DEBUG 레벨)
     import logging
+
+    from app.database.models import Base
+
     logger = logging.getLogger(__name__)
     logger.debug(f"📂 DB Directory: {DB_DIR}")
     logger.debug(f"📄 DB File: {DB_FILE}")

@@ -104,7 +104,8 @@ const convertToMetrics = (financials: StockFinancials): MetricData[] => {
     gaugePercent: per.percent,
     description: per.desc,
     category: '가치평가',
-    tooltip: '주가수익비율(Price Earning Ratio). 주가를 주당순이익(EPS)으로 나눈 값으로, 낮을수록 저평가된 것으로 판단합니다.',
+    tooltip:
+      '주가수익비율(Price Earning Ratio). 주가를 주당순이익(EPS)으로 나눈 값으로, 낮을수록 저평가된 것으로 판단합니다.',
   });
 
   const pbr = evaluateMetric(financials.pbr, 'PBR');
@@ -114,7 +115,8 @@ const convertToMetrics = (financials: StockFinancials): MetricData[] => {
     gaugePercent: pbr.percent,
     description: pbr.desc,
     category: '가치평가',
-    tooltip: '주가순자산비율(Price Book-value Ratio). 주가를 주당순자산(BPS)으로 나눈 값으로, 1 이하면 저평가된 것으로 판단합니다.',
+    tooltip:
+      '주가순자산비율(Price Book-value Ratio). 주가를 주당순자산(BPS)으로 나눈 값으로, 1 이하면 저평가된 것으로 판단합니다.',
   });
 
   const peg = evaluateMetric(financials.peg, 'PEG');
@@ -124,7 +126,8 @@ const convertToMetrics = (financials: StockFinancials): MetricData[] => {
     gaugePercent: peg.percent,
     description: peg.desc,
     category: '가치평가',
-    tooltip: 'PER을 EPS 성장률로 나눈 값. 성장성을 고려한 밸류에이션 지표로, 1 이하면 저평가된 것으로 판단합니다.',
+    tooltip:
+      'PER을 EPS 성장률로 나눈 값. 성장성을 고려한 밸류에이션 지표로, 1 이하면 저평가된 것으로 판단합니다.',
   });
 
   const forwardPe = evaluateMetric(financials.forward_pe, 'PER');
@@ -145,7 +148,8 @@ const convertToMetrics = (financials: StockFinancials): MetricData[] => {
     gaugePercent: roe.percent,
     description: roe.desc,
     category: '수익성',
-    tooltip: '자기자본이익률(Return On Equity). 순이익을 자기자본으로 나눈 값으로, 기업이 자본을 얼마나 효율적으로 활용하는지 나타냅니다. 높을수록 좋습니다.',
+    tooltip:
+      '자기자본이익률(Return On Equity). 순이익을 자기자본으로 나눈 값으로, 기업이 자본을 얼마나 효율적으로 활용하는지 나타냅니다. 높을수록 좋습니다.',
   });
 
   const opm = evaluateMetric(financials.opm ? financials.opm * 100 : null, 'OPM');
@@ -155,25 +159,30 @@ const convertToMetrics = (financials: StockFinancials): MetricData[] => {
     gaugePercent: opm.percent,
     description: opm.desc,
     category: '수익성',
-    tooltip: '영업이익을 매출액으로 나눈 비율. 본업에서 얼마나 효율적으로 이익을 창출하는지 나타냅니다. 높을수록 좋습니다.',
+    tooltip:
+      '영업이익을 매출액으로 나눈 비율. 본업에서 얼마나 효율적으로 이익을 창출하는지 나타냅니다. 높을수록 좋습니다.',
   });
 
   metrics.push({
     name: '배당수익률',
     value: financials.dividend_yield ? `${(financials.dividend_yield * 100).toFixed(2)}%` : 'N/A',
-    gaugePercent: financials.dividend_yield ? Math.min((financials.dividend_yield * 100) * 20, 100) : 0,
+    gaugePercent: financials.dividend_yield
+      ? Math.min(financials.dividend_yield * 100 * 20, 100)
+      : 0,
     description: financials.dividend_yield ? '배당' : 'N/A',
     category: '수익성',
-    tooltip: '주당배당금을 주가로 나눈 비율. 배당 투자자에게 중요한 지표로, 높을수록 배당 수익이 높습니다.',
+    tooltip:
+      '주당배당금을 주가로 나눈 비율. 배당 투자자에게 중요한 지표로, 높을수록 배당 수익이 높습니다.',
   });
 
   metrics.push({
     name: '배당성향',
     value: financials.payout_ratio ? `${(financials.payout_ratio * 100).toFixed(1)}%` : 'N/A',
-    gaugePercent: financials.payout_ratio ? Math.min((financials.payout_ratio * 100), 100) : 0,
+    gaugePercent: financials.payout_ratio ? Math.min(financials.payout_ratio * 100, 100) : 0,
     description: financials.payout_ratio ? '-' : 'N/A',
     category: '수익성',
-    tooltip: '배당금을 순이익으로 나눈 비율. 기업이 이익 중 얼마를 배당으로 지급하는지 나타냅니다. 너무 높으면 재투자 여력이 부족할 수 있습니다.',
+    tooltip:
+      '배당금을 순이익으로 나눈 비율. 기업이 이익 중 얼마를 배당으로 지급하는지 나타냅니다. 너무 높으면 재투자 여력이 부족할 수 있습니다.',
   });
 
   // 안정성
@@ -184,7 +193,8 @@ const convertToMetrics = (financials: StockFinancials): MetricData[] => {
     gaugePercent: debt.percent,
     description: debt.desc,
     category: '안정성',
-    tooltip: '부채를 자기자본으로 나눈 비율. 기업의 재무 안정성을 나타내며, 낮을수록 안정적입니다. 100% 이하가 일반적으로 안전합니다.',
+    tooltip:
+      '부채를 자기자본으로 나눈 비율. 기업의 재무 안정성을 나타내며, 낮을수록 안정적입니다. 100% 이하가 일반적으로 안전합니다.',
   });
 
   const currentRatio = evaluateMetric(financials.current_ratio, 'CURRENT_RATIO');
@@ -194,7 +204,8 @@ const convertToMetrics = (financials: StockFinancials): MetricData[] => {
     gaugePercent: currentRatio.percent,
     description: currentRatio.desc,
     category: '안정성',
-    tooltip: '유동자산을 유동부채로 나눈 비율. 단기 지급능력을 나타냅니다. 100% 이상이면 단기 채무를 상환할 능력이 있다고 판단합니다.',
+    tooltip:
+      '유동자산을 유동부채로 나눈 비율. 단기 지급능력을 나타냅니다. 100% 이상이면 단기 채무를 상환할 능력이 있다고 판단합니다.',
   });
 
   const quickRatio = evaluateMetric(financials.quick_ratio, 'CURRENT_RATIO');
@@ -204,28 +215,37 @@ const convertToMetrics = (financials: StockFinancials): MetricData[] => {
     gaugePercent: quickRatio.percent,
     description: quickRatio.desc,
     category: '안정성',
-    tooltip: '(유동자산 - 재고자산)을 유동부채로 나눈 비율. 재고를 제외한 즉시 현금화 가능한 자산으로 단기 채무를 갚을 수 있는지 나타냅니다.',
+    tooltip:
+      '(유동자산 - 재고자산)을 유동부채로 나눈 비율. 재고를 제외한 즉시 현금화 가능한 자산으로 단기 채무를 갚을 수 있는지 나타냅니다.',
   });
 
   // 성장성
-  const revenueGrowth = evaluateMetric(financials.revenue_growth ? financials.revenue_growth * 100 : null, 'GROWTH');
+  const revenueGrowth = evaluateMetric(
+    financials.revenue_growth ? financials.revenue_growth * 100 : null,
+    'GROWTH',
+  );
   metrics.push({
     name: '매출성장률',
     value: financials.revenue_growth ? `${(financials.revenue_growth * 100).toFixed(1)}%` : 'N/A',
     gaugePercent: revenueGrowth.percent,
     description: revenueGrowth.desc,
     category: '성장성',
-    tooltip: '전년 대비 매출액 증가율. 기업의 외형 성장을 나타내는 지표로, 높을수록 빠르게 성장하고 있음을 의미합니다.',
+    tooltip:
+      '전년 대비 매출액 증가율. 기업의 외형 성장을 나타내는 지표로, 높을수록 빠르게 성장하고 있음을 의미합니다.',
   });
 
-  const earningsGrowth = evaluateMetric(financials.earnings_growth ? financials.earnings_growth * 100 : null, 'GROWTH');
+  const earningsGrowth = evaluateMetric(
+    financials.earnings_growth ? financials.earnings_growth * 100 : null,
+    'GROWTH',
+  );
   metrics.push({
     name: 'EPS성장률',
     value: financials.earnings_growth ? `${(financials.earnings_growth * 100).toFixed(1)}%` : 'N/A',
     gaugePercent: earningsGrowth.percent,
     description: earningsGrowth.desc,
     category: '성장성',
-    tooltip: '전년 대비 주당순이익(EPS) 증가율. 수익성 개선 정도를 나타내며, 높을수록 주주 가치가 빠르게 증가하고 있음을 의미합니다.',
+    tooltip:
+      '전년 대비 주당순이익(EPS) 증가율. 수익성 개선 정도를 나타내며, 높을수록 주주 가치가 빠르게 증가하고 있음을 의미합니다.',
   });
 
   return metrics;
@@ -237,9 +257,7 @@ export function CategoryMetrics({ financials }: CategoryMetricsProps) {
   // 실제 데이터를 지표로 변환
   const allMetrics = convertToMetrics(financials);
 
-  const filteredMetrics = allMetrics.filter(
-    (metric) => metric.category === selectedCategory
-  );
+  const filteredMetrics = allMetrics.filter((metric) => metric.category === selectedCategory);
 
   return (
     <div className="p-6 space-y-3">

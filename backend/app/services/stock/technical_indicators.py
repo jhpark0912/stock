@@ -11,8 +11,8 @@ technical_indicators.py
 - Bollinger Bands: 볼린저밴드
 """
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 
 def calculate_sma(prices, period=20):
@@ -117,11 +117,7 @@ def calculate_macd(prices, fast_period=12, slow_period=26, signal_period=9):
     # Histogram 계산
     histogram = macd_line - signal_line
 
-    return {
-        'macd': macd_line,
-        'signal': signal_line,
-        'histogram': histogram
-    }
+    return {"macd": macd_line, "signal": signal_line, "histogram": histogram}
 
 
 def calculate_bollinger_bands(prices, period=20, std_dev=2):
@@ -153,11 +149,7 @@ def calculate_bollinger_bands(prices, period=20, std_dev=2):
     upper_band = middle_band + (std_dev * std)
     lower_band = middle_band - (std_dev * std)
 
-    return {
-        'upper': upper_band,
-        'middle': middle_band,
-        'lower': lower_band
-    }
+    return {"upper": upper_band, "middle": middle_band, "lower": lower_band}
 
 
 def calculate_all_indicators(prices, ticker_symbol="STOCK"):
@@ -177,16 +169,16 @@ def calculate_all_indicators(prices, ticker_symbol="STOCK"):
         # DataFrame인 경우 'close' 또는 'Close' 컬럼 추출
         # yahooquery는 lowercase 'close' 사용
         if isinstance(prices, pd.DataFrame):
-            if 'close' in prices.columns:
-                prices = prices['close']
-            elif 'Close' in prices.columns:
-                prices = prices['Close']
+            if "close" in prices.columns:
+                prices = prices["close"]
+            elif "Close" in prices.columns:
+                prices = prices["Close"]
             else:
-                return {'error': "가격 데이터에 'close' 또는 'Close' 컬럼이 없습니다."}
+                return {"error": "가격 데이터에 'close' 또는 'Close' 컬럼이 없습니다."}
 
         # 데이터 충분성 검증
         if len(prices) < 50:
-            return {'error': f"기술적 지표 계산을 위해서는 최소 50일의 데이터가 필요합니다. (현재: {len(prices)}일)"}
+            return {"error": f"기술적 지표 계산을 위해서는 최소 50일의 데이터가 필요합니다. (현재: {len(prices)}일)"}
 
         # 최신 값 추출 (NaN이 아닌 마지막 값)
         def get_latest_value(series):
@@ -213,34 +205,29 @@ def calculate_all_indicators(prices, ticker_symbol="STOCK"):
 
         # 최신 값들 정리
         result = {
-            'sma': {
-                'sma20': get_latest_value(sma_20),
-                'sma50': get_latest_value(sma_50),
-                'sma200': get_latest_value(sma_200) if sma_200 is not None else None
+            "sma": {
+                "sma20": get_latest_value(sma_20),
+                "sma50": get_latest_value(sma_50),
+                "sma200": get_latest_value(sma_200) if sma_200 is not None else None,
             },
-            'ema': {
-                'ema12': get_latest_value(ema_12),
-                'ema26': get_latest_value(ema_26)
+            "ema": {"ema12": get_latest_value(ema_12), "ema26": get_latest_value(ema_26)},
+            "rsi": {"rsi14": get_latest_value(rsi_14)},
+            "macd": {
+                "macd": get_latest_value(macd_data["macd"]),
+                "signal": get_latest_value(macd_data["signal"]),
+                "histogram": get_latest_value(macd_data["histogram"]),
             },
-            'rsi': {
-                'rsi14': get_latest_value(rsi_14)
+            "bollinger_bands": {
+                "upper": get_latest_value(bb_data["upper"]),
+                "middle": get_latest_value(bb_data["middle"]),
+                "lower": get_latest_value(bb_data["lower"]),
             },
-            'macd': {
-                'macd': get_latest_value(macd_data['macd']),
-                'signal': get_latest_value(macd_data['signal']),
-                'histogram': get_latest_value(macd_data['histogram'])
-            },
-            'bollinger_bands': {
-                'upper': get_latest_value(bb_data['upper']),
-                'middle': get_latest_value(bb_data['middle']),
-                'lower': get_latest_value(bb_data['lower'])
-            }
         }
 
         return result
 
     except Exception as e:
-        return {'error': f"기술적 지표 계산 중 오류 발생: {str(e)}"}
+        return {"error": f"기술적 지표 계산 중 오류 발생: {str(e)}"}
 
 
 # 사용 예시 (테스트용)
@@ -254,14 +241,14 @@ if __name__ == "__main__":
     rsi_14 = calculate_rsi(sample_prices, 14).iloc[-1]
 
     macd = calculate_macd(sample_prices)
-    macd_line = macd['macd'].iloc[-1]
-    signal_line = macd['signal'].iloc[-1]
-    histogram = macd['histogram'].iloc[-1]
+    macd_line = macd["macd"].iloc[-1]
+    signal_line = macd["signal"].iloc[-1]
+    histogram = macd["histogram"].iloc[-1]
 
     bb = calculate_bollinger_bands(sample_prices)
-    bb_upper = bb['upper'].iloc[-1]
-    bb_middle = bb['middle'].iloc[-1]
-    bb_lower = bb['lower'].iloc[-1]
+    bb_upper = bb["upper"].iloc[-1]
+    bb_middle = bb["middle"].iloc[-1]
+    bb_lower = bb["lower"].iloc[-1]
 
     # 전체 지표 테스트
     all_indicators = calculate_all_indicators(sample_prices)
@@ -280,7 +267,7 @@ def calculate_chart_data(history_df: pd.DataFrame):
                      예: [{'date': '2023-01-01', 'close': 150.0, 'volume': 10000, ...}, ...]
     """
     try:
-        if 'close' not in history_df.columns:
+        if "close" not in history_df.columns:
             raise ValueError("DataFrame에 'close' 컬럼이 필요합니다.")
 
         # 먼저 history_df의 인덱스를 tz-naive로 변환 (모든 Series가 같은 인덱스를 공유하도록)
@@ -293,10 +280,10 @@ def calculate_chart_data(history_df: pd.DataFrame):
 
             # timezone 제거 (tz-naive로 변환)
             history_df.index = history_df.index.tz_localize(None)
-        except Exception as e:
+        except Exception:
             raise
 
-        prices = history_df['close']
+        prices = history_df["close"]
 
         # 모든 지표 계산 (이제 모든 Series가 tz-naive 인덱스를 가짐)
         sma_20 = calculate_sma(prices, 20)
@@ -313,34 +300,34 @@ def calculate_chart_data(history_df: pd.DataFrame):
         chart_df = pd.DataFrame(index=history_df.index)
 
         # date 컬럼 생성
-        chart_df['date'] = chart_df.index.strftime('%Y-%m-%d')
+        chart_df["date"] = chart_df.index.strftime("%Y-%m-%d")
 
-        chart_df['close'] = prices.values  # .values 사용하여 인덱스 무시
+        chart_df["close"] = prices.values  # .values 사용하여 인덱스 무시
 
-        volume_series = history_df.get('volume', pd.Series(0, index=history_df.index))
-        chart_df['volume'] = volume_series.values
+        volume_series = history_df.get("volume", pd.Series(0, index=history_df.index))
+        chart_df["volume"] = volume_series.values
 
-        chart_df['sma20'] = sma_20.values
-        chart_df['sma50'] = sma_50.values
-        chart_df['sma200'] = sma_200.values
+        chart_df["sma20"] = sma_20.values
+        chart_df["sma50"] = sma_50.values
+        chart_df["sma200"] = sma_200.values
 
-        chart_df['rsi'] = rsi_14.values
+        chart_df["rsi"] = rsi_14.values
 
-        chart_df['macd'] = macd_data['macd'].values
-        chart_df['macd_signal'] = macd_data['signal'].values
-        chart_df['macd_hist'] = macd_data['histogram'].values
+        chart_df["macd"] = macd_data["macd"].values
+        chart_df["macd_signal"] = macd_data["signal"].values
+        chart_df["macd_hist"] = macd_data["histogram"].values
 
-        chart_df['bb_upper'] = bb_data['upper'].values
-        chart_df['bb_middle'] = bb_data['middle'].values
-        chart_df['bb_lower'] = bb_data['lower'].values
+        chart_df["bb_upper"] = bb_data["upper"].values
+        chart_df["bb_middle"] = bb_data["middle"].values
+        chart_df["bb_lower"] = bb_data["lower"].values
 
         # NaN 값을 None으로 변경하여 JSON 직렬화 문제를 방지
         chart_df = chart_df.replace({np.nan: None})
 
         # DataFrame을 dictionary 리스트로 변환
         # 최근 1년치 데이터만 반환 (차트 성능 최적화)
-        result = chart_df.tail(252).to_dict('records')
+        result = chart_df.tail(252).to_dict("records")
         return result
 
-    except Exception as e:
+    except Exception:
         raise

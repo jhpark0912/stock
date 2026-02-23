@@ -40,13 +40,9 @@ export function SectorSummary({ sectors, country }: SectorSummaryProps) {
       <div className="bg-card border rounded-lg p-4">
         <div className="flex items-center gap-2 mb-4">
           <BarChart3 className="h-5 w-5 text-primary" />
-          <h3 className="font-semibold text-foreground">
-            {getFlag()} 섹터별 등락률
-          </h3>
+          <h3 className="font-semibold text-foreground">{getFlag()} 섹터별 등락률</h3>
         </div>
-        <div className="p-6 text-center text-sm text-muted-foreground">
-          섹터 데이터가 없습니다.
-        </div>
+        <div className="p-6 text-center text-sm text-muted-foreground">섹터 데이터가 없습니다.</div>
       </div>
     );
   }
@@ -56,9 +52,7 @@ export function SectorSummary({ sectors, country }: SectorSummaryProps) {
       {/* 헤더 */}
       <div className="flex items-center gap-2 mb-4">
         <BarChart3 className="h-5 w-5 text-primary" />
-        <h3 className="font-semibold text-foreground">
-          {getFlag()} 섹터별 등락률
-        </h3>
+        <h3 className="font-semibold text-foreground">{getFlag()} 섹터별 등락률</h3>
       </div>
 
       {/* 히트맵 그리드 (4x2 고정) */}
@@ -71,7 +65,7 @@ export function SectorSummary({ sectors, country }: SectorSummaryProps) {
               key={sector.sector}
               className={cn(
                 'relative rounded-lg p-4 h-[80px] flex flex-col items-center justify-center transition-transform hover:scale-[1.02] cursor-default',
-                colorClass
+                colorClass,
               )}
             >
               {/* 섹터명 */}

@@ -23,16 +23,25 @@ const SECTOR_DETAIL: Record<string, string> = {
   XLU: '유틸리티 섹터는 전력, 가스, 수도 공급 기업으로 구성됩니다. 규제 산업으로 안정적이며 배당이 높습니다.',
   XLC: '커뮤니케이션 섹터는 미디어, 통신, 인터넷/소셜미디어 기업으로 구성됩니다. 광고 시장에 민감합니다.',
   // 한국 섹터
-  '091160.KS': '반도체 섹터는 삼성전자, SK하이닉스 등 메모리 반도체 세계 1위 기업들로 구성됩니다. 글로벌 IT 수요에 민감합니다.',
-  '091170.KS': '은행 섹터는 KB금융, 신한지주, 하나금융 등 대형 금융그룹으로 구성됩니다. 금리와 부동산 시장에 영향받습니다.',
-  '266420.KS': '헬스케어 섹터는 삼성바이오, 셀트리온 등 바이오시밀러 강자들로 구성됩니다. 글로벌 제약시장 진출이 특징입니다.',
-  '117460.KS': '에너지화학 섹터는 LG화학, SK이노베이션 등으로 구성됩니다. 유가와 배터리 수요에 민감합니다.',
-  '266370.KS': 'IT 섹터는 네이버, 카카오 등 플랫폼 기업으로 구성됩니다. 광고 시장과 신사업 성장에 영향받습니다.',
-  '091180.KS': '자동차 섹터는 현대차, 기아 등 완성차와 부품사로 구성됩니다. 전기차 전환이 핵심 이슈입니다.',
-  '117700.KS': '건설 섹터는 삼성물산, 현대건설 등으로 구성됩니다. 부동산 경기와 해외수주에 영향받습니다.',
+  '091160.KS':
+    '반도체 섹터는 삼성전자, SK하이닉스 등 메모리 반도체 세계 1위 기업들로 구성됩니다. 글로벌 IT 수요에 민감합니다.',
+  '091170.KS':
+    '은행 섹터는 KB금융, 신한지주, 하나금융 등 대형 금융그룹으로 구성됩니다. 금리와 부동산 시장에 영향받습니다.',
+  '266420.KS':
+    '헬스케어 섹터는 삼성바이오, 셀트리온 등 바이오시밀러 강자들로 구성됩니다. 글로벌 제약시장 진출이 특징입니다.',
+  '117460.KS':
+    '에너지화학 섹터는 LG화학, SK이노베이션 등으로 구성됩니다. 유가와 배터리 수요에 민감합니다.',
+  '266370.KS':
+    'IT 섹터는 네이버, 카카오 등 플랫폼 기업으로 구성됩니다. 광고 시장과 신사업 성장에 영향받습니다.',
+  '091180.KS':
+    '자동차 섹터는 현대차, 기아 등 완성차와 부품사로 구성됩니다. 전기차 전환이 핵심 이슈입니다.',
+  '117700.KS':
+    '건설 섹터는 삼성물산, 현대건설 등으로 구성됩니다. 부동산 경기와 해외수주에 영향받습니다.',
   '140710.KS': '운송 섹터는 HMM, 대한항공 등으로 구성됩니다. 글로벌 물류 수요와 유가에 민감합니다.',
-  '102970.KS': '증권 섹터는 미래에셋, 한국투자 등으로 구성됩니다. 주식시장 거래대금과 금리에 영향받습니다.',
-  '266390.KS': '경기소비재 섹터는 호텔신라, 현대백화점 등으로 구성됩니다. 소비심리와 관광 수요에 민감합니다.',
+  '102970.KS':
+    '증권 섹터는 미래에셋, 한국투자 등으로 구성됩니다. 주식시장 거래대금과 금리에 영향받습니다.',
+  '266390.KS':
+    '경기소비재 섹터는 호텔신라, 현대백화점 등으로 구성됩니다. 소비심리와 관광 수요에 민감합니다.',
 };
 
 type Period = '1D' | '1W' | '1M';
@@ -47,7 +56,7 @@ interface SectorData {
   change_1w: number;
   change_1m: number;
   market_cap: number;
-  top_holdings: string[];  // 상위 보유 종목 (API에서 동적 조회)
+  top_holdings: string[]; // 상위 보유 종목 (API에서 동적 조회)
 }
 
 interface SectorResponse {
@@ -59,12 +68,12 @@ interface SectorResponse {
 
 // 변화율에 따른 색상 반환 (더 진한 색상으로 가시성 향상)
 const getChangeColor = (change: number): string => {
-  if (change >= 3) return '#15803d';      // green-700
-  if (change >= 1) return '#16a34a';      // green-600
-  if (change >= 0) return '#22c55e';      // green-500
-  if (change >= -1) return '#ef4444';     // red-500
-  if (change >= -3) return '#dc2626';     // red-600
-  return '#b91c1c';                        // red-700
+  if (change >= 3) return '#15803d'; // green-700
+  if (change >= 1) return '#16a34a'; // green-600
+  if (change >= 0) return '#22c55e'; // green-500
+  if (change >= -1) return '#ef4444'; // red-500
+  if (change >= -3) return '#dc2626'; // red-600
+  return '#b91c1c'; // red-700
 };
 
 // 텍스트 색상 (항상 흰색으로 통일)
@@ -101,7 +110,21 @@ const CustomTooltip = ({ active, payload }: any) => {
 
 // 커스텀 Treemap 셀
 const CustomTreemapContent = (props: any) => {
-  const { x, y, width, height, depth, symbol, korName, change, price, color, onSectorClick, data, isKorea } = props;
+  const {
+    x,
+    y,
+    width,
+    height,
+    depth,
+    symbol,
+    korName,
+    change,
+    price,
+    color,
+    onSectorClick,
+    data,
+    isKorea,
+  } = props;
 
   // root 노드는 렌더링하지 않음 (depth === 1이 실제 데이터)
   if (depth === 0 || !symbol) {
@@ -173,7 +196,8 @@ const CustomTreemapContent = (props: any) => {
                 style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
                 className="pointer-events-none select-none"
               >
-                {(change ?? 0) >= 0 ? '+' : ''}{(change ?? 0).toFixed(2)}%
+                {(change ?? 0) >= 0 ? '+' : ''}
+                {(change ?? 0).toFixed(2)}%
               </text>
 
               {/* 가격 */}
@@ -207,7 +231,8 @@ const CustomTreemapContent = (props: any) => {
               style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
               className="pointer-events-none select-none"
             >
-              {(change ?? 0) >= 0 ? '+' : ''}{(change ?? 0).toFixed(1)}%
+              {(change ?? 0) >= 0 ? '+' : ''}
+              {(change ?? 0).toFixed(1)}%
             </text>
           )}
         </>
@@ -259,9 +284,12 @@ export function SectorHeatmap({ country }: SectorHeatmapProps) {
   // 기간에 따른 변화율
   const getChange = (sector: SectorData): number => {
     switch (period) {
-      case '1D': return sector.change_1d;
-      case '1W': return sector.change_1w;
-      case '1M': return sector.change_1m;
+      case '1D':
+        return sector.change_1d;
+      case '1W':
+        return sector.change_1w;
+      case '1M':
+        return sector.change_1m;
     }
   };
 
@@ -370,7 +398,7 @@ export function SectorHeatmap({ country }: SectorHeatmapProps) {
                   'px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
                   period === p
                     ? 'bg-background text-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
                 )}
               >
                 {p}
@@ -443,9 +471,7 @@ export function SectorHeatmap({ country }: SectorHeatmapProps) {
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4" />
           <span>
-            마지막 업데이트: {lastUpdated
-              ? new Date(lastUpdated).toLocaleString('ko-KR')
-              : '-'}
+            마지막 업데이트: {lastUpdated ? new Date(lastUpdated).toLocaleString('ko-KR') : '-'}
           </span>
         </div>
         <div className="text-xs">클릭하여 상위 종목 확인</div>

@@ -1,15 +1,17 @@
 """
 포트폴리오 Repository (CRUD)
 """
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
+
 from typing import List, Optional
+
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
+
 from app.database.models import PortfolioDB, StockAnalysisDB
 from app.models.portfolio import PortfolioCreate, PortfolioUpdate
 
 
 class PortfolioRepository:
-
     @staticmethod
     def create(db: Session, user_id: int, portfolio: PortfolioCreate) -> PortfolioDB:
         """생성"""
@@ -34,17 +36,16 @@ class PortfolioRepository:
     @staticmethod
     def get_all(db: Session, user_id: int) -> List[PortfolioDB]:
         """전체 조회 (유저별)"""
-        return db.query(PortfolioDB).filter(
-            PortfolioDB.user_id == user_id
-        ).order_by(PortfolioDB.created_at.desc()).all()
+        return (
+            db.query(PortfolioDB).filter(PortfolioDB.user_id == user_id).order_by(PortfolioDB.created_at.desc()).all()
+        )
 
     @staticmethod
     def get_by_ticker(db: Session, user_id: int, ticker: str) -> Optional[PortfolioDB]:
         """티커로 조회 (유저별)"""
-        return db.query(PortfolioDB).filter(
-            PortfolioDB.user_id == user_id,
-            PortfolioDB.ticker == ticker.upper()
-        ).first()
+        return (
+            db.query(PortfolioDB).filter(PortfolioDB.user_id == user_id, PortfolioDB.ticker == ticker.upper()).first()
+        )
 
     @staticmethod
     def update(db: Session, user_id: int, ticker: str, portfolio: PortfolioUpdate) -> Optional[PortfolioDB]:
@@ -70,8 +71,7 @@ class PortfolioRepository:
 
         # 분석 이력도 삭제 (CASCADE와 별개로 명시적 삭제)
         db.query(StockAnalysisDB).filter(
-            StockAnalysisDB.user_id == user_id,
-            StockAnalysisDB.ticker == ticker.upper()
+            StockAnalysisDB.user_id == user_id, StockAnalysisDB.ticker == ticker.upper()
         ).delete()
 
         db.delete(db_portfolio)

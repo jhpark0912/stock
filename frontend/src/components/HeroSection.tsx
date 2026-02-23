@@ -141,7 +141,8 @@ export function HeroSection({
                   isPositive ? 'text-success' : 'text-destructive'
                 }`}
               >
-                {isPositive ? '+' : ''}{(priceChangePercent || 0).toFixed(2)}%
+                {isPositive ? '+' : ''}
+                {(priceChangePercent || 0).toFixed(2)}%
               </span>
             </div>
           </div>
@@ -203,9 +204,7 @@ export function HeroSection({
             </span>
             <div
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md ${
-                isPositive
-                  ? 'bg-success/10 text-success'
-                  : 'bg-destructive/10 text-destructive'
+                isPositive ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'
               }`}
             >
               {isPositive ? (
@@ -215,7 +214,10 @@ export function HeroSection({
               )}
               <span className="text-sm font-semibold">
                 {isPositive ? '+' : ''}
-                {isKoreanTicker(ticker) ? Math.round(priceChange || 0).toLocaleString('ko-KR') : (priceChange || 0).toFixed(2)} ({(priceChangePercent || 0).toFixed(2)}%)
+                {isKoreanTicker(ticker)
+                  ? Math.round(priceChange || 0).toLocaleString('ko-KR')
+                  : (priceChange || 0).toFixed(2)}{' '}
+                ({(priceChangePercent || 0).toFixed(2)}%)
               </span>
             </div>
           </div>
@@ -241,14 +243,16 @@ export function HeroSection({
             <div className="sm:hidden">
               <div className="flex items-center justify-between text-[11px]">
                 <span className="text-muted-foreground">
-                  평단 {formatCurrency(profitInfo.purchasePrice, ticker)} × {profitInfo.quantity.toLocaleString()}주
+                  평단 {formatCurrency(profitInfo.purchasePrice, ticker)} ×{' '}
+                  {profitInfo.quantity.toLocaleString()}주
                 </span>
                 <span
                   className={`font-bold ${
                     profitInfo.isProfit ? 'text-success' : 'text-destructive'
                   }`}
                 >
-                  {profitInfo.profitPercent > 0 ? '+' : ''}{profitInfo.profitPercent.toFixed(2)}%
+                  {profitInfo.profitPercent > 0 ? '+' : ''}
+                  {profitInfo.profitPercent.toFixed(2)}%
                 </span>
               </div>
             </div>
@@ -288,9 +292,9 @@ export function HeroSection({
                     }`}
                   >
                     {profitInfo.totalProfitAmount > 0 ? '+' : ''}
-                    {formatLargeCurrency(Math.abs(profitInfo.totalProfitAmount), ticker)}
-                    {' '}
-                    ({profitInfo.profitPercent > 0 ? '+' : ''}{profitInfo.profitPercent.toFixed(2)}%)
+                    {formatLargeCurrency(Math.abs(profitInfo.totalProfitAmount), ticker)} (
+                    {profitInfo.profitPercent > 0 ? '+' : ''}
+                    {profitInfo.profitPercent.toFixed(2)}%)
                   </span>
                 </div>
               </div>

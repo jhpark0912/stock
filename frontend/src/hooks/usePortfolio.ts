@@ -9,7 +9,13 @@ import { api } from '@/lib/api';
 import type { ApiResponse } from '@/lib/api';
 import type { StockData, NewsItem, AIAnalysis } from '@/types/stock';
 import type { UserSettings } from '@/types/user';
-import { getPortfolios, createPortfolio, deletePortfolio, updatePortfolio, updateProfitInfo } from '@/lib/portfolioApi';
+import {
+  getPortfolios,
+  createPortfolio,
+  deletePortfolio,
+  updatePortfolio,
+  updateProfitInfo,
+} from '@/lib/portfolioApi';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface LoadingStates {
@@ -60,9 +66,9 @@ export function usePortfolio() {
     const loadPortfoliosFromDB = async () => {
       try {
         const portfolios = await getPortfolios();
-        setUserSettings(prev => ({
+        setUserSettings((prev) => ({
           ...prev,
-          tickers: portfolios.map(p => ({
+          tickers: portfolios.map((p) => ({
             symbol: p.ticker,
             displayName: p.display_name || undefined,
             purchasePrice: p.purchase_price,
@@ -92,21 +98,21 @@ export function usePortfolio() {
 
     try {
       const stockResponse = await api.get<ApiResponse<StockData>>(
-        `/api/stock/${tickerSymbol}?include_technical=true&include_chart=true`
+        `/api/stock/${tickerSymbol}?include_technical=true&include_chart=true`,
       );
 
       if (stockResponse.data.success && stockResponse.data.data) {
         const stock = stockResponse.data.data;
         setStockData(stock);
-        setLoadingStates(prev => ({ ...prev, stock: false }));
+        setLoadingStates((prev) => ({ ...prev, stock: false }));
 
-        const ticker = userSettings.tickers.find(t => t.symbol === tickerSymbol);
+        const ticker = userSettings.tickers.find((t) => t.symbol === tickerSymbol);
         if (ticker) {
           updateProfitInfo(tickerSymbol, stock.price.current, ticker.purchasePrice)
-            .then(updatedPortfolio => {
-              setUserSettings(prev => ({
+            .then((updatedPortfolio) => {
+              setUserSettings((prev) => ({
                 ...prev,
-                tickers: prev.tickers.map(t =>
+                tickers: prev.tickers.map((t) =>
                   t.symbol === tickerSymbol
                     ? {
                         ...t,
@@ -114,22 +120,23 @@ export function usePortfolio() {
                         profitPercent: updatedPortfolio.profit_percent,
                         lastUpdated: updatedPortfolio.last_updated,
                       }
-                    : t
+                    : t,
                 ),
               }));
             })
-            .catch(err => console.error('수익률 업데이트 실패:', err));
+            .catch((err) => console.error('수익률 업데이트 실패:', err));
         }
 
-        api.get<ApiResponse<NewsItem[]>>(`/api/stock/${tickerSymbol}/news`)
-          .then(newsResponse => {
+        api
+          .get<ApiResponse<NewsItem[]>>(`/api/stock/${tickerSymbol}/news`)
+          .then((newsResponse) => {
             if (newsResponse.data.success) {
               setNewsData(newsResponse.data.data);
             }
           })
-          .catch(err => console.error('뉴스 조회 실패:', err))
+          .catch((err) => console.error('뉴스 조회 실패:', err))
           .finally(() => {
-            setLoadingStates(prev => ({ ...prev, news: false }));
+            setLoadingStates((prev) => ({ ...prev, news: false }));
           });
       } else {
         setError(stockResponse.data.error || '알 수 없는 오류가 발생했습니다.');
@@ -146,7 +153,7 @@ export function usePortfolio() {
   };
 
   const handleAddTicker = async (symbol: string) => {
-    if (userSettings.tickers.some(t => t.symbol === symbol)) {
+    if (userSettings.tickers.some((t) => t.symbol === symbol)) {
       alert(`${symbol}은 이미 등록된 카테고리입니다.`);
       return;
     }
@@ -154,7 +161,7 @@ export function usePortfolio() {
     try {
       await createPortfolio({ ticker: symbol });
 
-      setUserSettings(prev => ({
+      setUserSettings((prev) => ({
         ...prev,
         tickers: [
           ...prev.tickers,
@@ -180,9 +187,9 @@ export function usePortfolio() {
     try {
       await deletePortfolio(symbol);
 
-      setUserSettings(prev => ({
+      setUserSettings((prev) => ({
         ...prev,
-        tickers: prev.tickers.filter(t => t.symbol !== symbol),
+        tickers: prev.tickers.filter((t) => t.symbol !== symbol),
         selectedTicker: prev.selectedTicker === symbol ? null : prev.selectedTicker,
       }));
     } catch (error) {
@@ -192,7 +199,7 @@ export function usePortfolio() {
   };
 
   const handleSelectTicker = (symbol: string) => {
-    setUserSettings(prev => ({
+    setUserSettings((prev) => ({
       ...prev,
       selectedTicker: symbol,
     }));
@@ -200,19 +207,21 @@ export function usePortfolio() {
     fetchStockData(symbol);
   };
 
-  const handleUpdatePurchasePrice = async (symbol: string, price: number | null, quantity: number | null) => {
+  const handleUpdatePurchasePrice = async (
+    symbol: string,
+    price: number | null,
+    quantity: number | null,
+  ) => {
     try {
       await updatePortfolio(symbol, {
         purchase_price: price,
         quantity: quantity,
       });
 
-      setUserSettings(prev => ({
+      setUserSettings((prev) => ({
         ...prev,
-        tickers: prev.tickers.map(t =>
-          t.symbol === symbol
-            ? { ...t, purchasePrice: price, quantity: quantity }
-            : t
+        tickers: prev.tickers.map((t) =>
+          t.symbol === symbol ? { ...t, purchasePrice: price, quantity: quantity } : t,
         ),
       }));
     } catch (error) {
@@ -227,12 +236,10 @@ export function usePortfolio() {
         display_name: displayName,
       });
 
-      setUserSettings(prev => ({
+      setUserSettings((prev) => ({
         ...prev,
-        tickers: prev.tickers.map(t =>
-          t.symbol === symbol
-            ? { ...t, displayName: displayName || undefined }
-            : t
+        tickers: prev.tickers.map((t) =>
+          t.symbol === symbol ? { ...t, displayName: displayName || undefined } : t,
         ),
       }));
     } catch (error) {
@@ -251,21 +258,24 @@ export function usePortfolio() {
       return;
     }
 
-    setLoadingStates(prev => ({ ...prev, ai: true }));
+    setLoadingStates((prev) => ({ ...prev, ai: true }));
     setAiError(null);
     setAiAnalysis(null);
 
     try {
       const analysisResponse = await api.post<ApiResponse<AIAnalysis>>(
         `/api/stock/${stockData.ticker}/analysis`,
-        stockData
+        stockData,
       );
 
       if (analysisResponse.data.success) {
         setAiAnalysis(analysisResponse.data.data);
       } else {
         const errorMsg = analysisResponse.data.error || 'AI 분석 결과를 가져올 수 없습니다.';
-        if (errorMsg.toLowerCase().includes('api key') || errorMsg.toLowerCase().includes('gemini')) {
+        if (
+          errorMsg.toLowerCase().includes('api key') ||
+          errorMsg.toLowerCase().includes('gemini')
+        ) {
           setAiError({ type: 'no_key', message: errorMsg });
         } else {
           setAiError({ type: 'api_error', message: errorMsg });
@@ -279,9 +289,11 @@ export function usePortfolio() {
         const responseError = err.response?.data?.error || err.message;
         errorMessage = responseError;
 
-        if (responseError.toLowerCase().includes('api key') ||
-            responseError.toLowerCase().includes('gemini') ||
-            err.response?.status === 401) {
+        if (
+          responseError.toLowerCase().includes('api key') ||
+          responseError.toLowerCase().includes('gemini') ||
+          err.response?.status === 401
+        ) {
           setAiError({ type: 'no_key', message: responseError });
         } else {
           setAiError({ type: 'api_error', message: errorMessage });
@@ -290,12 +302,14 @@ export function usePortfolio() {
         setAiError({ type: 'api_error', message: errorMessage });
       }
     } finally {
-      setLoadingStates(prev => ({ ...prev, ai: false }));
+      setLoadingStates((prev) => ({ ...prev, ai: false }));
     }
   };
 
   // 파생 데이터: displayData
-  const currentTicker = stockData ? userSettings.tickers.find(t => t.symbol === stockData.ticker) : null;
+  const currentTicker = stockData
+    ? userSettings.tickers.find((t) => t.symbol === stockData.ticker)
+    : null;
   const displayData = stockData
     ? {
         ticker: stockData.ticker,
@@ -303,10 +317,9 @@ export function usePortfolio() {
         displayName: currentTicker?.displayName || null,
         currentPrice: stockData.price.current,
         priceChange: stockData.price.current - stockData.price.open,
-        priceChangePercent: ((stockData.price.current - stockData.price.open) / stockData.price.open) * 100,
-        marketCap: stockData.market_cap
-          ? `$${(stockData.market_cap / 1e9).toFixed(2)}B`
-          : 'N/A',
+        priceChangePercent:
+          ((stockData.price.current - stockData.price.open) / stockData.price.open) * 100,
+        marketCap: stockData.market_cap ? `$${(stockData.market_cap / 1e9).toFixed(2)}B` : 'N/A',
         sector: stockData.company.sector || 'N/A',
         purchasePrice: currentTicker?.purchasePrice || null,
         quantity: currentTicker?.quantity || null,
@@ -327,7 +340,7 @@ export function usePortfolio() {
       };
 
   // 파생 데이터: sidebarTickers
-  const sidebarTickers = userSettings.tickers.map(t => {
+  const sidebarTickers = userSettings.tickers.map((t) => {
     const hasPurchasePrice = t.purchasePrice !== null && t.purchasePrice !== undefined;
     const hasStoredProfit = t.profitPercent !== null && t.profitPercent !== undefined;
 

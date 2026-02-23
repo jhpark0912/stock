@@ -1,152 +1,152 @@
-import { useState } from 'react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { LogIn, UserPlus, Coffee, CheckCircle, AlertCircle } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useState } from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { LogIn, UserPlus, Coffee, CheckCircle, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 /**
  * 로그인/회원가입 페이지
  * Phase 2: API 연결 완료
  */
 export function LoginPage() {
-  const auth = useAuth()
+  const auth = useAuth();
   // 로그인 폼 상태
   const [loginForm, setLoginForm] = useState({
     username: '',
     password: '',
-  })
+  });
 
   // 회원가입 폼 상태
   const [registerForm, setRegisterForm] = useState({
     username: '',
     password: '',
     confirmPassword: '',
-  })
+  });
 
   // 로딩 상태
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(false);
 
   // 에러 메시지
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null);
 
   // 성공 메시지
-  const [success, setSuccess] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null);
 
   /**
    * 탭 전환 핸들러
    * 탭 전환 시 에러/성공 메시지 및 입력 필드 초기화
    */
   const handleTabChange = (_value: string) => {
-    setError(null)
-    setSuccess(null)
+    setError(null);
+    setSuccess(null);
 
     // 입력 필드 초기화
     setLoginForm({
       username: '',
       password: '',
-    })
+    });
     setRegisterForm({
       username: '',
       password: '',
       confirmPassword: '',
-    })
-  }
+    });
+  };
 
   // 로그인 처리 (Phase 2: 실제 API 호출)
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setSuccess(null)
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
 
     // 클라이언트 검증
     if (!loginForm.username || !loginForm.password) {
-      setError('사용자명과 비밀번호를 입력해주세요')
-      return
+      setError('사용자명과 비밀번호를 입력해주세요');
+      return;
     }
 
     if (loginForm.username.length < 3) {
-      setError('사용자명은 최소 3자 이상이어야 합니다')
-      return
+      setError('사용자명은 최소 3자 이상이어야 합니다');
+      return;
     }
 
     if (loginForm.password.length < 6) {
-      setError('비밀번호는 최소 6자 이상이어야 합니다')
-      return
+      setError('비밀번호는 최소 6자 이상이어야 합니다');
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
       // 실제 API 호출
       await auth.login({
         username: loginForm.username,
         password: loginForm.password,
-      })
+      });
       // 로그인 성공 시 자동으로 대시보드로 이동 (AuthProvider에서 처리)
     } catch (err) {
       // 에러 처리
-      const errorMessage = err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다'
-      setError(errorMessage)
+      const errorMessage = err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다';
+      setError(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // 회원가입 처리 (Phase 2: 실제 API 호출)
   const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setSuccess(null)
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
 
     // 클라이언트 검증
     if (!registerForm.username || !registerForm.password || !registerForm.confirmPassword) {
-      setError('모든 필드를 입력해주세요')
-      return
+      setError('모든 필드를 입력해주세요');
+      return;
     }
 
     if (registerForm.username.length < 3) {
-      setError('사용자명은 최소 3자 이상이어야 합니다')
-      return
+      setError('사용자명은 최소 3자 이상이어야 합니다');
+      return;
     }
 
     if (registerForm.password.length < 6) {
-      setError('비밀번호는 최소 6자 이상이어야 합니다')
-      return
+      setError('비밀번호는 최소 6자 이상이어야 합니다');
+      return;
     }
 
     if (registerForm.password !== registerForm.confirmPassword) {
-      setError('비밀번호가 일치하지 않습니다')
-      return
+      setError('비밀번호가 일치하지 않습니다');
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
       // 실제 API 호출
       await auth.register({
         username: registerForm.username,
         password: registerForm.password,
-      })
+      });
 
       // 성공 메시지 표시 (구조화된 메시지는 렌더링에서 처리)
-      setSuccess('success')
+      setSuccess('success');
 
       // 폼 초기화
       setRegisterForm({
         username: '',
         password: '',
         confirmPassword: '',
-      })
+      });
     } catch (err) {
       // 에러 처리
-      const errorMessage = err instanceof Error ? err.message : '회원가입 중 오류가 발생했습니다'
-      setError(errorMessage)
+      const errorMessage = err instanceof Error ? err.message : '회원가입 중 오류가 발생했습니다';
+      setError(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -227,9 +227,7 @@ export function LoginPage() {
                     <div className="flex items-start gap-3">
                       <CheckCircle className="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-success">
-                          로그인 성공
-                        </p>
+                        <p className="text-sm font-medium text-success">로그인 성공</p>
                       </div>
                     </div>
                   </div>
@@ -261,7 +259,10 @@ export function LoginPage() {
               <form onSubmit={handleRegister} className="space-y-4">
                 {/* 사용자명 */}
                 <div className="space-y-2">
-                  <label htmlFor="register-username" className="text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="register-username"
+                    className="text-sm font-medium text-foreground"
+                  >
                     사용자명
                   </label>
                   <Input
@@ -277,7 +278,10 @@ export function LoginPage() {
 
                 {/* 비밀번호 */}
                 <div className="space-y-2">
-                  <label htmlFor="register-password" className="text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="register-password"
+                    className="text-sm font-medium text-foreground"
+                  >
                     비밀번호
                   </label>
                   <Input
@@ -293,7 +297,10 @@ export function LoginPage() {
 
                 {/* 비밀번호 확인 */}
                 <div className="space-y-2">
-                  <label htmlFor="register-confirm-password" className="text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="register-confirm-password"
+                    className="text-sm font-medium text-foreground"
+                  >
                     비밀번호 확인
                   </label>
                   <Input
@@ -301,7 +308,9 @@ export function LoginPage() {
                     type="password"
                     placeholder="비밀번호를 다시 입력하세요"
                     value={registerForm.confirmPassword}
-                    onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
+                    onChange={(e) =>
+                      setRegisterForm({ ...registerForm, confirmPassword: e.target.value })
+                    }
                     className="h-11"
                     disabled={isLoading}
                   />
@@ -334,7 +343,11 @@ export function LoginPage() {
                         </p>
                         <div className="flex items-start gap-2 text-xs text-muted-foreground">
                           <Coffee className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                          <p>관리자 승인 후 로그인이 가능합니다.<br />커피를 보내면 더 빨리 될수도</p>
+                          <p>
+                            관리자 승인 후 로그인이 가능합니다.
+                            <br />
+                            커피를 보내면 더 빨리 될수도
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -364,9 +377,7 @@ export function LoginPage() {
                 <div className="pt-4 space-y-2">
                   <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                     <Coffee className="h-4 w-4 text-primary/60" />
-                    <p className="text-center">
-                      관리자 승인 후 로그인 가능합니다
-                    </p>
+                    <p className="text-center">관리자 승인 후 로그인 가능합니다</p>
                   </div>
                 </div>
               </form>
@@ -375,5 +386,5 @@ export function LoginPage() {
         </div>
       </Card>
     </div>
-  )
+  );
 }

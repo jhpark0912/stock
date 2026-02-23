@@ -1,9 +1,10 @@
 """
 Mock 주식 데이터 (개발/테스트용)
 """
-from datetime import datetime
-from app.models.stock import StockData, PriceInfo, FinancialsInfo, CompanyInfo
 
+from datetime import datetime
+
+from app.models.stock import CompanyInfo, FinancialsInfo, PriceInfo, StockData
 
 MOCK_STOCKS = {
     "AAPL": {
@@ -125,10 +126,7 @@ def get_mock_stock_data(ticker: str) -> StockData:
     ticker_upper = ticker.upper()
 
     if ticker_upper not in MOCK_STOCKS:
-        raise ValueError(
-            f"Mock 데이터가 없습니다. "
-            f"사용 가능한 티커: {', '.join(MOCK_STOCKS.keys())}"
-        )
+        raise ValueError(f"Mock 데이터가 없습니다. 사용 가능한 티커: {', '.join(MOCK_STOCKS.keys())}")
 
     mock = MOCK_STOCKS[ticker_upper]
 

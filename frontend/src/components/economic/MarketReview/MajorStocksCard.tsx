@@ -16,7 +16,9 @@ function formatPrice(price: number, country: 'kr' | 'us'): string {
   if (country === 'kr') {
     return price.toLocaleString('ko-KR') + '원';
   }
-  return '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (
+    '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  );
 }
 
 function formatPercent(value: number): string {
@@ -53,11 +55,21 @@ export function MajorStocksCard({ title, stocks, country }: MajorStocksCardProps
         <table className="w-full">
           <thead>
             <tr className="border-b bg-muted/30">
-              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground w-8">#</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">종목명</th>
-              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">현재가</th>
-              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">등락률</th>
-              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">시총</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground w-8">
+                #
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
+                종목명
+              </th>
+              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">
+                현재가
+              </th>
+              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">
+                등락률
+              </th>
+              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">
+                시총
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -70,26 +82,22 @@ export function MajorStocksCard({ title, stocks, country }: MajorStocksCardProps
                   key={stock.symbol}
                   className="border-b last:border-b-0 hover:bg-muted/20 transition-colors"
                 >
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {stock.rank}
-                  </td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">{stock.rank}</td>
                   <td className="px-4 py-3">
-                    <div className="font-medium text-sm text-foreground">
-                      {stock.name}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {stock.symbol}
-                    </div>
+                    <div className="font-medium text-sm text-foreground">{stock.name}</div>
+                    <div className="text-xs text-muted-foreground">{stock.symbol}</div>
                   </td>
                   <td className="px-4 py-3 text-right text-sm font-medium text-foreground">
                     {formatPrice(stock.price, country)}
                   </td>
-                  <td className={cn(
-                    'px-4 py-3 text-right text-sm font-bold',
-                    isPositive && 'text-emerald-600 dark:text-emerald-400',
-                    isNegative && 'text-red-600 dark:text-red-400',
-                    !isPositive && !isNegative && 'text-muted-foreground'
-                  )}>
+                  <td
+                    className={cn(
+                      'px-4 py-3 text-right text-sm font-bold',
+                      isPositive && 'text-emerald-600 dark:text-emerald-400',
+                      isNegative && 'text-red-600 dark:text-red-400',
+                      !isPositive && !isNegative && 'text-muted-foreground',
+                    )}
+                  >
                     {formatPercent(stock.change_percent)}
                   </td>
                   <td className="px-4 py-3 text-right text-sm text-muted-foreground">
@@ -103,9 +111,7 @@ export function MajorStocksCard({ title, stocks, country }: MajorStocksCardProps
       </div>
 
       {stocks.length === 0 && (
-        <div className="p-6 text-center text-sm text-muted-foreground">
-          데이터가 없습니다.
-        </div>
+        <div className="p-6 text-center text-sm text-muted-foreground">데이터가 없습니다.</div>
       )}
     </div>
   );

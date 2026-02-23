@@ -10,13 +10,16 @@ interface StatusGaugeProps {
 }
 
 // 지표별 임계값 정의
-const THRESHOLDS: Record<string, {
-  good: { min?: number; max?: number };
-  caution: { min?: number; max?: number };
-  danger: { min?: number; max?: number };
-  unit: string;
-  reversed?: boolean; // true면 낮을수록 좋음
-}> = {
+const THRESHOLDS: Record<
+  string,
+  {
+    good: { min?: number; max?: number };
+    caution: { min?: number; max?: number };
+    danger: { min?: number; max?: number };
+    unit: string;
+    reversed?: boolean; // true면 낮을수록 좋음
+  }
+> = {
   '^VIX': {
     good: { max: 20 },
     caution: { min: 20, max: 30 },
@@ -50,13 +53,13 @@ const THRESHOLDS: Record<string, {
     danger: {},
     unit: '$',
   },
-  'CPIAUCSL': {
+  CPIAUCSL: {
     good: { min: 1.5, max: 2.5 },
     caution: { min: 2.5, max: 4.0 },
     danger: { min: 4.0 },
     unit: '%',
   },
-  'M2SL': {
+  M2SL: {
     good: { min: 4, max: 8 },
     caution: { min: 1, max: 4 },
     danger: { max: 0 },
@@ -93,7 +96,7 @@ export function StatusGauge({ indicator }: StatusGaugeProps) {
   const status = indicator.status as 'good' | 'caution' | 'danger' | undefined;
 
   // 임계값이 없거나 상태가 없으면 기본 표시
-  if (!threshold || !status || status === 'none' as any || value === null) {
+  if (!threshold || !status || status === ('none' as any) || value === null) {
     return (
       <div className="bg-card border border-border rounded-lg p-4">
         <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
@@ -112,9 +115,7 @@ export function StatusGauge({ indicator }: StatusGaugeProps) {
   // 포맷팅
   const formatThreshold = (val: number | undefined): string => {
     if (val === undefined) return '-';
-    return threshold.unit === '$'
-      ? `${threshold.unit}${val}`
-      : `${val}${threshold.unit}`;
+    return threshold.unit === '$' ? `${threshold.unit}${val}` : `${val}${threshold.unit}`;
   };
 
   return (
@@ -132,8 +133,11 @@ export function StatusGauge({ indicator }: StatusGaugeProps) {
           <span className="text-foreground">
             {threshold.good.max !== undefined && `< ${formatThreshold(threshold.good.max)}`}
             {threshold.good.min !== undefined && threshold.good.max !== undefined && ' ~ '}
-            {threshold.good.min !== undefined && threshold.good.max === undefined && `> ${formatThreshold(threshold.good.min)}`}
-            {threshold.good.min !== undefined && threshold.good.max !== undefined &&
+            {threshold.good.min !== undefined &&
+              threshold.good.max === undefined &&
+              `> ${formatThreshold(threshold.good.min)}`}
+            {threshold.good.min !== undefined &&
+              threshold.good.max !== undefined &&
               `${formatThreshold(threshold.good.min)} ~ ${formatThreshold(threshold.good.max)}`}
           </span>
         </div>
@@ -164,17 +168,15 @@ export function StatusGauge({ indicator }: StatusGaugeProps) {
           {isFredIndicator ? 'YoY 변화율' : '현재값'}
         </span>
         <span className={cn('text-lg font-bold', style.text)}>
-          {value !== null && value !== undefined ? (
-            isFredIndicator ? (
-              // FRED 지표: YoY 변화율 표시
-              `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
-            ) : (
-              // 기타 지표: 절대값 표시
-              threshold.unit === '$'
+          {value !== null && value !== undefined
+            ? isFredIndicator
+              ? // FRED 지표: YoY 변화율 표시
+                `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+              : // 기타 지표: 절대값 표시
+                threshold.unit === '$'
                 ? `${threshold.unit}${value.toFixed(2)}`
                 : `${value.toFixed(2)}${threshold.unit}`
-            )
-          ) : 'N/A'}
+            : 'N/A'}
           <span className="ml-2 text-sm font-medium">({style.label})</span>
         </span>
       </div>

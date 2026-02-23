@@ -3,11 +3,13 @@
 - GET /economic/market-cycle
 - GET /economic/market-cycle/analysis
 """
+
 import logging
-from fastapi import APIRouter, Query
 from typing import Literal
 
-from app.models.economic import MarketCycleResponse, KrMarketCycleResponse
+from fastapi import APIRouter, Query
+
+from app.models.economic import KrMarketCycleResponse, MarketCycleResponse
 
 logger = logging.getLogger(__name__)
 
@@ -16,10 +18,7 @@ router = APIRouter()
 
 @router.get("/economic/market-cycle")
 async def get_market_cycle(
-    country: Literal["us", "kr"] = Query(
-        default="us",
-        description="조회할 국가 (us: 미국, kr: 한국)"
-    )
+    country: Literal["us", "kr"] = Query(default="us", description="조회할 국가 (us: 미국, kr: 한국)"),
 ):
     """
     시장 사이클 (경기 계절) 조회
@@ -50,11 +49,13 @@ async def get_market_cycle(
 
         if country == "us":
             from app.services.market.market_cycle_service import get_real_market_cycle
+
             cycle_data = get_real_market_cycle()
             logger.debug(f"미국 시장 사이클 조회 완료: {cycle_data.season}")
             return MarketCycleResponse(success=True, data=cycle_data)
         else:  # kr
             from app.services.market.kr_market_cycle_service import get_real_kr_market_cycle, get_sample_kr_market_cycle
+
             try:
                 cycle_data = get_real_kr_market_cycle()
                 logger.debug(f"한국 시장 사이클 조회 완료: {cycle_data.season}")
@@ -73,10 +74,7 @@ async def get_market_cycle(
 
 @router.get("/economic/market-cycle/analysis")
 async def get_market_cycle_with_ai(
-    country: Literal["us", "kr"] = Query(
-        default="us",
-        description="조회할 국가 (us: 미국, kr: 한국)"
-    )
+    country: Literal["us", "kr"] = Query(default="us", description="조회할 국가 (us: 미국, kr: 한국)"),
 ):
     """
     시장 사이클 + AI 분석 조회 (Admin 전용)
@@ -102,7 +100,7 @@ async def get_market_cycle_with_ai(
         api_key = settings.gemini_api_key
 
         if country == "us":
-            from app.services.market.market_cycle_service import get_real_market_cycle, generate_ai_comment
+            from app.services.market.market_cycle_service import generate_ai_comment, get_real_market_cycle
 
             cycle_data = get_real_market_cycle()
 
@@ -112,9 +110,9 @@ async def get_market_cycle_with_ai(
 
             try:
                 ai_result = generate_ai_comment(cycle_data, api_key)
-                cycle_data.ai_comment = ai_result['comment']
-                cycle_data.ai_recommendation = ai_result['recommendation']
-                cycle_data.ai_risk = ai_result.get('risk')
+                cycle_data.ai_comment = ai_result["comment"]
+                cycle_data.ai_recommendation = ai_result["recommendation"]
+                cycle_data.ai_risk = ai_result.get("risk")
                 logger.debug(f"AI 코멘트 생성 완료: {len(ai_result['comment'])}자")
             except Exception as ai_error:
                 logger.error(f"AI 코멘트 생성 실패 (무시): {ai_error}")
@@ -122,7 +120,11 @@ async def get_market_cycle_with_ai(
             return MarketCycleResponse(success=True, data=cycle_data)
 
         else:  # kr
-            from app.services.market.kr_market_cycle_service import get_real_kr_market_cycle, get_sample_kr_market_cycle, generate_kr_ai_comment
+            from app.services.market.kr_market_cycle_service import (
+                generate_kr_ai_comment,
+                get_real_kr_market_cycle,
+                get_sample_kr_market_cycle,
+            )
 
             try:
                 cycle_data = get_real_kr_market_cycle()
@@ -136,9 +138,9 @@ async def get_market_cycle_with_ai(
 
             try:
                 ai_result = generate_kr_ai_comment(cycle_data, api_key)
-                cycle_data.ai_comment = ai_result['comment']
-                cycle_data.ai_recommendation = ai_result['recommendation']
-                cycle_data.ai_risk = ai_result.get('risk')
+                cycle_data.ai_comment = ai_result["comment"]
+                cycle_data.ai_recommendation = ai_result["recommendation"]
+                cycle_data.ai_risk = ai_result.get("risk")
                 logger.debug(f"AI 코멘트 생성 완료: {len(ai_result['comment'])}자")
             except Exception as ai_error:
                 logger.error(f"AI 코멘트 생성 실패 (무시): {ai_error}")

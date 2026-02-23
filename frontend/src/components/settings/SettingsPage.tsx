@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Key, Save, Trash2, Eye, EyeOff, Building2 } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Key, Save, Trash2, Eye, EyeOff, Building2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   updateGeminiKey,
   deleteGeminiKey,
@@ -11,210 +11,213 @@ import {
   updateKISCredentials,
   deleteKISCredentials,
   getKISCredentialsStatus,
-} from '@/lib/authApi'
-import { PageHeader, PageContainer } from '@/components/layout'
+} from '@/lib/authApi';
+import { PageHeader, PageContainer } from '@/components/layout';
 
 /**
  * 설정 페이지 - API 키 관리
  */
 export function SettingsPage() {
-  const { token, user } = useAuth()
+  const { token, user } = useAuth();
 
   // ============ Gemini API 키 상태 ============
-  const [apiKey, setApiKey] = useState('')
-  const [hasKey, setHasKey] = useState(false)
-  const [keyPreview, setKeyPreview] = useState<string | null>(null)
-  const [showApiKey, setShowApiKey] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [isFetching, setIsFetching] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
+  const [apiKey, setApiKey] = useState('');
+  const [hasKey, setHasKey] = useState(false);
+  const [keyPreview, setKeyPreview] = useState<string | null>(null);
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // ============ 한국투자증권 API 키 상태 ============
-  const [kisAppKey, setKisAppKey] = useState('')
-  const [kisAppSecret, setKisAppSecret] = useState('')
-  const [hasKisCredentials, setHasKisCredentials] = useState(false)
-  const [kisAppKeyPreview, setKisAppKeyPreview] = useState<string | null>(null)
-  const [showKisAppKey, setShowKisAppKey] = useState(false)
-  const [showKisAppSecret, setShowKisAppSecret] = useState(false)
-  const [isKisLoading, setIsKisLoading] = useState(false)
-  const [isKisFetching, setIsKisFetching] = useState(true)
-  const [kisError, setKisError] = useState<string | null>(null)
-  const [kisSuccess, setKisSuccess] = useState<string | null>(null)
+  const [kisAppKey, setKisAppKey] = useState('');
+  const [kisAppSecret, setKisAppSecret] = useState('');
+  const [hasKisCredentials, setHasKisCredentials] = useState(false);
+  const [kisAppKeyPreview, setKisAppKeyPreview] = useState<string | null>(null);
+  const [showKisAppKey, setShowKisAppKey] = useState(false);
+  const [showKisAppSecret, setShowKisAppSecret] = useState(false);
+  const [isKisLoading, setIsKisLoading] = useState(false);
+  const [isKisFetching, setIsKisFetching] = useState(true);
+  const [kisError, setKisError] = useState<string | null>(null);
+  const [kisSuccess, setKisSuccess] = useState<string | null>(null);
 
   /**
    * Gemini API 키 상태 조회
    */
   const fetchKeyStatus = async () => {
-    if (!token) return
+    if (!token) return;
 
-    setIsFetching(true)
+    setIsFetching(true);
     try {
-      const status = await getGeminiKeyStatus(token)
-      setHasKey(status.has_key)
-      setKeyPreview(status.key_preview || null)
+      const status = await getGeminiKeyStatus(token);
+      setHasKey(status.has_key);
+      setKeyPreview(status.key_preview || null);
     } catch (err) {
-      console.error('API 키 상태 조회 실패:', err)
+      console.error('API 키 상태 조회 실패:', err);
     } finally {
-      setIsFetching(false)
+      setIsFetching(false);
     }
-  }
+  };
 
   /**
    * 한국투자증권 API 키 상태 조회
    */
   const fetchKisCredentialsStatus = async () => {
-    if (!token) return
+    if (!token) return;
 
-    setIsKisFetching(true)
+    setIsKisFetching(true);
     try {
-      const status = await getKISCredentialsStatus(token)
-      setHasKisCredentials(status.has_credentials)
-      setKisAppKeyPreview(status.app_key_preview || null)
+      const status = await getKISCredentialsStatus(token);
+      setHasKisCredentials(status.has_credentials);
+      setKisAppKeyPreview(status.app_key_preview || null);
     } catch (err) {
-      console.error('KIS API 키 상태 조회 실패:', err)
+      console.error('KIS API 키 상태 조회 실패:', err);
     } finally {
-      setIsKisFetching(false)
+      setIsKisFetching(false);
     }
-  }
+  };
 
   /**
    * 컴포넌트 마운트 시 API 키 상태 조회
    */
   useEffect(() => {
-    fetchKeyStatus()
-    fetchKisCredentialsStatus()
-  }, [token])
+    fetchKeyStatus();
+    fetchKisCredentialsStatus();
+  }, [token]);
 
   /**
    * Gemini API 키 저장
    */
   const handleSaveKey = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setSuccess(null)
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
 
     // 클라이언트 검증
     if (!apiKey || apiKey.trim().length < 10) {
-      setError('유효한 Gemini API 키를 입력해주세요 (최소 10자)')
-      return
+      setError('유효한 Gemini API 키를 입력해주세요 (최소 10자)');
+      return;
     }
 
     if (!token) {
-      setError('로그인이 필요합니다')
-      return
+      setError('로그인이 필요합니다');
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
       // API 키 저장
-      const result = await updateGeminiKey(token, apiKey.trim())
+      const result = await updateGeminiKey(token, apiKey.trim());
 
       // 성공 메시지
-      setSuccess('Gemini API 키가 저장되었습니다')
+      setSuccess('Gemini API 키가 저장되었습니다');
 
       // 상태 업데이트
-      setHasKey(result.has_key)
-      setKeyPreview(result.key_preview || null)
+      setHasKey(result.has_key);
+      setKeyPreview(result.key_preview || null);
 
       // 입력 필드 초기화
-      setApiKey('')
-      setShowApiKey(false)
+      setApiKey('');
+      setShowApiKey(false);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'API 키 저장 중 오류가 발생했습니다'
-      setError(errorMessage)
+      const errorMessage =
+        err instanceof Error ? err.message : 'API 키 저장 중 오류가 발생했습니다';
+      setError(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   /**
    * Gemini API 키 삭제
    */
   const handleDeleteKey = async () => {
     if (!confirm('Gemini API 키를 삭제하시겠습니까?\nAI 분석 기능을 사용할 수 없게 됩니다.')) {
-      return
+      return;
     }
 
-    setError(null)
-    setSuccess(null)
+    setError(null);
+    setSuccess(null);
 
     if (!token) {
-      setError('로그인이 필요합니다')
-      return
+      setError('로그인이 필요합니다');
+      return;
     }
 
-    setIsLoading(true)
+    setIsLoading(true);
 
     try {
       // API 키 삭제
-      await deleteGeminiKey(token)
+      await deleteGeminiKey(token);
 
       // 성공 메시지
-      setSuccess('Gemini API 키가 삭제되었습니다')
+      setSuccess('Gemini API 키가 삭제되었습니다');
 
       // 상태 업데이트
-      setHasKey(false)
-      setKeyPreview(null)
-      setApiKey('')
+      setHasKey(false);
+      setKeyPreview(null);
+      setApiKey('');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'API 키 삭제 중 오류가 발생했습니다'
-      setError(errorMessage)
+      const errorMessage =
+        err instanceof Error ? err.message : 'API 키 삭제 중 오류가 발생했습니다';
+      setError(errorMessage);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   /**
    * 한국투자증권 API 키 저장
    */
   const handleSaveKisCredentials = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setKisError(null)
-    setKisSuccess(null)
+    e.preventDefault();
+    setKisError(null);
+    setKisSuccess(null);
 
     // 클라이언트 검증
     if (!kisAppKey || kisAppKey.trim().length < 10) {
-      setKisError('유효한 App Key를 입력해주세요 (최소 10자)')
-      return
+      setKisError('유효한 App Key를 입력해주세요 (최소 10자)');
+      return;
     }
 
     if (!kisAppSecret || kisAppSecret.trim().length < 20) {
-      setKisError('유효한 App Secret을 입력해주세요 (최소 20자)')
-      return
+      setKisError('유효한 App Secret을 입력해주세요 (최소 20자)');
+      return;
     }
 
     if (!token) {
-      setKisError('로그인이 필요합니다')
-      return
+      setKisError('로그인이 필요합니다');
+      return;
     }
 
-    setIsKisLoading(true)
+    setIsKisLoading(true);
 
     try {
       // API 키 저장
-      const result = await updateKISCredentials(token, kisAppKey.trim(), kisAppSecret.trim())
+      const result = await updateKISCredentials(token, kisAppKey.trim(), kisAppSecret.trim());
 
       // 성공 메시지
-      setKisSuccess('한국투자증권 API 키가 저장되었습니다')
+      setKisSuccess('한국투자증권 API 키가 저장되었습니다');
 
       // 상태 업데이트
-      setHasKisCredentials(result.has_credentials)
-      setKisAppKeyPreview(result.app_key_preview || null)
+      setHasKisCredentials(result.has_credentials);
+      setKisAppKeyPreview(result.app_key_preview || null);
 
       // 입력 필드 초기화
-      setKisAppKey('')
-      setKisAppSecret('')
-      setShowKisAppKey(false)
-      setShowKisAppSecret(false)
+      setKisAppKey('');
+      setKisAppSecret('');
+      setShowKisAppKey(false);
+      setShowKisAppSecret(false);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'API 키 저장 중 오류가 발생했습니다'
-      setKisError(errorMessage)
+      const errorMessage =
+        err instanceof Error ? err.message : 'API 키 저장 중 오류가 발생했습니다';
+      setKisError(errorMessage);
     } finally {
-      setIsKisLoading(false)
+      setIsKisLoading(false);
     }
-  }
+  };
 
   /**
    * 한국투자증권 API 키 삭제
@@ -222,41 +225,42 @@ export function SettingsPage() {
   const handleDeleteKisCredentials = async () => {
     if (
       !confirm(
-        '한국투자증권 API 키를 삭제하시겠습니까?\n한국 섹터 ETF 구성종목 상세정보를 조회할 수 없게 됩니다.'
+        '한국투자증권 API 키를 삭제하시겠습니까?\n한국 섹터 ETF 구성종목 상세정보를 조회할 수 없게 됩니다.',
       )
     ) {
-      return
+      return;
     }
 
-    setKisError(null)
-    setKisSuccess(null)
+    setKisError(null);
+    setKisSuccess(null);
 
     if (!token) {
-      setKisError('로그인이 필요합니다')
-      return
+      setKisError('로그인이 필요합니다');
+      return;
     }
 
-    setIsKisLoading(true)
+    setIsKisLoading(true);
 
     try {
       // API 키 삭제
-      await deleteKISCredentials(token)
+      await deleteKISCredentials(token);
 
       // 성공 메시지
-      setKisSuccess('한국투자증권 API 키가 삭제되었습니다')
+      setKisSuccess('한국투자증권 API 키가 삭제되었습니다');
 
       // 상태 업데이트
-      setHasKisCredentials(false)
-      setKisAppKeyPreview(null)
-      setKisAppKey('')
-      setKisAppSecret('')
+      setHasKisCredentials(false);
+      setKisAppKeyPreview(null);
+      setKisAppKey('');
+      setKisAppSecret('');
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'API 키 삭제 중 오류가 발생했습니다'
-      setKisError(errorMessage)
+      const errorMessage =
+        err instanceof Error ? err.message : 'API 키 삭제 중 오류가 발생했습니다';
+      setKisError(errorMessage);
     } finally {
-      setIsKisLoading(false)
+      setIsKisLoading(false);
     }
-  }
+  };
 
   return (
     <div className="h-full min-h-0 flex flex-col">
@@ -286,7 +290,9 @@ export function SettingsPage() {
                   {/* 현재 API 키 상태 */}
                   {hasKey && keyPreview && (
                     <div className="p-4 rounded-lg bg-success/10 border border-success/20 space-y-2">
-                      <p className="text-sm font-medium text-success">✓ API 키가 등록되어 있습니다</p>
+                      <p className="text-sm font-medium text-success">
+                        ✓ API 키가 등록되어 있습니다
+                      </p>
                       <p className="text-sm text-muted-foreground font-mono">{keyPreview}</p>
                     </div>
                   )}
@@ -302,7 +308,8 @@ export function SettingsPage() {
                       </p>
                       {user?.role === 'admin' && (
                         <p className="text-xs text-muted-foreground">
-                          💡 개인 API 키를 등록하지 않으면 서버의 환경변수에 설정된 API 키가 사용됩니다.
+                          💡 개인 API 키를 등록하지 않으면 서버의 환경변수에 설정된 API 키가
+                          사용됩니다.
                         </p>
                       )}
                     </div>
@@ -330,7 +337,11 @@ export function SettingsPage() {
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                           disabled={isLoading}
                         >
-                          {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showApiKey ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </button>
                       </div>
                       <p className="text-xs text-muted-foreground">
@@ -456,7 +467,8 @@ export function SettingsPage() {
                       </p>
                       {user?.role === 'admin' && (
                         <p className="text-xs text-muted-foreground">
-                          💡 개인 API 키를 등록하지 않으면 서버의 환경변수에 설정된 API 키가 사용됩니다.
+                          💡 개인 API 키를 등록하지 않으면 서버의 환경변수에 설정된 API 키가
+                          사용됩니다.
                         </p>
                       )}
                     </div>
@@ -485,14 +497,21 @@ export function SettingsPage() {
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                           disabled={isKisLoading}
                         >
-                          {showKisAppKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showKisAppKey ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </button>
                       </div>
                     </div>
 
                     {/* App Secret */}
                     <div className="space-y-2">
-                      <label htmlFor="kis-app-secret" className="text-sm font-medium text-foreground">
+                      <label
+                        htmlFor="kis-app-secret"
+                        className="text-sm font-medium text-foreground"
+                      >
                         {hasKisCredentials ? '새 App Secret' : 'App Secret'}
                       </label>
                       <div className="relative">
@@ -511,7 +530,11 @@ export function SettingsPage() {
                           className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                           disabled={isKisLoading}
                         >
-                          {showKisAppSecret ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showKisAppSecret ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
                         </button>
                       </div>
                       <p className="text-xs text-muted-foreground">
@@ -606,5 +629,5 @@ export function SettingsPage() {
         </div>
       </PageContainer>
     </div>
-  )
+  );
 }

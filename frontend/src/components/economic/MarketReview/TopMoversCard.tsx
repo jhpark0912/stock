@@ -17,7 +17,9 @@ function formatPrice(price: number, country: 'kr' | 'us'): string {
   if (country === 'kr') {
     return price.toLocaleString('ko-KR') + '원';
   }
-  return '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (
+    '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  );
 }
 
 function formatPercent(value: number): string {
@@ -28,7 +30,9 @@ function formatPercent(value: number): string {
 export function TopMoversCard({ title, type, stocks, country }: TopMoversCardProps) {
   const isGainers = type === 'gainers';
   const Icon = isGainers ? TrendingUp : TrendingDown;
-  const iconColor = isGainers ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400';
+  const iconColor = isGainers
+    ? 'text-emerald-600 dark:text-emerald-400'
+    : 'text-red-600 dark:text-red-400';
   const headerBg = isGainers
     ? 'bg-emerald-50 dark:bg-emerald-950/30'
     : 'bg-red-50 dark:bg-red-950/30';
@@ -44,31 +48,26 @@ export function TopMoversCard({ title, type, stocks, country }: TopMoversCardPro
       {/* 모바일: 카드 리스트 */}
       <div className="block sm:hidden divide-y divide-border">
         {stocks.map((stock) => (
-          <div
-            key={stock.symbol}
-            className="px-4 py-3 flex items-center justify-between"
-          >
+          <div key={stock.symbol} className="px-4 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3 min-w-0">
-              <span className="text-sm text-muted-foreground w-5 flex-shrink-0">
-                {stock.rank}
-              </span>
+              <span className="text-sm text-muted-foreground w-5 flex-shrink-0">{stock.rank}</span>
               <div className="min-w-0">
-                <div className="font-medium text-sm text-foreground truncate">
-                  {stock.name}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {stock.symbol}
-                </div>
+                <div className="font-medium text-sm text-foreground truncate">{stock.name}</div>
+                <div className="text-xs text-muted-foreground">{stock.symbol}</div>
               </div>
             </div>
             <div className="text-right flex-shrink-0 ml-2">
               <div className="text-sm font-medium text-foreground">
                 {formatPrice(stock.price, country)}
               </div>
-              <div className={cn(
-                'text-sm font-bold',
-                isGainers ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
-              )}>
+              <div
+                className={cn(
+                  'text-sm font-bold',
+                  isGainers
+                    ? 'text-emerald-600 dark:text-emerald-400'
+                    : 'text-red-600 dark:text-red-400',
+                )}
+              >
                 {formatPercent(stock.change_percent)}
               </div>
             </div>
@@ -81,10 +80,18 @@ export function TopMoversCard({ title, type, stocks, country }: TopMoversCardPro
         <table className="w-full">
           <thead>
             <tr className="border-b bg-muted/30">
-              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground w-8">#</th>
-              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">종목명</th>
-              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">현재가</th>
-              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">등락률</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground w-8">
+                #
+              </th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-muted-foreground">
+                종목명
+              </th>
+              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">
+                현재가
+              </th>
+              <th className="px-4 py-2 text-right text-xs font-medium text-muted-foreground">
+                등락률
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -93,24 +100,22 @@ export function TopMoversCard({ title, type, stocks, country }: TopMoversCardPro
                 key={stock.symbol}
                 className="border-b last:border-b-0 hover:bg-muted/20 transition-colors"
               >
-                <td className="px-4 py-3 text-sm text-muted-foreground">
-                  {stock.rank}
-                </td>
+                <td className="px-4 py-3 text-sm text-muted-foreground">{stock.rank}</td>
                 <td className="px-4 py-3">
-                  <div className="font-medium text-sm text-foreground">
-                    {stock.name}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {stock.symbol}
-                  </div>
+                  <div className="font-medium text-sm text-foreground">{stock.name}</div>
+                  <div className="text-xs text-muted-foreground">{stock.symbol}</div>
                 </td>
                 <td className="px-4 py-3 text-right text-sm font-medium text-foreground">
                   {formatPrice(stock.price, country)}
                 </td>
-                <td className={cn(
-                  'px-4 py-3 text-right text-sm font-bold',
-                  isGainers ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'
-                )}>
+                <td
+                  className={cn(
+                    'px-4 py-3 text-right text-sm font-bold',
+                    isGainers
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-red-600 dark:text-red-400',
+                  )}
+                >
                   {formatPercent(stock.change_percent)}
                 </td>
               </tr>
@@ -120,9 +125,7 @@ export function TopMoversCard({ title, type, stocks, country }: TopMoversCardPro
       </div>
 
       {stocks.length === 0 && (
-        <div className="p-6 text-center text-sm text-muted-foreground">
-          데이터가 없습니다.
-        </div>
+        <div className="p-6 text-center text-sm text-muted-foreground">데이터가 없습니다.</div>
       )}
     </div>
   );

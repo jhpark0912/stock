@@ -3,7 +3,7 @@ export interface StockPrice {
   open: number;
   high: number;
   low: number;
-  close: number | null;  // 종가 추가
+  close: number | null; // 종가 추가
   volume: number;
 }
 
@@ -110,7 +110,7 @@ export interface ChartDataPoint {
 export type InvestmentStrategy = 'buy' | 'hold' | 'sell';
 
 export interface AnalysisSummary {
-  summary: string;  // 3줄 요약 (줄바꿈으로 구분)
+  summary: string; // 3줄 요약 (줄바꿈으로 구분)
   strategy: InvestmentStrategy;
 }
 

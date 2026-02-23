@@ -7,12 +7,14 @@ GCP Secret Manager 클라이언트 (캐싱 포함)
 - 컨테이너 시작 시 한 번만 로드
 - 캐시 통계 추적
 """
-import os
+
 import logging
-from typing import Dict, Optional
+import os
 from datetime import datetime, timedelta
-from google.cloud import secretmanager
+from typing import Dict, Optional
+
 from google.api_core import exceptions
+from google.cloud import secretmanager
 
 logger = logging.getLogger(__name__)
 
@@ -23,11 +25,7 @@ class SecretCache:
     def __init__(self, ttl_seconds: int = 3600):
         self.cache: Dict[str, tuple[str, datetime]] = {}
         self.ttl_seconds = ttl_seconds
-        self.stats = {
-            "hits": 0,
-            "misses": 0,
-            "api_calls": 0
-        }
+        self.stats = {"hits": 0, "misses": 0, "api_calls": 0}
 
     def get(self, key: str) -> Optional[str]:
         """캐시에서 값 가져오기"""
@@ -69,7 +67,7 @@ class SecretCache:
             "misses": self.stats["misses"],
             "hit_rate": f"{hit_rate:.2f}%",
             "api_calls": self.stats["api_calls"],
-            "cached_secrets": len(self.cache)
+            "cached_secrets": len(self.cache),
         }
 
 
@@ -125,14 +123,14 @@ class SecretManagerClient:
 
         Returns:
             시크릿 값
-        
+
         Note:
             환경 변수 이름을 자동으로 Secret Manager 형식으로 변환:
             GEMINI_API_KEY → gemini-api-key
         """
         # 환경 변수 이름 → Secret Manager 이름 변환
         # GEMINI_API_KEY → gemini-api-key
-        sm_secret_id = secret_id.lower().replace('_', '-')
+        sm_secret_id = secret_id.lower().replace("_", "-")
         # Secret Manager 비활성화 시 즉시 .env 사용
         if not self.use_secret_manager:
             return self._get_from_env(fallback_env_var or secret_id)
@@ -163,7 +161,7 @@ class SecretManagerClient:
     def _fetch_from_secret_manager(self, secret_id: str) -> str:
         """
         Secret Manager에서 실제 값 조회 (API 호출)
-        
+
         Args:
             secret_id: Secret Manager의 시크릿 ID (소문자-하이픈 형식, 예: gemini-api-key)
         """

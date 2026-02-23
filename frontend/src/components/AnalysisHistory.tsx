@@ -40,7 +40,9 @@ function StrategyBadge({ strategy }: { strategy: string }) {
   };
 
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${styles[strategyLower]}`}>
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${styles[strategyLower]}`}
+    >
       {icons[strategyLower]}
       {labels[strategyLower]}
     </span>
@@ -94,9 +96,7 @@ export function AnalysisHistory({ ticker, isOpen, onClose, onDeleted }: Analysis
       <div className="bg-card border border-border rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
         {/* 헤더 */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-          <h2 className="text-lg font-semibold text-foreground">
-            분석 이력 - {ticker}
-          </h2>
+          <h2 className="text-lg font-semibold text-foreground">분석 이력 - {ticker}</h2>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-4 w-4" />
           </Button>
@@ -105,17 +105,11 @@ export function AnalysisHistory({ ticker, isOpen, onClose, onDeleted }: Analysis
         {/* 콘텐츠 */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {loading ? (
-            <div className="text-center py-8 text-muted-foreground">
-              로딩 중...
-            </div>
+            <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
           ) : error ? (
-            <div className="text-center py-8 text-destructive">
-              {error}
-            </div>
+            <div className="text-center py-8 text-destructive">{error}</div>
           ) : analyses.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              저장된 분석이 없습니다.
-            </div>
+            <div className="text-center py-8 text-muted-foreground">저장된 분석이 없습니다.</div>
           ) : (
             analyses.map((analysis) => (
               <div
@@ -167,8 +161,13 @@ export function AnalysisHistory({ ticker, isOpen, onClose, onDeleted }: Analysis
                       <span>평단가: ${analysis.user_avg_price.toFixed(2)}</span>
                     )}
                     {analysis.profit_loss_ratio !== null && (
-                      <span className={analysis.profit_loss_ratio >= 0 ? 'text-success' : 'text-destructive'}>
-                        {analysis.profit_loss_ratio >= 0 ? '+' : ''}{analysis.profit_loss_ratio.toFixed(1)}%
+                      <span
+                        className={
+                          analysis.profit_loss_ratio >= 0 ? 'text-success' : 'text-destructive'
+                        }
+                      >
+                        {analysis.profit_loss_ratio >= 0 ? '+' : ''}
+                        {analysis.profit_loss_ratio.toFixed(1)}%
                       </span>
                     )}
                   </div>

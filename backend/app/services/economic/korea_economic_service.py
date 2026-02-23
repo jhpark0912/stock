@@ -4,13 +4,14 @@
 ECOS (한국은행 경제통계시스템) API 및 Yahoo Finance를 사용하여
 한국 경제 지표를 조회합니다.
 """
+
 import logging
-import requests
-from typing import Dict, Optional, List
-from datetime import datetime, timedelta
-from concurrent.futures import ThreadPoolExecutor
-from functools import lru_cache
 import time
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime, timedelta
+from typing import Dict, Optional
+
+import requests
 
 from app.config import settings
 from app.models.economic import EconomicIndicator, HistoryPoint
@@ -37,7 +38,7 @@ ECOS_SERIES = {
         "name": "국고채 10년물",
         "metaphor": "한국 자산시장의 중력",
         "description": "한국 정부가 발행하는 10년 만기 국채의 수익률입니다. 주택담보대출 금리의 기준이 됩니다.",
-        "impact": "이 금리가 오르면 대출이자가 올라 부동산·주식에 하방 압력이 커집니다. 미국 10년물에 연동되어 움직입니다."
+        "impact": "이 금리가 오르면 대출이자가 올라 부동산·주식에 하방 압력이 커집니다. 미국 10년물에 연동되어 움직입니다.",
     },
     "KR_BASE_RATE": {
         "stat_code": "722Y001",
@@ -47,7 +48,7 @@ ECOS_SERIES = {
         "name": "한국은행 기준금리",
         "metaphor": "한국 경제의 온도 조절기",
         "description": "한국은행이 금융기관과 거래할 때 기준이 되는 금리입니다. 모든 금리의 출발점입니다.",
-        "impact": "인상하면 예금이자는 오르지만 대출이자도 올라 소비·투자가 위축됩니다. 인하하면 돈이 풀려 주식·부동산에 호재입니다."
+        "impact": "인상하면 예금이자는 오르지만 대출이자도 올라 소비·투자가 위축됩니다. 인하하면 돈이 풀려 주식·부동산에 호재입니다.",
     },
     "KR_CPI": {
         "stat_code": "901Y009",
@@ -57,7 +58,7 @@ ECOS_SERIES = {
         "name": "한국 소비자물가지수",
         "metaphor": "장바구니 물가 (한국판 CPI)",
         "description": "마트에서 장을 보는 비용이 작년보다 얼마나 올랐는지 보여줍니다. 한국은행의 목표는 2%입니다.",
-        "impact": "2%대면 안정적, 3% 넘으면 금리 인상 압력이 커져 주식·부동산에 악재입니다. 마이너스면 디플레이션 경고입니다."
+        "impact": "2%대면 안정적, 3% 넘으면 금리 인상 압력이 커져 주식·부동산에 악재입니다. 마이너스면 디플레이션 경고입니다.",
     },
     "KR_M2": {
         "stat_code": "161Y006",  # M2 상품별 구성내역(평잔, 원계열)
@@ -67,7 +68,7 @@ ECOS_SERIES = {
         "name": "한국 M2 통화량",
         "metaphor": "한국 주식시장의 연료",
         "description": "시중에 풀린 현금, 예적금 등 바로 쓸 수 있는 돈의 총량입니다.",
-        "impact": "M2가 늘어나면 갈 곳 없는 돈이 주식·부동산으로 흘러갑니다. 줄어들면 자산 가격 하락 압력이 커집니다."
+        "impact": "M2가 늘어나면 갈 곳 없는 돈이 주식·부동산으로 흘러갑니다. 줄어들면 자산 가격 하락 압력이 커집니다.",
     },
     "KR_EXPORT": {
         "stat_code": "301Y013",
@@ -77,17 +78,17 @@ ECOS_SERIES = {
         "name": "월간 수출액 (BOP)",
         "metaphor": "코스피의 심장 박동",
         "description": "국제수지 기준 상품 수출 금액(백만달러)입니다. 반도체·자동차 등 한국 주력 수출품이 세계에서 얼마나 팔리는지 보여줍니다.",
-        "impact": "수출 YoY 증가 → 기업 실적 개선 → 코스피 상승 동력. 3개월 연속 감소 시 경기 침체 신호."
+        "impact": "수출 YoY 증가 → 기업 실적 개선 → 코스피 상승 동력. 3개월 연속 감소 시 경기 침체 신호.",
     },
     "KR_INDPRO": {
         "stat_code": "901Y033",
         "item_code": "A00",  # 전산업 (2020=100)
-        "item_code2": "2",   # 계절조정 (1=원계열, 2=계절조정)
+        "item_code2": "2",  # 계절조정 (1=원계열, 2=계절조정)
         "cycle": "M",
         "name": "전산업생산지수",
         "metaphor": "한국 공장의 심장 박동",
         "description": "광업, 제조업, 전기가스업의 생산량을 종합한 지수입니다(2020=100). 한국 경제의 실물 활동을 직접 보여줍니다.",
-        "impact": "100 이상이면 기준기간보다 생산이 활발한 것이고, YoY 양수(+)면 경기 확장 신호입니다."
+        "impact": "100 이상이면 기준기간보다 생산이 활발한 것이고, YoY 양수(+)면 경기 확장 신호입니다.",
     },
     "KR_LEADING_INDEX": {
         "stat_code": "901Y067",
@@ -97,7 +98,7 @@ ECOS_SERIES = {
         "name": "선행지수 순환변동치",
         "metaphor": "경기의 내비게이션",
         "description": "6~9개월 후 경기 방향을 미리 보여주는 지표입니다. 기준값 100을 중심으로 위면 경기 확장, 아래면 경기 수축을 예고합니다.",
-        "impact": "100 이상 & 상승이면 경기 확장 신호로 주식 비중 확대. 하락 전환하면 경기 고점 통과 가능성, 하락장 대비 필요."
+        "impact": "100 이상 & 상승이면 경기 확장 신호로 주식 비중 확대. 하락 전환하면 경기 고점 통과 가능성, 하락장 대비 필요.",
     },
     "KR_CCSI": {
         "stat_code": "511Y002",
@@ -107,7 +108,7 @@ ECOS_SERIES = {
         "name": "소비자심리지수 (CCSI)",
         "metaphor": "국민 경기 체감 온도",
         "description": "소비자들이 현재·미래 경기를 어떻게 느끼는지 수치화한 지표입니다. 기준값 100이 '보통'입니다.",
-        "impact": "100 초과면 '먹고살 만하다' → 소비 활성화 기대. 100 미만이면 '지갑 닫음' → 경기 침체 우려."
+        "impact": "100 초과면 '먹고살 만하다' → 소비 활성화 기대. 100 미만이면 '지갑 닫음' → 경기 침체 우려.",
     },
 }
 
@@ -123,7 +124,7 @@ YAHOO_KR_SYMBOLS = {
         "name": "원/달러 환율",
         "metaphor": "한국 경제의 체온계",
         "description": "1달러를 사기 위해 필요한 원화입니다. 환율이 오르면 원화 가치가 떨어진다는 뜻입니다.",
-        "impact": "1,300원 이상이면 수입 물가 상승으로 서민 생활이 힘들어지고, 외국인 투자자가 한국 주식을 팔고 나갈 수 있습니다."
+        "impact": "1,300원 이상이면 수입 물가 상승으로 서민 생활이 힘들어지고, 외국인 투자자가 한국 주식을 팔고 나갈 수 있습니다.",
     }
 }
 
@@ -151,17 +152,15 @@ def _set_cache(key: str, data: any):
 # ECOS API 조회 함수
 # ============================================
 
-def get_ecos_indicator(
-    series_id: str,
-    include_history: bool = False
-) -> Optional[EconomicIndicator]:
+
+def get_ecos_indicator(series_id: str, include_history: bool = False) -> Optional[EconomicIndicator]:
     """
     ECOS API에서 개별 지표 조회
-    
+
     Args:
         series_id: 시리즈 ID (KR_BOND_10Y, KR_BASE_RATE 등)
         include_history: 히스토리 포함 여부
-    
+
     Returns:
         EconomicIndicator 또는 None
     """
@@ -169,18 +168,18 @@ def get_ecos_indicator(
     if not api_key:
         logger.warning("ECOS_API_KEY가 설정되지 않았습니다.")
         return None
-    
+
     if series_id not in ECOS_SERIES:
         logger.error(f"알 수 없는 ECOS 시리즈: {series_id}")
         return None
-    
+
     # 캐시 확인
     cache_key = f"ecos_{series_id}_{include_history}"
     cached = _get_cached(cache_key, ECOS_CACHE_TTL)
     if cached:
         logger.debug(f"ECOS 캐시 히트: {series_id}")
         return cached
-    
+
     series = ECOS_SERIES[series_id]
     stat_code = series["stat_code"]
     item_code = series["item_code"]
@@ -195,7 +194,7 @@ def get_ecos_indicator(
         if include_history:
             start_date = (today - timedelta(days=1280)).strftime("%Y%m")  # ~42개월
         else:
-            start_date = (today - timedelta(days=460)).strftime("%Y%m")   # ~15개월
+            start_date = (today - timedelta(days=460)).strftime("%Y%m")  # ~15개월
     else:
         # 일간 데이터: 최근 200일 (6개월 + 여유)
         end_date = today.strftime("%Y%m%d")
@@ -224,7 +223,7 @@ def get_ecos_indicator(
                 logger.error(f"ECOS API 에러 ({series_id}): {error_msg} (코드: {error_code})")
                 logger.debug(f"ECOS 응답: {data}")
             return None
-        
+
         rows = data["StatisticSearch"].get("row", [])
         if not rows:
             logger.warning(f"ECOS 데이터 없음: {series_id}")
@@ -236,24 +235,24 @@ def get_ecos_indicator(
         value = float(latest.get("DATA_VALUE", 0))
 
         logger.info(f"✅ ECOS {series_id}: 최신 데이터 {latest_date} = {value} (총 {len(rows)}개)")
-        
+
         # 변화율 계산 (전기 대비)
         change = None
         change_percent = None
         yoy_change = None
-        
+
         if len(rows) >= 2:
             prev_value = float(rows[-2].get("DATA_VALUE", 0))
             if prev_value != 0:
                 change = value - prev_value
                 change_percent = (change / prev_value) * 100
-        
+
         # YoY 변화율 (월간 데이터만)
         if cycle == "M" and len(rows) >= 13:
             yoy_value = float(rows[-13].get("DATA_VALUE", 0))
             if yoy_value != 0:
                 yoy_change = ((value - yoy_value) / yoy_value) * 100
-        
+
         # 히스토리 데이터 구성
         history = None
         if include_history:
@@ -269,16 +268,11 @@ def get_ecos_indicator(
                     # YYYYMMDD -> YYYY-MM-DD
                     date_str = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:]}"
 
-                history.append(HistoryPoint(
-                    date=date_str,
-                    value=float(row.get("DATA_VALUE", 0))
-                ))
-        
+                history.append(HistoryPoint(date=date_str, value=float(row.get("DATA_VALUE", 0))))
+
         # 상태 판단
-        status, status_label, status_criteria = get_indicator_status(
-            series_id, value, yoy_change
-        )
-        
+        status, status_label, status_criteria = get_indicator_status(series_id, value, yoy_change)
+
         indicator = EconomicIndicator(
             symbol=series_id,
             name=series["name"],
@@ -292,12 +286,12 @@ def get_ecos_indicator(
             history=history,
             status=status.value,
             status_label=status_label,
-            status_criteria=status_criteria
+            status_criteria=status_criteria,
         )
-        
+
         _set_cache(cache_key, indicator)
         return indicator
-        
+
     except requests.exceptions.RequestException as e:
         logger.error(f"ECOS API 요청 실패 ({series_id}): {e}")
         return None
@@ -306,9 +300,7 @@ def get_ecos_indicator(
         return None
 
 
-def get_credit_spread(
-    include_history: bool = False
-) -> Optional[EconomicIndicator]:
+def get_credit_spread(include_history: bool = False) -> Optional[EconomicIndicator]:
     """
     신용 스프레드 (회사채-국고채 금리 차이) 조회
 
@@ -341,7 +333,9 @@ def get_credit_spread(
 
     try:
         # 국고채 3년 조회 (최대 10000개)
-        treasury_url = f"{ECOS_BASE_URL}/{api_key}/json/kr/1/10000/{stat_code}/D/{start_date}/{end_date}/{treasury_code}"
+        treasury_url = (
+            f"{ECOS_BASE_URL}/{api_key}/json/kr/1/10000/{stat_code}/D/{start_date}/{end_date}/{treasury_code}"
+        )
         logger.debug(f"국고채 3년 URL: {treasury_url}")
 
         treasury_response = requests.get(treasury_url, timeout=20)
@@ -358,7 +352,9 @@ def get_credit_spread(
             return None
 
         # 회사채 3년(AA-) 조회 (최대 10000개)
-        corporate_url = f"{ECOS_BASE_URL}/{api_key}/json/kr/1/10000/{stat_code}/D/{start_date}/{end_date}/{corporate_code}"
+        corporate_url = (
+            f"{ECOS_BASE_URL}/{api_key}/json/kr/1/10000/{stat_code}/D/{start_date}/{end_date}/{corporate_code}"
+        )
         logger.debug(f"회사채 3년 URL: {corporate_url}")
 
         corporate_response = requests.get(corporate_url, timeout=20)
@@ -380,7 +376,9 @@ def get_credit_spread(
         latest_corporate = float(corporate_rows[-1].get("DATA_VALUE", 0))
         spread = latest_corporate - latest_treasury
 
-        logger.info(f"✅ ECOS 신용스프레드: 최신 데이터 {latest_date} = {spread:.3f}%p (국고채: {len(treasury_rows)}개, 회사채: {len(corporate_rows)}개)")
+        logger.info(
+            f"✅ ECOS 신용스프레드: 최신 데이터 {latest_date} = {spread:.3f}%p (국고채: {len(treasury_rows)}개, 회사채: {len(corporate_rows)}개)"
+        )
 
         # 이전 스프레드 (변화율 계산용)
         change = None
@@ -410,15 +408,10 @@ def get_credit_spread(
                 c_value = float(corporate_rows[i].get("DATA_VALUE", 0))
                 spread_value = c_value - t_value
 
-                history.append(HistoryPoint(
-                    date=date_str,
-                    value=round(spread_value, 3)
-                ))
+                history.append(HistoryPoint(date=date_str, value=round(spread_value, 3)))
 
         # 상태 판단
-        status, status_label, status_criteria = get_indicator_status(
-            "KR_CREDIT_SPREAD", spread
-        )
+        status, status_label, status_criteria = get_indicator_status("KR_CREDIT_SPREAD", spread)
 
         indicator = EconomicIndicator(
             symbol="KR_CREDIT_SPREAD",
@@ -432,7 +425,7 @@ def get_credit_spread(
             history=history,
             status=status.value,
             status_label=status_label,
-            status_criteria=status_criteria
+            status_criteria=status_criteria,
         )
 
         _set_cache(cache_key, indicator)
@@ -446,51 +439,48 @@ def get_credit_spread(
         return None
 
 
-def get_yahoo_kr_indicator(
-    symbol: str,
-    include_history: bool = False
-) -> Optional[EconomicIndicator]:
+def get_yahoo_kr_indicator(symbol: str, include_history: bool = False) -> Optional[EconomicIndicator]:
     """
     Yahoo Finance에서 한국 지표 조회
-    
+
     Args:
         symbol: Yahoo 심볼 (^VKOSPI, KRW=X 등)
         include_history: 히스토리 포함 여부
-    
+
     Returns:
         EconomicIndicator 또는 None
     """
     if symbol not in YAHOO_KR_SYMBOLS:
         logger.error(f"알 수 없는 Yahoo 한국 심볼: {symbol}")
         return None
-    
+
     # 캐시 확인
     cache_key = f"yahoo_kr_{symbol}_{include_history}"
     cached = _get_cached(cache_key, YAHOO_CACHE_TTL)
     if cached:
         logger.debug(f"Yahoo KR 캐시 히트: {symbol}")
         return cached
-    
+
     try:
         # yahooquery 사용
         from yahooquery import Ticker
-        
+
         ticker = Ticker(symbol)
         price_data = ticker.price.get(symbol, {})
-        
+
         if isinstance(price_data, str) or not price_data:
             logger.warning(f"Yahoo 한국 지표 조회 실패: {symbol}")
             return None
-        
+
         value = price_data.get("regularMarketPrice")
         if value is None:
             return None
-        
+
         change = price_data.get("regularMarketChange")
         change_percent = price_data.get("regularMarketChangePercent")
         if change_percent:
             change_percent = change_percent * 100
-        
+
         # 히스토리 조회
         history = None
         if include_history:
@@ -500,18 +490,15 @@ def get_yahoo_kr_indicator(
                 for date, row in hist.iterrows():
                     if isinstance(date, tuple):
                         date = date[1]  # MultiIndex의 경우
-                    history.append(HistoryPoint(
-                        date=str(date)[:10],
-                        value=float(row.get("close", row.get("adjclose", 0)))
-                    ))
-        
+                    history.append(
+                        HistoryPoint(date=str(date)[:10], value=float(row.get("close", row.get("adjclose", 0))))
+                    )
+
         meta = YAHOO_KR_SYMBOLS[symbol]
-        
+
         # 상태 판단
-        status, status_label, status_criteria = get_indicator_status(
-            symbol, value
-        )
-        
+        status, status_label, status_criteria = get_indicator_status(symbol, value)
+
         indicator = EconomicIndicator(
             symbol=symbol,
             name=meta["name"],
@@ -524,12 +511,12 @@ def get_yahoo_kr_indicator(
             history=history,
             status=status.value,
             status_label=status_label,
-            status_criteria=status_criteria
+            status_criteria=status_criteria,
         )
-        
+
         _set_cache(cache_key, indicator)
         return indicator
-        
+
     except ImportError:
         logger.error("yahooquery 라이브러리가 설치되지 않았습니다.")
         return None
@@ -542,9 +529,8 @@ def get_yahoo_kr_indicator(
 # 통합 조회 함수
 # ============================================
 
-def get_all_korea_indicators(
-    include_history: bool = False
-) -> Dict:
+
+def get_all_korea_indicators(include_history: bool = False) -> Dict:
     """
     모든 한국 경제 지표 병렬 조회
 
@@ -564,16 +550,10 @@ def get_all_korea_indicators(
         "rates": {
             "bond_10y": None,
             "base_rate": None,
-            "credit_spread": None  # 신용 스프레드 (회사채-국고채 금리 차이)
+            "credit_spread": None,  # 신용 스프레드 (회사채-국고채 금리 차이)
         },
-        "macro": {
-            "leading_index": None,
-            "ccsi": None,
-            "export": None
-        },
-        "fx": {
-            "usd_krw": None
-        }
+        "macro": {"leading_index": None, "ccsi": None, "export": None},
+        "fx": {"usd_krw": None},
     }
 
     def fetch_ecos(series_id: str):
@@ -625,7 +605,7 @@ def get_all_korea_indicators(
                         results["fx"]["usd_krw"] = indicator
             except Exception as e:
                 logger.error(f"지표 조회 실패: {e}")
-    
+
     logger.debug("한국 경제 지표 전체 조회 완료")
     return results
 
@@ -633,19 +613,16 @@ def get_all_korea_indicators(
 def check_ecos_availability() -> Dict:
     """
     ECOS API 상태 확인
-    
+
     Returns:
         {"available": bool, "message": str}
     """
     api_key = settings.ecos_api_key
-    
+
     if not api_key:
         return {
             "available": False,
-            "message": "ECOS_API_KEY가 설정되지 않았습니다. 한국 경제 지표를 조회하려면 https://ecos.bok.or.kr/api/ 에서 API 키를 발급받으세요."
+            "message": "ECOS_API_KEY가 설정되지 않았습니다. 한국 경제 지표를 조회하려면 https://ecos.bok.or.kr/api/ 에서 API 키를 발급받으세요.",
         }
-    
-    return {
-        "available": True,
-        "message": "ECOS API 키가 설정되어 있습니다."
-    }
+
+    return {"available": True, "message": "ECOS API 키가 설정되어 있습니다."}

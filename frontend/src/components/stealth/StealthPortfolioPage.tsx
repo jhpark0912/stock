@@ -5,11 +5,34 @@
  */
 
 import { useState, useEffect } from 'react';
-import { Plus, X, ChevronRight, ChevronLeft, Menu, RefreshCw, FileText, History, Save, Trash2 } from 'lucide-react';
+import {
+  Plus,
+  X,
+  ChevronRight,
+  ChevronLeft,
+  Menu,
+  RefreshCw,
+  FileText,
+  History,
+  Save,
+  Trash2,
+} from 'lucide-react';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { LoadingSpinner } from '../LoadingSpinner';
-import { generateSummary, saveAnalysis, getAnalysisHistory, deleteAnalysis } from '@/lib/analysisApi';
-import type { StockData, AIAnalysis, NewsItem, AnalysisSummary, SavedAnalysis, InvestmentStrategy } from '@/types/stock';
+import {
+  generateSummary,
+  saveAnalysis,
+  getAnalysisHistory,
+  deleteAnalysis,
+} from '@/lib/analysisApi';
+import type {
+  StockData,
+  AIAnalysis,
+  NewsItem,
+  AnalysisSummary,
+  SavedAnalysis,
+  InvestmentStrategy,
+} from '@/types/stock';
 
 export function StealthPortfolioPage() {
   const {
@@ -88,9 +111,7 @@ export function StealthPortfolioPage() {
               }`}
             >
               <div className="flex items-center gap-2">
-                {selectedTicker === ticker.symbol && (
-                  <ChevronRight className="h-3 w-3" />
-                )}
+                {selectedTicker === ticker.symbol && <ChevronRight className="h-3 w-3" />}
                 <span>{ticker.symbol}</span>
               </div>
               <button
@@ -128,7 +149,10 @@ export function StealthPortfolioPage() {
                   추가
                 </button>
                 <button
-                  onClick={() => { setIsAdding(false); setNewProjectInput(''); }}
+                  onClick={() => {
+                    setIsAdding(false);
+                    setNewProjectInput('');
+                  }}
                   className="flex-1 px-2.5 py-1 bg-secondary text-secondary-foreground rounded-md text-[10px] font-medium hover:opacity-90 transition-opacity"
                 >
                   취소
@@ -213,7 +237,7 @@ export function StealthPortfolioPage() {
                 {displayData.purchasePrice !== null && stockData.price.current && (
                   <ProjectInfoLine
                     label="성과"
-                    value={`${((stockData.price.current - displayData.purchasePrice) / displayData.purchasePrice * 100).toFixed(1)}%`}
+                    value={`${(((stockData.price.current - displayData.purchasePrice) / displayData.purchasePrice) * 100).toFixed(1)}%`}
                   />
                 )}
               </div>
@@ -223,28 +247,49 @@ export function StealthPortfolioPage() {
             <NoteSection title="세부 지표">
               <div className="space-y-1">
                 {stockData.financials.trailing_pe !== null && (
-                  <ProjectInfoLine label="PER" value={stockData.financials.trailing_pe.toFixed(1)} />
+                  <ProjectInfoLine
+                    label="PER"
+                    value={stockData.financials.trailing_pe.toFixed(1)}
+                  />
                 )}
                 {stockData.financials.pbr !== null && (
                   <ProjectInfoLine label="PBR" value={stockData.financials.pbr.toFixed(2)} />
                 )}
                 {stockData.financials.roe !== null && (
-                  <ProjectInfoLine label="ROE" value={`${(stockData.financials.roe * 100).toFixed(1)}%`} />
+                  <ProjectInfoLine
+                    label="ROE"
+                    value={`${(stockData.financials.roe * 100).toFixed(1)}%`}
+                  />
                 )}
                 {stockData.financials.opm !== null && (
-                  <ProjectInfoLine label="영업이익률" value={`${(stockData.financials.opm * 100).toFixed(1)}%`} />
+                  <ProjectInfoLine
+                    label="영업이익률"
+                    value={`${(stockData.financials.opm * 100).toFixed(1)}%`}
+                  />
                 )}
                 {stockData.financials.dividend_yield !== null && (
-                  <ProjectInfoLine label="배당률" value={`${(stockData.financials.dividend_yield * 100).toFixed(2)}%`} />
+                  <ProjectInfoLine
+                    label="배당률"
+                    value={`${(stockData.financials.dividend_yield * 100).toFixed(2)}%`}
+                  />
                 )}
                 {stockData.financials.revenue_growth !== null && (
-                  <ProjectInfoLine label="매출성장률" value={`${(stockData.financials.revenue_growth * 100).toFixed(1)}%`} />
+                  <ProjectInfoLine
+                    label="매출성장률"
+                    value={`${(stockData.financials.revenue_growth * 100).toFixed(1)}%`}
+                  />
                 )}
                 {stockData.financials.debt_to_equity !== null && (
-                  <ProjectInfoLine label="부채비율" value={`${stockData.financials.debt_to_equity.toFixed(1)}%`} />
+                  <ProjectInfoLine
+                    label="부채비율"
+                    value={`${stockData.financials.debt_to_equity.toFixed(1)}%`}
+                  />
                 )}
                 {stockData.market_cap !== null && (
-                  <ProjectInfoLine label="규모" value={`$${(stockData.market_cap / 1e9).toFixed(2)}B`} />
+                  <ProjectInfoLine
+                    label="규모"
+                    value={`$${(stockData.market_cap / 1e9).toFixed(2)}B`}
+                  />
                 )}
               </div>
             </NoteSection>
@@ -418,13 +463,9 @@ function StealthAnalysisSection({
                 )}
               </div>
 
-              {summaryLoading && (
-                <p className="text-xs text-muted-foreground">요약 생성 중...</p>
-              )}
+              {summaryLoading && <p className="text-xs text-muted-foreground">요약 생성 중...</p>}
 
-              {summaryError && (
-                <p className="text-xs text-muted-foreground">{summaryError}</p>
-              )}
+              {summaryError && <p className="text-xs text-muted-foreground">{summaryError}</p>}
 
               {summary && (
                 <div className="space-y-2">
@@ -468,7 +509,9 @@ function StealthAnalysisSection({
             <button
               onClick={() => setShowHistory(!showHistory)}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-xs border border-border rounded hover:bg-muted transition-colors ${
-                showHistory ? 'bg-muted text-foreground' : 'text-muted-foreground hover:text-foreground'
+                showHistory
+                  ? 'bg-muted text-foreground'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               <History className="h-3 w-3" />
@@ -480,23 +523,14 @@ function StealthAnalysisSection({
 
       {/* 이력 패널 (인라인) */}
       {showHistory && (
-        <StealthAnalysisHistory
-          ticker={stockData.ticker}
-          onClose={() => setShowHistory(false)}
-        />
+        <StealthAnalysisHistory ticker={stockData.ticker} onClose={() => setShowHistory(false)} />
       )}
     </>
   );
 }
 
 /** 스텔스 모드 분석 이력 (인라인 패널, 모달 아님) */
-function StealthAnalysisHistory({
-  ticker,
-  onClose,
-}: {
-  ticker: string;
-  onClose: () => void;
-}) {
+function StealthAnalysisHistory({ ticker, onClose }: { ticker: string; onClose: () => void }) {
   const [analyses, setAnalyses] = useState<SavedAnalysis[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -523,7 +557,7 @@ function StealthAnalysisHistory({
     setDeletingId(id);
     try {
       await deleteAnalysis(id);
-      setAnalyses(prev => prev.filter(a => a.id !== id));
+      setAnalyses((prev) => prev.filter((a) => a.id !== id));
     } catch (e) {
       setError(e instanceof Error ? e.message : '삭제 실패');
     } finally {
@@ -541,11 +575,8 @@ function StealthAnalysisHistory({
         ) : analyses.length === 0 ? (
           <p className="text-xs text-muted-foreground">저장된 이력이 없습니다.</p>
         ) : (
-          analyses.map(analysis => (
-            <div
-              key={analysis.id}
-              className="border border-border rounded p-3 space-y-1.5"
-            >
+          analyses.map((analysis) => (
+            <div key={analysis.id} className="border border-border rounded p-3 space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-muted-foreground">
                   {new Date(analysis.created_at).toLocaleString('ko-KR', {
@@ -568,7 +599,9 @@ function StealthAnalysisHistory({
                 </button>
               </div>
               {analysis.summary.split('\n').map((line, idx) => (
-                <p key={idx} className="text-sm text-foreground">- {line}</p>
+                <p key={idx} className="text-sm text-foreground">
+                  - {line}
+                </p>
               ))}
               {analysis.current_price && (
                 <p className="text-xs text-muted-foreground pt-1">
@@ -578,10 +611,7 @@ function StealthAnalysisHistory({
             </div>
           ))
         )}
-        <button
-          onClick={onClose}
-          className="text-xs text-muted-foreground hover:text-foreground"
-        >
+        <button onClick={onClose} className="text-xs text-muted-foreground hover:text-foreground">
           닫기
         </button>
       </div>

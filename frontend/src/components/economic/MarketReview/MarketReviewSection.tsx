@@ -14,10 +14,19 @@ import { SectorSummary } from './SectorSummary';
 import { AIInsightCard } from './AIInsightCard';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { api } from '@/lib/api';
-import type { MarketReviewData, MarketReviewResponse, MarketReviewAIResponse } from '@/types/marketReview';
+import type {
+  MarketReviewData,
+  MarketReviewResponse,
+  MarketReviewAIResponse,
+} from '@/types/marketReview';
 
 // Mock 데이터 (Fallback)
-import { mockKrMarketReview, mockUsMarketReview, mockKrAIAnalysis, mockUsAIAnalysis } from '@/mocks/marketReviewMock';
+import {
+  mockKrMarketReview,
+  mockUsMarketReview,
+  mockKrAIAnalysis,
+  mockUsAIAnalysis,
+} from '@/mocks/marketReviewMock';
 
 type ReviewCountry = 'kr' | 'us';
 
@@ -34,7 +43,7 @@ function formatDate(dateStr: string): string {
   const month = date.getMonth() + 1;
   const day = date.getDate();
   const weekday = weekdays[date.getDay()];
-  
+
   return `${year}년 ${month}월 ${day}일 (${weekday})`;
 }
 
@@ -45,71 +54,80 @@ export function MarketReviewSection({ country, className }: MarketReviewSectionP
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const [useMock] = useState(false); // false: 실제 API 사용, true: Mock 데이터
-  
+
   // 중복 호출 방지용 ref
   const loadingRef = useRef(false);
   const loadedCountryRef = useRef<ReviewCountry | null>(null);
 
   // 데이터 로드
-  const loadData = useCallback(async (targetCountry: ReviewCountry, forceRefresh = false) => {
-    // 이미 로딩 중이면 무시
-    if (loadingRef.current) return;
-    
-    // 이미 해당 국가 데이터가 로드되었고, 강제 새로고침이 아니면 무시
-    if (!forceRefresh && loadedCountryRef.current === targetCountry) return;
-    
-    loadingRef.current = true;
-    setLoading(true);
-    setError(null);
-    
-    try {
-      if (useMock) {
-        // Mock 데이터 사용 (Fallback)
-        await new Promise(resolve => setTimeout(resolve, 500));
-        const mockData = targetCountry === 'kr' ? mockKrMarketReview : mockUsMarketReview;
-        setData(mockData);
-      } else {
-        // 실제 API 호출
-        const response = await api.get<MarketReviewResponse>(`/api/economic/market-review/${targetCountry}`);
-        if (response.data.success && response.data.data) {
-          setData(response.data.data);
-        } else {
-          // API 실패 시 Mock 데이터로 Fallback
+  const loadData = useCallback(
+    async (targetCountry: ReviewCountry, forceRefresh = false) => {
+      // 이미 로딩 중이면 무시
+      if (loadingRef.current) return;
+
+      // 이미 해당 국가 데이터가 로드되었고, 강제 새로고침이 아니면 무시
+      if (!forceRefresh && loadedCountryRef.current === targetCountry) return;
+
+      loadingRef.current = true;
+      setLoading(true);
+      setError(null);
+
+      try {
+        if (useMock) {
+          // Mock 데이터 사용 (Fallback)
+          await new Promise((resolve) => setTimeout(resolve, 500));
           const mockData = targetCountry === 'kr' ? mockKrMarketReview : mockUsMarketReview;
           setData(mockData);
-          setError(response.data.error || null);
+        } else {
+          // 실제 API 호출
+          const response = await api.get<MarketReviewResponse>(
+            `/api/economic/market-review/${targetCountry}`,
+          );
+          if (response.data.success && response.data.data) {
+            setData(response.data.data);
+          } else {
+            // API 실패 시 Mock 데이터로 Fallback
+            const mockData = targetCountry === 'kr' ? mockKrMarketReview : mockUsMarketReview;
+            setData(mockData);
+            setError(response.data.error || null);
+          }
         }
+      } catch (err) {
+        // API 오류 시 Mock 데이터로 Fallback
+        const mockData = targetCountry === 'kr' ? mockKrMarketReview : mockUsMarketReview;
+        setData(mockData);
+        setError('실시간 데이터를 불러올 수 없어 샘플 데이터를 표시합니다.');
+      } finally {
+        setLoading(false);
+        loadingRef.current = false;
+        loadedCountryRef.current = targetCountry;
       }
-    } catch (err) {
-      // API 오류 시 Mock 데이터로 Fallback
-      const mockData = targetCountry === 'kr' ? mockKrMarketReview : mockUsMarketReview;
-      setData(mockData);
-      setError('실시간 데이터를 불러올 수 없어 샘플 데이터를 표시합니다.');
-    } finally {
-      setLoading(false);
-      loadingRef.current = false;
-      loadedCountryRef.current = targetCountry;
-    }
-  }, [useMock]);
+    },
+    [useMock],
+  );
 
   // AI 분석 생성
   const handleGenerateAI = useCallback(async () => {
     if (!data) return;
-    
+
     setAiLoading(true);
     setAiError(null);
-    
+
     try {
       if (useMock) {
         // Mock AI 분석
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
         const mockAI = country === 'kr' ? mockKrAIAnalysis : mockUsAIAnalysis;
-        setData(prev => prev ? { ...prev, ai_analysis: mockAI } : null);
+        setData((prev) => (prev ? { ...prev, ai_analysis: mockAI } : null));
       } else {
         // 실제 AI API 호출
-        const response = await api.post<MarketReviewAIResponse>(`/api/economic/market-review/${country}/ai`);
+        const response = await api.post<MarketReviewAIResponse>(
+          `/api/economic/market-review/${country}/ai`,
+        );
         if (response.data.success && response.data.data) {
-          setData(prev => prev ? { ...prev, ai_analysis: response.data.data ?? undefined } : null);
+          setData((prev) =>
+            prev ? { ...prev, ai_analysis: response.data.data ?? undefined } : null,
+          );
         } else {
           // AI 실패 시 에러 메시지 표시
           const errorMsg = response.data.error || 'AI 분석 생성에 실패했습니다.';
@@ -118,7 +136,8 @@ export function MarketReviewSection({ country, className }: MarketReviewSectionP
       }
     } catch (err: any) {
       // AI 오류 시 에러 메시지 표시
-      const errorMsg = err?.response?.data?.error || err?.message || 'AI 분석 중 오류가 발생했습니다.';
+      const errorMsg =
+        err?.response?.data?.error || err?.message || 'AI 분석 중 오류가 발생했습니다.';
       setAiError(errorMsg);
     } finally {
       setAiLoading(false);
@@ -132,8 +151,6 @@ export function MarketReviewSection({ country, className }: MarketReviewSectionP
     loadData(country);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [country]); // loadData를 의존성에서 제외하여 중복 호출 방지
-
-
 
   // 새로고침 핸들러
   const handleRefresh = () => {
@@ -181,9 +198,7 @@ export function MarketReviewSection({ country, className }: MarketReviewSectionP
     return (
       <div className={cn('', className)}>
         <div className="flex items-center justify-center p-6">
-          <div className="text-center text-muted-foreground">
-            데이터가 없습니다.
-          </div>
+          <div className="text-center text-muted-foreground">데이터가 없습니다.</div>
         </div>
       </div>
     );
@@ -207,8 +222,7 @@ export function MarketReviewSection({ country, className }: MarketReviewSectionP
                 </span>
                 {data.is_market_closed && (
                   <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                    <CheckCircle2 className="h-4 w-4" />
-                    장 마감
+                    <CheckCircle2 className="h-4 w-4" />장 마감
                   </span>
                 )}
               </div>
@@ -274,11 +288,7 @@ export function MarketReviewSection({ country, className }: MarketReviewSectionP
         )}
 
         {country === 'us' && data.major_stocks && (
-          <MajorStocksCard
-            title="S&P 500 시총 TOP 5"
-            stocks={data.major_stocks}
-            country="us"
-          />
+          <MajorStocksCard title="S&P 500 시총 TOP 5" stocks={data.major_stocks} country="us" />
         )}
 
         {/* AI 분석 */}

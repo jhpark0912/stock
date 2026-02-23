@@ -8,8 +8,8 @@ import { cn } from '@/lib/utils';
 
 interface CompareSelectorProps {
   indicators: EconomicIndicator[];
-  selectedSymbol: string;  // 메인으로 선택된 지표 (비교 대상에서 제외)
-  compareSymbols: string[];  // 비교할 지표들
+  selectedSymbol: string; // 메인으로 선택된 지표 (비교 대상에서 제외)
+  compareSymbols: string[]; // 비교할 지표들
   onToggle: (symbol: string) => void;
 }
 
@@ -20,21 +20,21 @@ const indicatorIcons: Record<string, string> = {
   '^VIX': '📊',
   'CL=F': '🛢️',
   'GC=F': '💰',
-  'CPIAUCSL': '📊',
-  'M2SL': '💵',
+  CPIAUCSL: '📊',
+  M2SL: '💵',
 };
 
 export function CompareSelector({
   indicators,
   selectedSymbol,
   compareSymbols,
-  onToggle
+  onToggle,
 }: CompareSelectorProps) {
   // 메인 지표 제외
-  const availableIndicators = indicators.filter(i => i.symbol !== selectedSymbol);
+  const availableIndicators = indicators.filter((i) => i.symbol !== selectedSymbol);
 
   // 히스토리가 있는 지표만 비교 가능
-  const comparableIndicators = availableIndicators.filter(i => i.history && i.history.length > 0);
+  const comparableIndicators = availableIndicators.filter((i) => i.history && i.history.length > 0);
 
   return (
     <div className="bg-card border border-border rounded-lg p-4">
@@ -44,9 +44,7 @@ export function CompareSelector({
       </h4>
 
       {comparableIndicators.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          비교 가능한 지표가 없습니다
-        </p>
+        <p className="text-sm text-muted-foreground">비교 가능한 지표가 없습니다</p>
       ) : (
         <div className="space-y-2">
           {comparableIndicators.map((indicator) => {
@@ -60,30 +58,32 @@ export function CompareSelector({
                 className={cn(
                   'w-full flex items-center justify-between p-2 rounded-md transition-colors',
                   'hover:bg-muted/50',
-                  isSelected && 'bg-primary/10'
+                  isSelected && 'bg-primary/10',
                 )}
               >
                 <div className="flex items-center gap-2">
                   <span className="text-sm">{icon}</span>
-                  <span className={cn(
-                    'text-sm',
-                    isSelected ? 'text-foreground font-medium' : 'text-muted-foreground'
-                  )}>
+                  <span
+                    className={cn(
+                      'text-sm',
+                      isSelected ? 'text-foreground font-medium' : 'text-muted-foreground',
+                    )}
+                  >
                     {indicator.name}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">
-                    {formatValue(indicator)}
-                  </span>
+                  <span className="text-xs text-muted-foreground">{formatValue(indicator)}</span>
 
-                  <div className={cn(
-                    'w-5 h-5 rounded border flex items-center justify-center transition-colors',
-                    isSelected
-                      ? 'bg-primary border-primary text-primary-foreground'
-                      : 'border-border'
-                  )}>
+                  <div
+                    className={cn(
+                      'w-5 h-5 rounded border flex items-center justify-center transition-colors',
+                      isSelected
+                        ? 'bg-primary border-primary text-primary-foreground'
+                        : 'border-border',
+                    )}
+                  >
                     {isSelected && <Check className="h-3 w-3" />}
                   </div>
                 </div>
@@ -94,9 +94,7 @@ export function CompareSelector({
       )}
 
       {compareSymbols.length > 0 && (
-        <p className="text-xs text-muted-foreground mt-3">
-          {compareSymbols.length}개 지표 비교 중
-        </p>
+        <p className="text-xs text-muted-foreground mt-3">{compareSymbols.length}개 지표 비교 중</p>
       )}
     </div>
   );

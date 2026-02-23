@@ -1,8 +1,8 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
 }
 
 /**
@@ -67,10 +67,15 @@ export function formatLargeCurrency(amount: number, ticker?: string): string {
 export function calculateProfit(
   purchasePrice: number | null,
   currentPrice: number,
-  quantity: number | null
+  quantity: number | null,
 ): ProfitInfo | null {
   // 구매가나 수량이 없으면 계산 불가
-  if (purchasePrice === null || purchasePrice === undefined || quantity === null || quantity === undefined) {
+  if (
+    purchasePrice === null ||
+    purchasePrice === undefined ||
+    quantity === null ||
+    quantity === undefined
+  ) {
     return null;
   }
 

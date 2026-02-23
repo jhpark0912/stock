@@ -105,7 +105,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
   const handleLegendClick3 = (e: any) => {
     const dataKey = e.dataKey;
     const value = e.value; // 범례에 표시된 이름 (name 속성 값)
-    
+
     // '밴드 영역'을 클릭했을 때만 area 토글
     if (value === '밴드 영역') {
       setVisibleLines3((prev) => ({ ...prev, area: !prev.area }));
@@ -117,7 +117,7 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
   const handleLegendClick4 = (e: any) => {
     const dataKey = e.dataKey;
     const value = e.value; // 범례에 표시된 이름 (name 속성 값)
-    
+
     // 'BB 영역'을 클릭했을 때만 area 토글
     if (value === 'BB 영역') {
       setVisibleLines4((prev) => ({ ...prev, area: !prev.area }));
@@ -147,7 +147,9 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
         <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
           <p className="text-xs text-muted-foreground mb-2">{data.date}</p>
           <div className="space-y-1">
-            <p className="text-sm font-bold text-foreground">종가: {formatPrice(data.price, ticker)}</p>
+            <p className="text-sm font-bold text-foreground">
+              종가: {formatPrice(data.price, ticker)}
+            </p>
             <p className="text-xs text-muted-foreground">
               거래량: {(data.volume / 1000000).toFixed(2)}M
             </p>
@@ -166,7 +168,9 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
         <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
           <p className="text-xs text-muted-foreground mb-2">{data.date}</p>
           <div className="space-y-1">
-            <p className="text-sm font-bold text-foreground">종가: {formatPrice(data.price, ticker)}</p>
+            <p className="text-sm font-bold text-foreground">
+              종가: {formatPrice(data.price, ticker)}
+            </p>
             {data.sma20 && (
               <p className="text-xs text-blue-500">SMA20: {formatPrice(data.sma20, ticker)}</p>
             )}
@@ -191,12 +195,20 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
         <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
           <p className="text-xs text-muted-foreground mb-2">{data.date}</p>
           <div className="space-y-1">
-            <p className="text-sm font-bold text-foreground">종가: {formatPrice(data.price, ticker)}</p>
+            <p className="text-sm font-bold text-foreground">
+              종가: {formatPrice(data.price, ticker)}
+            </p>
             {data.bb_upper && (
               <>
-                <p className="text-xs text-purple-500">상단: {formatPrice(data.bb_upper, ticker)}</p>
-                <p className="text-xs text-gray-500">중간: {data.bb_middle ? formatPrice(data.bb_middle, ticker) : '-'}</p>
-                <p className="text-xs text-purple-500">하단: {data.bb_lower ? formatPrice(data.bb_lower, ticker) : '-'}</p>
+                <p className="text-xs text-purple-500">
+                  상단: {formatPrice(data.bb_upper, ticker)}
+                </p>
+                <p className="text-xs text-gray-500">
+                  중간: {data.bb_middle ? formatPrice(data.bb_middle, ticker) : '-'}
+                </p>
+                <p className="text-xs text-purple-500">
+                  하단: {data.bb_lower ? formatPrice(data.bb_lower, ticker) : '-'}
+                </p>
               </>
             )}
           </div>
@@ -214,7 +226,9 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
         <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
           <p className="text-xs text-muted-foreground mb-2">{data.date}</p>
           <div className="space-y-1">
-            <p className="text-sm font-bold text-foreground">종가: {formatPrice(data.price, ticker)}</p>
+            <p className="text-sm font-bold text-foreground">
+              종가: {formatPrice(data.price, ticker)}
+            </p>
             {data.sma20 && (
               <p className="text-xs text-blue-500">SMA20: {formatPrice(data.sma20, ticker)}</p>
             )}
@@ -226,7 +240,8 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
             )}
             {data.bb_upper && (
               <p className="text-xs text-purple-500">
-                BB: {data.bb_lower ? formatPrice(data.bb_lower, ticker) : '-'} - {formatPrice(data.bb_upper, ticker)}
+                BB: {data.bb_lower ? formatPrice(data.bb_lower, ticker) : '-'} -{' '}
+                {formatPrice(data.bb_upper, ticker)}
               </p>
             )}
             <p className="text-xs text-muted-foreground">
@@ -250,7 +265,9 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
           </div>
           <div>
             <p className="text-xs text-muted-foreground">시작가</p>
-            <p className="text-sm font-semibold text-foreground">{formatPrice(data[0].price, ticker)}</p>
+            <p className="text-sm font-semibold text-foreground">
+              {formatPrice(data[0].price, ticker)}
+            </p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">현재가</p>
@@ -262,16 +279,10 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
             <p className="text-xs text-muted-foreground">변동률</p>
             <p
               className={`text-sm font-semibold ${
-                data[data.length - 1].price >= data[0].price
-                  ? 'text-success'
-                  : 'text-destructive'
+                data[data.length - 1].price >= data[0].price ? 'text-success' : 'text-destructive'
               }`}
             >
-              {(
-                ((data[data.length - 1].price - data[0].price) / data[0].price) *
-                100
-              ).toFixed(2)}
-              %
+              {(((data[data.length - 1].price - data[0].price) / data[0].price) * 100).toFixed(2)}%
             </p>
           </div>
         </div>
@@ -310,9 +321,9 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
               />
               <Tooltip content={<PriceTooltip />} />
-              <Legend 
-                wrapperStyle={{ fontSize: '11px', cursor: 'pointer' }} 
-                iconSize={12} 
+              <Legend
+                wrapperStyle={{ fontSize: '11px', cursor: 'pointer' }}
+                iconSize={12}
                 onClick={handleLegendClick1}
               />
               <Bar
@@ -359,9 +370,9 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 tick={{ fill: 'hsl(var(--muted-foreground))' }}
               />
               <Tooltip content={<SMATooltip />} />
-              <Legend 
-                wrapperStyle={{ fontSize: '11px', cursor: 'pointer' }} 
-                iconSize={12} 
+              <Legend
+                wrapperStyle={{ fontSize: '11px', cursor: 'pointer' }}
+                iconSize={12}
                 onClick={handleLegendClick2}
               />
               <Line
@@ -432,9 +443,9 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 tick={{ fill: 'hsl(var(--muted-foreground))' }}
               />
               <Tooltip content={<BBTooltip />} />
-              <Legend 
-                wrapperStyle={{ fontSize: '11px', cursor: 'pointer' }} 
-                iconSize={12} 
+              <Legend
+                wrapperStyle={{ fontSize: '11px', cursor: 'pointer' }}
+                iconSize={12}
                 onClick={handleLegendClick3}
               />
               <Area
@@ -531,9 +542,9 @@ export function StockChart({ ticker, chartData, chartType: _chartType = 'area' }
                 tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
               />
               <Tooltip content={<ComprehensiveTooltip />} />
-              <Legend 
-                wrapperStyle={{ fontSize: '10px', cursor: 'pointer' }} 
-                iconSize={10} 
+              <Legend
+                wrapperStyle={{ fontSize: '10px', cursor: 'pointer' }}
+                iconSize={10}
                 onClick={handleLegendClick4}
               />
 

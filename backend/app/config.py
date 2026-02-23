@@ -5,9 +5,11 @@
 - 🔴 높은 보안 (Secret Manager): GEMINI, KIS, JWT, ENCRYPTION, ADMIN_PASSWORD
 - 🟢 낮은 보안 (.env): FRED, ECOS (무료 API)
 """
-import os
+
 import logging
+import os
 from typing import List
+
 from dotenv import load_dotenv
 
 # .env 파일 로드
@@ -53,8 +55,7 @@ class Settings:
 
         # CORS
         self.allowed_origins = os.getenv(
-            "ALLOWED_ORIGINS",
-            "http://localhost:8080,http://localhost:5173,http://localhost:3000"
+            "ALLOWED_ORIGINS", "http://localhost:8080,http://localhost:5173,http://localhost:3000"
         )
 
         # Server

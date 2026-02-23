@@ -17,7 +17,7 @@ const StealthContext = createContext<StealthProviderState | undefined>(undefined
 
 export function StealthProvider({ children }: { children: React.ReactNode }) {
   const [stealthMode, setStealthMode] = useState<boolean>(
-    () => localStorage.getItem(STORAGE_KEY) === 'true'
+    () => localStorage.getItem(STORAGE_KEY) === 'true',
   );
 
   // document.title 동기화
@@ -30,7 +30,7 @@ export function StealthProvider({ children }: { children: React.ReactNode }) {
   }, [stealthMode]);
 
   const toggleStealth = useCallback(() => {
-    setStealthMode(prev => {
+    setStealthMode((prev) => {
       const next = !prev;
       localStorage.setItem(STORAGE_KEY, String(next));
       return next;

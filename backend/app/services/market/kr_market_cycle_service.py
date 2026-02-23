@@ -8,10 +8,9 @@
 - 겨울 (침체기): 수출 역성장, 고위험
 """
 
-import logging
 import json
-from typing import Optional, Dict, Any, List
-from datetime import datetime
+import logging
+from typing import Dict, Optional
 
 import google.generativeai as genai
 
@@ -25,24 +24,25 @@ logger = logging.getLogger(__name__)
 # ============================================
 
 KR_SEASONS = {
-    'spring': {'name': '봄 (회복기)', 'emoji': '🌸'},
-    'summer': {'name': '여름 (활황기)', 'emoji': '☀️'},
-    'autumn': {'name': '가을 (후퇴기)', 'emoji': '🍂'},
-    'winter': {'name': '겨울 (침체기)', 'emoji': '❄️'},
+    "spring": {"name": "봄 (회복기)", "emoji": "🌸"},
+    "summer": {"name": "여름 (활황기)", "emoji": "☀️"},
+    "autumn": {"name": "가을 (후퇴기)", "emoji": "🍂"},
+    "winter": {"name": "겨울 (침체기)", "emoji": "❄️"},
 }
 
 # 한국 특화 섹터
 KR_SECTOR_RECOMMENDATIONS = {
-    'spring': ['반도체', '2차전지', 'IT 서비스'],
-    'summer': ['자동차', '조선', '철강', '화학'],
-    'autumn': ['유틸리티', '통신', '필수소비재'],
-    'winter': ['국채', '현금', '방어주', '헬스케어'],
+    "spring": ["반도체", "2차전지", "IT 서비스"],
+    "summer": ["자동차", "조선", "철강", "화학"],
+    "autumn": ["유틸리티", "통신", "필수소비재"],
+    "winter": ["국채", "현금", "방어주", "헬스케어"],
 }
 
 
 # ============================================
 # 헬퍼 함수
 # ============================================
+
 
 def calculate_momentum(history: Optional[list]) -> str:
     """
@@ -62,10 +62,7 @@ def calculate_momentum(history: Optional[list]) -> str:
         recent_4 = [h.value for h in history[-4:]]
 
         # MoM 변화율 계산 (3개)
-        mom_changes = [
-            ((recent_4[i] - recent_4[i-1]) / recent_4[i-1]) * 100
-            for i in range(1, 4)
-        ]
+        mom_changes = [((recent_4[i] - recent_4[i - 1]) / recent_4[i - 1]) * 100 for i in range(1, 4)]
 
         # 평균 기울기 계산
         avg_slope = sum(mom_changes) / len(mom_changes)
@@ -96,33 +93,28 @@ def get_transition_signal(season: str, score: float, confidence: int) -> str:
     """
     # 피크 아웃 구간 감지 (여름 끝자락 → 가을 전환)
     if 70 <= score <= 80:
-        if season == 'summer':
+        if season == "summer":
             return "⚠️ 피크 아웃 구간 - 과열 경계, 수익 실현 고려 시점"
-        elif season == 'autumn':
+        elif season == "autumn":
             return "⚠️ 고점 통과 - 방어적 포지셔닝 필요"
 
     # 일반 전환 신호
     if confidence < 60:
         return "경계 구간 - 다음 계절로 전환 가능성 높음"
     elif confidence < 75:
-        if season == 'spring':
+        if season == "spring":
             return "여름(활황기)로 전환 가능성 있음"
-        elif season == 'summer':
+        elif season == "summer":
             return "가을(후퇴기)로 전환 가능성 있음"
-        elif season == 'autumn':
+        elif season == "autumn":
             return "겨울(침체기)로 전환 가능성 있음"
-        elif season == 'winter':
+        elif season == "winter":
             return "봄(회복기)로 전환 가능성 있음"
 
     return "안정적 유지"
 
 
-def judge_kr_season(
-    export_yoy: float,
-    export_trend: str,
-    cpi_yoy: float,
-    credit_spread: float
-) -> tuple[str, float]:
+def judge_kr_season(export_yoy: float, export_trend: str, cpi_yoy: float, credit_spread: float) -> tuple[str, float]:
     """
     한국 시장 사이클 판단 (K-사계절 기준)
 
@@ -221,24 +213,18 @@ def judge_kr_season(
     # 5. 계절 판단
     # ============================================
     if score < 25:
-        season = 'winter'
+        season = "winter"
     elif score < 50:
-        season = 'spring'
+        season = "spring"
     elif score < 75:
-        season = 'summer'
+        season = "summer"
     else:
-        season = 'autumn'
+        season = "autumn"
 
     return season, score
 
 
-def calculate_kr_confidence(
-    season: str,
-    score: float,
-    export_trend: str,
-    cpi_yoy: float,
-    credit_spread: float
-) -> int:
+def calculate_kr_confidence(season: str, score: float, export_trend: str, cpi_yoy: float, credit_spread: float) -> int:
     """
     신뢰도 계산 (0-100)
 
@@ -254,10 +240,10 @@ def calculate_kr_confidence(
     """
     # 계절별 중심 점수
     season_centers = {
-        'winter': 12.5,
-        'spring': 37.5,
-        'summer': 62.5,
-        'autumn': 87.5,
+        "winter": 12.5,
+        "spring": 37.5,
+        "summer": 62.5,
+        "autumn": 87.5,
     }
 
     # 점수가 중심에서 멀수록 신뢰도 감소
@@ -266,30 +252,26 @@ def calculate_kr_confidence(
     confidence = max(0, 100 - (distance * 4))
 
     # 추세 일관성 보정
-    if season == 'spring' and export_trend != "상승 추세":
+    if season == "spring" and export_trend != "상승 추세":
         confidence -= 10
-    elif season == 'autumn' and export_trend != "하락 추세":
+    elif season == "autumn" and export_trend != "하락 추세":
         confidence -= 10
 
     # CPI 범위 보정
-    if season == 'summer' and (cpi_yoy < 2 or cpi_yoy > 3):
+    if season == "summer" and (cpi_yoy < 2 or cpi_yoy > 3):
         confidence -= 15
 
     # 신용 스프레드 범위 보정
-    if season == 'summer' and credit_spread > 60:
+    if season == "summer" and credit_spread > 60:
         confidence -= 10
-    elif season == 'winter' and credit_spread < 60:
+    elif season == "winter" and credit_spread < 60:
         confidence -= 10
 
     return max(0, min(100, int(confidence)))
 
 
 def generate_kr_reasoning(
-    season: str,
-    export_yoy: float,
-    export_trend: str,
-    cpi_yoy: float,
-    credit_spread: float
+    season: str, export_yoy: float, export_trend: str, cpi_yoy: float, credit_spread: float
 ) -> str:
     """
     한국 시장 사이클 판단 근거 생성
@@ -333,10 +315,10 @@ def generate_kr_reasoning(
 
     # 계절별 설명
     season_names = {
-        'spring': '봄(회복기)',
-        'summer': '여름(활황기)',
-        'autumn': '가을(후퇴기)',
-        'winter': '겨울(침체기)'
+        "spring": "봄(회복기)",
+        "summer": "여름(활황기)",
+        "autumn": "가을(후퇴기)",
+        "winter": "겨울(침체기)",
     }
 
     reasoning = f"{export_desc}, {cpi_desc}(CPI {cpi_yoy:.1f}%), {spread_desc}(스프레드 {credit_spread:.0f}bp)로 {season_names[season]}로 판단됩니다."
@@ -348,12 +330,9 @@ def generate_kr_reasoning(
 # 메인 함수
 # ============================================
 
+
 def analyze_kr_market_cycle(
-    export_yoy: float,
-    export_trend: str,
-    cpi_yoy: float,
-    cpi_prev_month: float,
-    credit_spread: float
+    export_yoy: float, export_trend: str, cpi_yoy: float, cpi_prev_month: float, credit_spread: float
 ) -> KrMarketCycleData:
     """
     한국 시장 사이클 분석 (수출 기반)
@@ -378,19 +357,12 @@ def analyze_kr_market_cycle(
 
         # 계절 판단
         season, score = judge_kr_season(
-            export_yoy=export_yoy,
-            export_trend=export_trend,
-            cpi_yoy=cpi_yoy,
-            credit_spread=credit_spread
+            export_yoy=export_yoy, export_trend=export_trend, cpi_yoy=cpi_yoy, credit_spread=credit_spread
         )
 
         # 신뢰도 계산
         confidence = calculate_kr_confidence(
-            season=season,
-            score=score,
-            export_trend=export_trend,
-            cpi_yoy=cpi_yoy,
-            credit_spread=credit_spread
+            season=season, score=score, export_trend=export_trend, cpi_yoy=cpi_yoy, credit_spread=credit_spread
         )
 
         # 전환 신호
@@ -402,7 +374,7 @@ def analyze_kr_market_cycle(
             export_yoy=export_yoy,
             export_trend=export_trend,
             cpi_yoy=cpi_yoy,
-            credit_spread=credit_spread
+            credit_spread=credit_spread,
         )
 
         # CPI 전월 대비 변화
@@ -424,29 +396,21 @@ def analyze_kr_market_cycle(
         # KrMarketCycleData 생성
         cycle_data = KrMarketCycleData(
             season=season,
-            season_name=KR_SEASONS[season]['name'],
-            season_emoji=KR_SEASONS[season]['emoji'],
+            season_name=KR_SEASONS[season]["name"],
+            season_emoji=KR_SEASONS[season]["emoji"],
             confidence=confidence,
             score=score,
             transition_signal=transition_signal,
             reasoning=reasoning,
-            export=KrMarketCycleIndicator(
-                value=export_yoy,
-                trend=export_trend,
-                label="수출액 (YoY)"
-            ),
+            export=KrMarketCycleIndicator(value=export_yoy, trend=export_trend, label="수출액 (YoY)"),
             cpi=KrMarketCycleIndicator(
                 value=cpi_yoy,
                 trend="안정",  # CPI는 추세 계산 안 함
                 label="CPI (YoY)",
-                mom_change=cpi_mom_str
+                mom_change=cpi_mom_str,
             ),
-            credit_spread=KrMarketCycleIndicator(
-                value=credit_spread,
-                trend=spread_trend,
-                label="신용 스프레드 (bp)"
-            ),
-            sectors=sectors
+            credit_spread=KrMarketCycleIndicator(value=credit_spread, trend=spread_trend, label="신용 스프레드 (bp)"),
+            sectors=sectors,
         )
 
         logger.debug(f"한국 시장 사이클 분석 완료: {season} (신뢰도: {confidence}%)")
@@ -461,6 +425,7 @@ def analyze_kr_market_cycle(
 # 실제 데이터 기반 분석
 # ============================================
 
+
 def get_real_kr_market_cycle() -> KrMarketCycleData:
     """
     실제 데이터 기반 한국 시장 사이클 분석
@@ -471,7 +436,7 @@ def get_real_kr_market_cycle() -> KrMarketCycleData:
     Raises:
         Exception: 데이터 조회 실패 또는 계산 오류
     """
-    from app.services.economic.korea_economic_service import get_ecos_indicator, get_credit_spread
+    from app.services.economic.korea_economic_service import get_credit_spread, get_ecos_indicator
 
     logger.debug("실제 데이터 기반 한국 시장 사이클 분석 시작")
 
@@ -524,7 +489,7 @@ def get_real_kr_market_cycle() -> KrMarketCycleData:
         export_trend=export_trend,
         cpi_yoy=cpi_yoy,
         cpi_prev_month=cpi_prev,
-        credit_spread=credit_spread
+        credit_spread=credit_spread,
     )
 
     logger.debug(f"실제 데이터 기반 한국 시장 사이클 분석 완료: {cycle_data.season}")
@@ -535,6 +500,7 @@ def get_real_kr_market_cycle() -> KrMarketCycleData:
 # Mock 데이터 생성 (테스트용)
 # ============================================
 
+
 def get_sample_kr_market_cycle() -> KrMarketCycleData:
     """
     샘플 한국 시장 사이클 데이터 반환 (테스트용)
@@ -543,30 +509,17 @@ def get_sample_kr_market_cycle() -> KrMarketCycleData:
         KrMarketCycleData 객체
     """
     return KrMarketCycleData(
-        season='summer',
-        season_name='여름 (활황기)',
-        season_emoji='☀️',
+        season="summer",
+        season_name="여름 (활황기)",
+        season_emoji="☀️",
         confidence=82,
         score=60.0,
-        transition_signal='안정적 유지',
-        reasoning='수출 확장(YoY +8.5%), 양호한 물가(CPI 2.8%), 낮은 시장 리스크(스프레드 58bp)로 여름(활황기)로 판단됩니다.',
-        export=KrMarketCycleIndicator(
-            value=8.5,
-            trend="상승 추세",
-            label="수출액 (YoY)"
-        ),
-        cpi=KrMarketCycleIndicator(
-            value=2.8,
-            trend="안정",
-            label="CPI (YoY)",
-            mom_change="+0.1"
-        ),
-        credit_spread=KrMarketCycleIndicator(
-            value=58.0,
-            trend="낮은 리스크",
-            label="신용 스프레드 (bp)"
-        ),
-        sectors=['자동차', '조선', '철강', '화학']
+        transition_signal="안정적 유지",
+        reasoning="수출 확장(YoY +8.5%), 양호한 물가(CPI 2.8%), 낮은 시장 리스크(스프레드 58bp)로 여름(활황기)로 판단됩니다.",
+        export=KrMarketCycleIndicator(value=8.5, trend="상승 추세", label="수출액 (YoY)"),
+        cpi=KrMarketCycleIndicator(value=2.8, trend="안정", label="CPI (YoY)", mom_change="+0.1"),
+        credit_spread=KrMarketCycleIndicator(value=58.0, trend="낮은 리스크", label="신용 스프레드 (bp)"),
+        sectors=["자동차", "조선", "철강", "화학"],
     )
 
 
@@ -574,10 +527,8 @@ def get_sample_kr_market_cycle() -> KrMarketCycleData:
 # AI 분석 (Gemini)
 # ============================================
 
-def generate_kr_ai_comment(
-    cycle_data: KrMarketCycleData,
-    api_key: str
-) -> Dict[str, str]:
+
+def generate_kr_ai_comment(cycle_data: KrMarketCycleData, api_key: str) -> Dict[str, str]:
     """
     Gemini를 사용하여 한국 시장 사이클 AI 코멘트 생성
 
@@ -598,19 +549,9 @@ def generate_kr_ai_comment(
     try:
         # Gemini 설정
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('models/gemini-flash-latest')
+        model = genai.GenerativeModel("models/gemini-flash-latest")
 
         # 시스템 프롬프트
-        system_instruction = """
-당신은 20년 경력의 한국 경제 전문 애널리스트이자 투자 멘토입니다. 사용자는 주식 대시보드를 통해 현재 한국 경제 국면(봄, 여름, 가을, 겨울)을 확인하고 있습니다. 당신의 임무는 한국 경제 지표의 '결'을 읽어 사용자에게 딱 한 문장의 날카로운 통찰과 행동 지침을 주는 것입니다.
-
-작성 원칙:
-- 현재 계절을 확정 짓되, 다음 계절로의 전환 가능성을 지표 근거로 언급할 것.
-- 전문 용어만 나열하지 말고, 투자자의 심리와 행동(섹터 로테이션)을 짚어줄 것.
-- 한국 특화 섹터(반도체, 2차전지, 자동차, 조선 등)를 언급할 것.
-- 말투는 냉철하면서도 신뢰감 있는 멘토의 어조를 유지할 것.
-- 가급적 한 문장(최대 두 문장)으로 짧고 강렬하게 작성할 것.
-        """
 
         # 피크 아웃 구간 감지 (70-80점)
         is_peak_out = 70 <= cycle_data.score <= 80
@@ -630,9 +571,9 @@ recommendation에 반드시 "과열 경계" 또는 "수익 실현" 관련 멘트
 - 경계선 위치: {cycle_data.transition_signal}
 - 주요 지표:
   * 수출액 YoY {cycle_data.export.value:+.1f}% ({cycle_data.export.trend})
-  * CPI {cycle_data.cpi.value}% (전월 대비 {cycle_data.cpi.mom_change or '0.0'})
+  * CPI {cycle_data.cpi.value}% (전월 대비 {cycle_data.cpi.mom_change or "0.0"})
   * 신용 스프레드: {cycle_data.credit_spread.value:.0f}bp ({cycle_data.credit_spread.trend})
-- 추천 섹터: {', '.join(cycle_data.sectors or [])}
+- 추천 섹터: {", ".join(cycle_data.sectors or [])}
 {peak_out_notice}
 [요청 사항]
 위 데이터를 바탕으로 멘토 코멘트를 작성하되, **반드시 아래 JSON 형식**으로 응답해 줘.
@@ -648,10 +589,10 @@ recommendation에 반드시 "과열 경계" 또는 "수익 실현" 관련 멘트
 
         # 안전 설정 (필터 완화)
         safety_settings = {
-            'HARM_CATEGORY_HARASSMENT': 'BLOCK_NONE',
-            'HARM_CATEGORY_HATE_SPEECH': 'BLOCK_NONE',
-            'HARM_CATEGORY_SEXUALLY_EXPLICIT': 'BLOCK_NONE',
-            'HARM_CATEGORY_DANGEROUS_CONTENT': 'BLOCK_NONE',
+            "HARM_CATEGORY_HARASSMENT": "BLOCK_NONE",
+            "HARM_CATEGORY_HATE_SPEECH": "BLOCK_NONE",
+            "HARM_CATEGORY_SEXUALLY_EXPLICIT": "BLOCK_NONE",
+            "HARM_CATEGORY_DANGEROUS_CONTENT": "BLOCK_NONE",
         }
 
         # Gemini 호출 (타임아웃 60초)
@@ -662,7 +603,7 @@ recommendation에 반드시 "과열 경계" 또는 "수익 실현" 관련 멘트
                 max_output_tokens=2000,
             ),
             safety_settings=safety_settings,
-            request_options={'timeout': 60}  # 1분 타임아웃
+            request_options={"timeout": 60},  # 1분 타임아웃
         )
 
         # 응답 확인
@@ -685,9 +626,9 @@ recommendation에 반드시 "과열 경계" 또는 "수익 실현" 관련 멘트
 
         # 필수 필드 검증 및 기본값 설정
         ai_comment = {
-            'comment': result.get('comment', '현재 한국 시장 사이클 분석 중입니다.'),
-            'recommendation': result.get('recommendation', '균형잡힌 포트폴리오를 유지하세요.'),
-            'risk': result.get('risk', None)  # 선택 필드
+            "comment": result.get("comment", "현재 한국 시장 사이클 분석 중입니다."),
+            "recommendation": result.get("recommendation", "균형잡힌 포트폴리오를 유지하세요."),
+            "risk": result.get("risk", None),  # 선택 필드
         }
 
         logger.debug(f"AI 코멘트 생성 완료: {len(ai_comment['comment'])}자")
@@ -698,16 +639,16 @@ recommendation에 반드시 "과열 경계" 또는 "수익 실현" 관련 멘트
         logger.error(f"응답 텍스트: {response_text}")
         # Fallback: 기본 메시지 반환
         return {
-            'comment': f"{cycle_data.season_name} 국면입니다. {cycle_data.transition_signal}",
-            'recommendation': "포트폴리오를 재점검하고 리스크 관리를 강화하세요.",
-            'risk': None
+            "comment": f"{cycle_data.season_name} 국면입니다. {cycle_data.transition_signal}",
+            "recommendation": "포트폴리오를 재점검하고 리스크 관리를 강화하세요.",
+            "risk": None,
         }
 
     except Exception as e:
         logger.error(f"Gemini AI 코멘트 생성 오류: {e}", exc_info=True)
         # Fallback: 기본 메시지 반환
         return {
-            'comment': f"{cycle_data.season_name} 국면입니다. {cycle_data.transition_signal}",
-            'recommendation': "포트폴리오를 재점검하고 리스크 관리를 강화하세요.",
-            'risk': None
+            "comment": f"{cycle_data.season_name} 국면입니다. {cycle_data.transition_signal}",
+            "recommendation": "포트폴리오를 재점검하고 리스크 관리를 강화하세요.",
+            "risk": None,
         }
