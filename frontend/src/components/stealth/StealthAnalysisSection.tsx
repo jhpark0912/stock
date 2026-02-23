@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { RefreshCw, FileText, Save, History } from 'lucide-react';
-import { useAnalysisSummary } from '@/hooks/useAnalysisSummary';
+import { useAnalysisSummary } from '@/hooks/common/useAnalysisSummary';
 import { NoteSection, strategyToLabel } from '@/components/stealth/StealthPortfolioComponents';
 import { StealthAnalysisHistory } from '@/components/stealth/StealthAnalysisHistory';
 import type { StockData, AIAnalysis } from '@/types/stock';

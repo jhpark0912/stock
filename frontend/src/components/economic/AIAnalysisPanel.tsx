@@ -5,7 +5,7 @@
 
 import { Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { AIAnalysisData } from '@/hooks/useMarketCycle';
+import type { AIAnalysisData } from '@/hooks/economic/useMarketCycle';
 
 interface AIAnalysisPanelProps {
   aiAnalysis: AIAnalysisData | null;

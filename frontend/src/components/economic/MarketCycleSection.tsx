@@ -16,7 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { useMarketCycle } from '@/hooks/useMarketCycle';
+import { useMarketCycle } from '@/hooks/economic/useMarketCycle';
 import { US_SEASONS, KR_SEASONS } from './marketCycleConstants';
 import type { MarketSeason } from './marketCycleConstants';
 import { SeasonDetailPanel } from './SeasonDetailPanel';

@@ -5,7 +5,7 @@
 import { cn } from '@/lib/utils';
 import { CountryTab } from './CountryTab';
 import type { Country } from '@/types/economic';
-import type { EconomicTab } from '@/hooks/useEconomicData';
+import type { EconomicTab } from '@/hooks/economic/useEconomicData';
 
 interface EconomicSubTabsProps {
   activeTab: EconomicTab;

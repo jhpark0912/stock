@@ -6,7 +6,7 @@
 import { Search, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Country } from '@/types/economic';
-import { useStealthHome } from '@/hooks/useStealthHome';
+import { useStealthHome } from '@/hooks/stealth/useStealthHome';
 import { StealthMemoTab } from '@/components/stealth/StealthMemoTab';
 import { StealthStatusTab } from '@/components/stealth/StealthStatusTab';
 import { StealthJournalTab } from '@/components/stealth/StealthJournalTab';

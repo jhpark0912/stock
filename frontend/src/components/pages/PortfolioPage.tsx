@@ -13,7 +13,7 @@ import { StockChart } from '@/components/StockChart';
 import { GaugeBar } from '@/components/GaugeBar';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { AIAnalysisTab } from '@/components/AIAnalysisTab';
-import { usePortfolio } from '@/hooks/usePortfolio';
+import { usePortfolio } from '@/hooks/portfolio/usePortfolio';
 import { formatCurrency } from '@/lib/utils';
 
 interface PortfolioPageProps {

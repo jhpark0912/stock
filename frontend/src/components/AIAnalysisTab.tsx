@@ -12,7 +12,7 @@ import { AnalysisHistory } from './AnalysisHistory';
 import { StrategyBadge } from '@/components/StrategyBadge';
 import type { StockData, AIAnalysis } from '@/types/stock';
 import type { UserResponse } from '@/types/auth';
-import { useAnalysisSummary } from '@/hooks/useAnalysisSummary';
+import { useAnalysisSummary } from '@/hooks/common/useAnalysisSummary';
 
 interface AIAnalysisTabProps {
   stockData: StockData | null;

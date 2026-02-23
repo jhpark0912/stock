@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import { Plus, X, ChevronRight, ChevronLeft, Menu } from 'lucide-react';
-import { usePortfolio } from '@/hooks/usePortfolio';
+import { usePortfolio } from '@/hooks/portfolio/usePortfolio';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { NoteSection, ProjectInfoLine } from '@/components/stealth/StealthPortfolioComponents';
 import { StealthAnalysisSection } from '@/components/stealth/StealthAnalysisSection';

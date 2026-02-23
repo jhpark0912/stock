@@ -13,7 +13,7 @@ import {
   MarketReviewSection,
 } from './economic';
 import { EconomicSubTabs } from './economic/EconomicSubTabs';
-import { useEconomicData } from '@/hooks/useEconomicData';
+import { useEconomicData } from '@/hooks/economic/useEconomicData';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 

@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { SectorDetail } from './SectorDetail';
 import { TreemapLegend } from './TreemapLegend';
-import { useSectorHeatmap } from '@/hooks/useSectorHeatmap';
+import { useSectorHeatmap } from '@/hooks/economic/useSectorHeatmap';
 import type { Country } from '@/types/economic';
-import type { Period } from '@/hooks/useSectorHeatmap';
+import type { Period } from '@/hooks/economic/useSectorHeatmap';
 
 // 텍스트 색상 (항상 흰색으로 통일)
 const getTextColor = (): string => '#ffffff';

@@ -4,7 +4,7 @@ import { X, Loader2, AlertCircle, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getChangeColor, SECTOR_INFO } from './sectorConstants';
 import { TreemapLegend } from './TreemapLegend';
-import { useSectorDetail } from '@/hooks/useSectorDetail';
+import { useSectorDetail } from '@/hooks/economic/useSectorDetail';
 
 interface SectorDetailProps {
   symbol: string;
