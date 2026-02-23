@@ -6,6 +6,15 @@
 - SQL queries must use parameterized statements. No string concatenation.
 - 모든 도구 사용은 `.claude/audit.log`에 자동 기록됨.
 
+# 🔧 Initial Setup (Fresh Clone)
+```bash
+npm install                                    # 루트: husky + lint-staged + prettier
+cd frontend && npm install && cd ..            # 프론트엔드: React + 의존성
+pip install -r backend/requirements-dev.txt    # 백엔드: FastAPI + ruff + pytest
+```
+> `npm install` 시 husky가 자동으로 git hooks를 등록합니다.
+> 커밋 시 lint-staged가 변경 파일에 대해 ruff(backend) / prettier(frontend) 자동 실행.
+
 # 🚀 Commands
 - Run: `run.bat` or `python stock_info.py`
 - CLI (n8n): `python stock_cli.py AAPL`
