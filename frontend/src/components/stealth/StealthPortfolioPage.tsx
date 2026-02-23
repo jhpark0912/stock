@@ -19,12 +19,8 @@ import {
 } from 'lucide-react';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import {
-  generateSummary,
-  saveAnalysis,
-  getAnalysisHistory,
-  deleteAnalysis,
-} from '@/lib/analysisApi';
+import { useAnalysisSummary } from '@/hooks/useAnalysisSummary';
+import { getAnalysisHistory, deleteAnalysis } from '@/lib/analysisApi';
 import type {
   StockData,
   AIAnalysis,
@@ -378,57 +374,25 @@ function StealthAnalysisSection({
   loadingAI: boolean;
   onAnalyzeAI: () => void;
 }) {
-  const [summary, setSummary] = useState<AnalysisSummary | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState(false);
-  const [summaryError, setSummaryError] = useState<string | null>(null);
-  const [saveLoading, setSaveLoading] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  const { summary, summaryLoading, summaryError, saveLoading, saveSuccess, generate, save, reset } =
+    useAnalysisSummary(stockData.ticker, stockData.price.current);
   const [showHistory, setShowHistory] = useState(false);
 
   // AI 분석이 변경되면 요약 상태 초기화
   useEffect(() => {
-    setSummary(null);
-    setSaveSuccess(false);
-    setSummaryError(null);
+    reset();
   }, [aiAnalysis]);
 
-  const handleGenerateSummary = async () => {
-    if (!aiAnalysis) return;
-    setSummaryLoading(true);
-    setSummaryError(null);
-    setSaveSuccess(false);
-    try {
-      const result = await generateSummary(stockData.ticker, aiAnalysis.report);
-      setSummary(result);
-    } catch (e) {
-      setSummaryError(e instanceof Error ? e.message : '요약 생성 실패');
-    } finally {
-      setSummaryLoading(false);
-    }
+  const handleGenerateSummary = () => {
+    if (aiAnalysis) generate(aiAnalysis.report);
   };
 
-  const handleSaveAnalysis = async () => {
-    if (!summary) return;
-    setSaveLoading(true);
-    try {
-      await saveAnalysis(stockData.ticker, {
-        summary: summary.summary,
-        strategy: summary.strategy,
-        current_price: stockData.price.current,
-        full_report: aiAnalysis?.report,
-      });
-      setSaveSuccess(true);
-    } catch (e) {
-      setSummaryError(e instanceof Error ? e.message : '저장 실패');
-    } finally {
-      setSaveLoading(false);
-    }
+  const handleSaveAnalysis = () => {
+    save(aiAnalysis?.report);
   };
 
   const handleAnalyzeWithReset = () => {
-    setSummary(null);
-    setSaveSuccess(false);
-    setSummaryError(null);
+    reset();
     onAnalyzeAI();
   };
 

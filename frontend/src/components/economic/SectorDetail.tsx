@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils';
 import { X, Loader2, AlertCircle, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
+import { getChangeColor, SECTOR_INFO } from './sectorConstants';
+import { TreemapLegend } from './TreemapLegend';
 
 interface SectorHolding {
   symbol: string;
@@ -30,115 +32,6 @@ interface SectorDetailProps {
   onClose: () => void;
   onStockClick?: (symbol: string) => void;
 }
-
-// 섹터별 초보자 친화 설명 (경제지표의 metaphor 스타일)
-const SECTOR_INFO: Record<string, { metaphor: string; description: string }> = {
-  // 미국 섹터
-  XLK: {
-    metaphor: '💻 "미래를 만드는 기업들의 집합소"',
-    description:
-      '애플, 마이크로소프트, 엔비디아 등 IT 기업들이 모여있어요. 금리가 오르면 주가가 빠지는 경향이 있어요.',
-  },
-  XLF: {
-    metaphor: '🏦 "돈이 흐르는 곳"',
-    description:
-      '은행, 보험사, 증권사 등이 포함돼요. 금리가 오르면 이자 수익이 늘어나 좋아지는 편이에요.',
-  },
-  XLV: {
-    metaphor: '💊 "건강은 불황도 이긴다"',
-    description:
-      '제약, 의료기기 회사들이에요. 경기가 나빠도 사람들은 아프면 병원에 가야 해서 안정적이에요.',
-  },
-  XLE: {
-    metaphor: '⛽ "세상을 움직이는 연료"',
-    description:
-      '석유, 가스 회사들이에요. 유가가 오르면 함께 오르고, 유가가 떨어지면 함께 떨어져요.',
-  },
-  XLI: {
-    metaphor: '🏗️ "경제가 잘 돌아가면 바빠지는 곳"',
-    description: '항공, 건설, 기계 회사들이에요. 경기가 좋아지면 공장이 돌아가고 물건이 옮겨져요.',
-  },
-  XLB: {
-    metaphor: '🧱 "모든 제품의 원재료"',
-    description: '철강, 화학, 건축자재 회사들이에요. 원자재 가격과 함께 움직이는 편이에요.',
-  },
-  XLY: {
-    metaphor: '🛍️ "지갑이 두꺼워지면 찾는 곳"',
-    description: '자동차, 명품, 호텔, 레저 회사들이에요. 사람들이 돈을 쓰고 싶을 때 좋아져요.',
-  },
-  XLP: {
-    metaphor: '🧴 "매일 쓰는 생필품"',
-    description:
-      '식품, 음료, 생활용품 회사들이에요. 경기가 나빠도 사람들은 밥은 먹어야 해서 안정적이에요.',
-  },
-  XLRE: {
-    metaphor: '🏠 "땅과 건물의 힘"',
-    description:
-      '부동산 투자 회사(리츠)들이에요. 금리가 오르면 부담이 커져서 주가가 빠지는 편이에요.',
-  },
-  XLU: {
-    metaphor: '💡 "전기와 물은 언제나 필요해"',
-    description: '전력, 가스, 수도 회사들이에요. 필수 서비스라 안정적이고 배당금도 잘 줘요.',
-  },
-  XLC: {
-    metaphor: '📱 "소통과 콘텐츠의 세상"',
-    description: '구글, 메타, 넷플릭스 같은 회사들이에요. 광고 시장과 함께 움직이는 경향이 있어요.',
-  },
-  // 한국 섹터
-  '091160.KS': {
-    metaphor: '🇰🇷 "세계 반도체 공장"',
-    description:
-      '삼성전자, SK하이닉스 등 메모리 반도체 세계 1위 기업들이에요. AI와 IT 수요에 민감해요.',
-  },
-  '091170.KS': {
-    metaphor: '🏦 "한국의 금융 중심"',
-    description: 'KB금융, 신한지주 등 대형 금융그룹들이에요. 금리와 부동산 시장에 영향받아요.',
-  },
-  '266420.KS': {
-    metaphor: '🧬 "K-바이오의 힘"',
-    description:
-      '삼성바이오, 셀트리온 등 바이오시밀러 강자들이에요. 글로벌 제약시장 진출이 특징이에요.',
-  },
-  '117460.KS': {
-    metaphor: '🔋 "에너지와 화학의 융합"',
-    description: 'LG화학, SK이노베이션 등이에요. 유가, 전기차 배터리 수요에 민감해요.',
-  },
-  '266370.KS': {
-    metaphor: '💻 "K-플랫폼의 시대"',
-    description: '네이버, 카카오 등 IT 플랫폼 기업들이에요. 광고 시장과 신사업 성장에 영향받아요.',
-  },
-  '091180.KS': {
-    metaphor: '🚗 "K-자동차의 질주"',
-    description: '현대차, 기아 등 완성차와 부품사들이에요. 전기차 전환이 핵심 이슈예요.',
-  },
-  '117700.KS': {
-    metaphor: '🏗️ "대한민국을 짓다"',
-    description: '삼성물산, 현대건설 등이에요. 부동산 경기와 해외수주에 영향받아요.',
-  },
-  '140710.KS': {
-    metaphor: '🚢 "세상을 연결하는 물류"',
-    description: 'HMM, 대한항공 등이에요. 글로벌 물류 수요와 유가에 민감해요.',
-  },
-  '102970.KS': {
-    metaphor: '📈 "주식시장과 함께"',
-    description: '미래에셋, 한국투자 등이에요. 거래대금과 금리에 영향받아요.',
-  },
-  '266390.KS': {
-    metaphor: '🛍️ "소비와 여행의 즐거움"',
-    description: '호텔신라, 현대백화점 등이에요. 소비심리와 관광 수요에 민감해요.',
-  },
-};
-
-// 변화율에 따른 색상 반환 (섹터 히트맵과 동일)
-const getChangeColor = (change: number | null): string => {
-  if (change === null) return '#6b7280'; // gray-500
-  if (change >= 3) return '#15803d'; // green-700
-  if (change >= 1) return '#16a34a'; // green-600
-  if (change >= 0) return '#22c55e'; // green-500
-  if (change >= -1) return '#ef4444'; // red-500
-  if (change >= -3) return '#dc2626'; // red-600
-  return '#b91c1c'; // red-700
-};
 
 // 커스텀 툴팁 (섹터 히트맵과 동일한 스타일)
 const CustomTooltip = ({ active, payload }: any) => {
@@ -433,35 +326,8 @@ export function SectorDetail({ symbol, name, onClose, onStockClick }: SectorDeta
                 </ResponsiveContainer>
               </div>
 
-              {/* 범례 (메인 화면과 동일) */}
-              <div className="flex items-center justify-center gap-6 text-xs text-muted-foreground">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-3 rounded-sm bg-green-600" />
-                    <span>+3% 이상</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-3 rounded-sm bg-green-500" />
-                    <span>+1~3%</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-3 rounded-sm bg-green-300" />
-                    <span>0~+1%</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-3 rounded-sm bg-red-300" />
-                    <span>0~-1%</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-3 rounded-sm bg-red-500" />
-                    <span>-1~-3%</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-4 h-3 rounded-sm bg-red-600" />
-                    <span>-3% 이하</span>
-                  </div>
-                </div>
-              </div>
+              {/* 범례 */}
+              <TreemapLegend />
 
               {/* 상위 5개 종목 상세 */}
               <div className="border rounded-lg overflow-hidden">
