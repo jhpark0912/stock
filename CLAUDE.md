@@ -34,6 +34,14 @@ pip install -r backend/requirements-dev.txt    # 백엔드: FastAPI + ruff + pyt
 - `docs/DESIGN_SYSTEM.md` — Indigo #6366F1, Lucide React icons
 - `docs/UX_GUIDELINES.md` — 초보자용 메타포 작성 규칙
 
+# 🧱 Code Structure Rules
+- 단일 파일 **300줄 초과 금지**. 초과 예상 시 작성 시점에 분리.
+- 도메인 기반 디렉토리: `services/{domain}/`, `components/{domain}/`. flat 구조 금지.
+- 관심사 분리: UI(렌더링) / 훅(상태+API) / 상수·타입 각각 별도 파일.
+- 동일 로직 2회 사용 시 즉시 공유 모듈 추출. 복붙 후 "나중에 정리" 금지.
+- Frontend import: `@/` 절대 경로만 사용. `../` 상대 경로 금지 (ESLint 강제).
+- Backend route: 라우터 1파일 = 1도메인. 단일 파일에 엔드포인트 누적 금지.
+
 # 📏 Conventions
 - Git: `.claude/COMMIT_CONVENTION.md` (예: `:sparkles: [feat]`)
 - Logging: `logger.debug()` only. No `print()` or `console.log` in production.
