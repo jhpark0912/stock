@@ -16,8 +16,8 @@ DB 마이그레이션: 기존 API 키 암호화
     - 평문으로 저장된 gemini_api_key를 암호화하여 재저장
 """
 
-import sys
 import os
+import sys
 from pathlib import Path
 
 # 프로젝트 루트를 Python 경로에 추가
@@ -27,15 +27,18 @@ sys.path.insert(0, str(project_root / "backend"))
 
 # .env 로드 (프로젝트 루트 기준)
 from dotenv import load_dotenv
+
 project_root = Path(__file__).parent.parent.parent
 env_file = project_root / ".env"
 load_dotenv(env_file)
 
+import logging
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from app.database.models import UserDB
 from app.utils.crypto import encrypt_api_key
-import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -99,7 +102,7 @@ def encrypt_existing_keys():
                     raise
 
         session.commit()
-        logger.info(f"\n[SUCCESS] Encryption completed!")
+        logger.info("\n[SUCCESS] Encryption completed!")
         logger.info(f"   - Encrypted: {encrypted_count}")
         logger.info(f"   - Skipped: {skipped_count}")
         logger.info(f"   - Total: {len(users)}")
@@ -122,7 +125,7 @@ if __name__ == "__main__":
     print("   2. ENCRYPTION_KEY must be set in .env")
     print("   3. NEVER change ENCRYPTION_KEY after running this!")
     print("      (Changing it will make existing keys unrecoverable)\n")
-    
+
     confirm = input("[WARNING] Really run this? (yes/no): ")
     if confirm.lower() in ['yes', 'y']:
         encrypt_existing_keys()

@@ -19,3 +19,4 @@ known-first-party = ["app"]
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]  # __init__.py re-export는 미사용 import 허용
 "init_database.py" = ["E402"]  # load_dotenv() 후 import 패턴 허용
+"migrations/*.py" = ["E402"]  # sys.path 조작 후 import 패턴 허용 (backend/ 외부 스크립트)

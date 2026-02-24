@@ -10,7 +10,6 @@ DB 마이그레이션: KIS API 인증정보 컬럼 추가
 """
 
 import sys
-import os
 from pathlib import Path
 
 # 프로젝트 루트를 Python 경로에 추가
@@ -18,9 +17,10 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 sys.path.insert(0, str(project_root / "backend"))
 
+import logging
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-import logging
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     print("\n" + "="*60)
     print("DB Migration: Add KIS API Credentials Columns")
     print("="*60 + "\n")
-    
+
     confirm = input("[WARNING] Run migration? (yes/no): ")
     if confirm.lower() in ['yes', 'y']:
         run_migration()

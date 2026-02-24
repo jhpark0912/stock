@@ -5,14 +5,12 @@
 import { RefreshCw, TrendingUp, BarChart3, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { IndicatorCard } from './IndicatorCard';
-import { LoadingSpinner } from './LoadingSpinner';
-import {
-  EconomicChartView,
-  SectorHeatmap,
-  MarketCycleSection,
-  MarketReviewSection,
-} from './economic';
-import { EconomicSubTabs } from './economic/EconomicSubTabs';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { EconomicChartView } from './EconomicChartView';
+import { SectorHeatmap } from './SectorHeatmap';
+import { MarketCycleSection } from './MarketCycleSection';
+import { MarketReviewSection } from './MarketReview';
+import { EconomicSubTabs } from './EconomicSubTabs';
 import { useEconomicData } from '@/hooks/economic/useEconomicData';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';

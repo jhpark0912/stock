@@ -10,7 +10,6 @@
 
 # 🏗️ Architecture
 > 상세 구조: `.claude/PROJECT_STRUCTURE.md` / 변경 이력: `.claude/CHANGELOG.md`
-- `docs/ARCHITECTURE.md` — API 설계, n8n 연동
 - `docs/DESIGN_SYSTEM.md` — Indigo #6366F1, Lucide React
 - `docs/UX_GUIDELINES.md` — 초보자용 메타포 규칙
 
@@ -22,7 +21,7 @@
 
 # 📏 Conventions
 - Git: `.claude/COMMIT_CONVENTION.md` | Logging: `logger.debug()` only | Type hints 필수.
-- 구조 변경 → `PROJECT_STRUCTURE.md` 업데이트 / 기능 변경 → `CHANGELOG.md` 기록.
+- 구조 변경 → `PROJECT_STRUCTURE.md` 업데이트 (파일 추가·삭제·이동만. 내용 수정은 CHANGELOG만) / 기능 변경 → `CHANGELOG.md` 기록.
 
 # 📖 Response Rules
 - 한국어. 코드 전체 출력 금지 (변경 스니펫만). 변경 시 why + 트레이드오프 먼저.

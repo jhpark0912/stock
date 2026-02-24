@@ -4,11 +4,11 @@
 
 import { useMemo } from 'react';
 import type { ChartDataPoint } from '@/types/stock';
-import { formatPrice, formatChartData } from './charts/chartUtils';
-import { PriceVolumeChart } from './charts/PriceVolumeChart';
-import { SMAChart } from './charts/SMAChart';
-import { BollingerChart } from './charts/BollingerChart';
-import { ComprehensiveChart } from './charts/ComprehensiveChart';
+import { formatPrice, formatChartData } from '@/components/charts/chartUtils';
+import { PriceVolumeChart } from '@/components/charts/PriceVolumeChart';
+import { SMAChart } from '@/components/charts/SMAChart';
+import { BollingerChart } from '@/components/charts/BollingerChart';
+import { ComprehensiveChart } from '@/components/charts/ComprehensiveChart';
 
 interface StockChartProps {
   ticker?: string;
