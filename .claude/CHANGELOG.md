@@ -5,6 +5,31 @@
 
 ## 최근 변경 이력
 
+### 2026-02-24: 리팩토링 로드맵 종료 — S3 패스, S4 완료, 최종 정리
+
+- **S3 CI 파이프라인**: 패스 (현 시점 불필요)
+- **S4 구조 규칙 성문화**: CLAUDE.md에 이미 반영 완료 확인, 유형별 세분화 불필요로 판단
+- **로드맵 최종 정리**: P1~P4 + S0~S1 완료, S2~S3 스킵/패스, S4 완료, P5 보류
+- `REFACTORING_ROADMAP.md` 슬림화 (완료 요약 + 성과 + 스킵 사유)
+
+### 2026-02-24: P3 2차 + P4 완료 확인
+
+- **P3 2차**: SectorHeatmap, SectorDetail 훅 추출이 이전 세션에서 이미 완료된 상태 확인
+  - `SectorHeatmap.tsx` 391L → 326L (`useSectorHeatmap` 추출됨)
+  - `SectorDetail.tsx` 393L → 320L (`useSectorDetail` 추출됨)
+  - `AIAnalysisTab.tsx` 426L → ~240L (이전 P3 2차 세션에서 완료)
+- **P4 커스텀 훅**: 7개 도메인별 훅 체계 구축 완료
+  - `hooks/portfolio/usePortfolio.ts`, `hooks/economic/{useEconomicData, useMarketCycle, useSectorHeatmap, useSectorDetail}.ts`, `hooks/stealth/useStealthHome.ts`, `hooks/common/useAnalysisSummary.ts`
+- 로드맵 상태 갱신: P3 2차 ✅, P4 ✅
+
+### 2026-02-24: S2 최소 테스트 인프라 — 스킵 결정
+
+- **결론**: S2 전체 스킵. 현재 시점에서 테스트 인프라 구축 불필요로 판단.
+- **사유**:
+  - Frontend: `tsc -b && vite build`가 이미 TypeScript 컴파일 + import 검증 수행
+  - Backend: smoke test 수준이라면 수동 서버 기동으로 충분
+  - 테스트 인프라 구축 대비 실효성이 낮음
+
 ### 2026-02-24: P3 2차 - AIAnalysisTab 리팩토링
 
 1. **AIAnalysisTab.tsx 383줄 → ~240줄 (-37%)**
