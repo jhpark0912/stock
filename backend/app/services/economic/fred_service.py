@@ -115,9 +115,12 @@ def get_fred_indicator(series_id: str, include_history: bool = False) -> Optiona
     Returns:
         EconomicIndicator 또는 None
     """
-    cache_key = f"fred_{series_id}_{'history' if include_history else 'current'}"
+    # 캐시 확인 — 항상 히스토리 포함 버전을 기준으로 캐싱
+    cache_key = f"fred_{series_id}"
     cached = _get_cache(cache_key)
     if cached:
+        if not include_history and cached.history is not None:
+            return cached.model_copy(update={"history": None})
         return cached
 
     fred = _get_fred_client()
@@ -148,14 +151,12 @@ def get_fred_indicator(series_id: str, include_history: bool = False) -> Optiona
             if year_ago_value != 0:
                 yoy_change = ((current_value - year_ago_value) / year_ago_value) * 100
 
-        # 히스토리 데이터 (최근 30개 데이터 포인트)
-        history_list = None
-        if include_history:
-            history_list = []
-            recent_data = data.tail(30)
-            for date, value in recent_data.items():
-                if value is not None and not (isinstance(value, float) and value != value):  # NaN 체크
-                    history_list.append(HistoryPoint(date=date.strftime("%Y-%m-%d"), value=float(value)))
+        # 히스토리 데이터 — 항상 빌드 (캐시 통합)
+        history_list = []
+        recent_data = data.tail(30)
+        for date, value in recent_data.items():
+            if value is not None and not (isinstance(value, float) and value != value):  # NaN 체크
+                history_list.append(HistoryPoint(date=date.strftime("%Y-%m-%d"), value=float(value)))
 
         # 상태 판단 (FRED는 YoY 변화율 기반)
         status, status_label, status_criteria = get_indicator_status(series_id, current_value, yoy_change)
@@ -177,6 +178,8 @@ def get_fred_indicator(series_id: str, include_history: bool = False) -> Optiona
         )
 
         _set_cache(cache_key, indicator)
+        if not include_history:
+            return indicator.model_copy(update={"history": None})
         return indicator
 
     except Exception as e:

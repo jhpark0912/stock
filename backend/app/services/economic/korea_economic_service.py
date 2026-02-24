@@ -173,11 +173,13 @@ def get_ecos_indicator(series_id: str, include_history: bool = False) -> Optiona
         logger.error(f"알 수 없는 ECOS 시리즈: {series_id}")
         return None
 
-    # 캐시 확인
-    cache_key = f"ecos_{series_id}_{include_history}"
+    # 캐시 확인 — 항상 히스토리 포함 버전을 기준으로 캐싱
+    cache_key = f"ecos_{series_id}"
     cached = _get_cached(cache_key, ECOS_CACHE_TTL)
     if cached:
         logger.debug(f"ECOS 캐시 히트: {series_id}")
+        if not include_history and cached.history is not None:
+            return cached.model_copy(update={"history": None})
         return cached
 
     series = ECOS_SERIES[series_id]
@@ -186,17 +188,12 @@ def get_ecos_indicator(series_id: str, include_history: bool = False) -> Optiona
     item_code2 = series.get("item_code2")
     cycle = series["cycle"]
 
-    # 날짜 범위 설정
+    # 날짜 범위 설정 — 항상 히스토리 포함 범위로 조회 (캐시 통합)
     today = datetime.now()
     if cycle == "M":
-        # 월간 데이터: 히스토리 포함 시 약 3.5년, 미포함 시 15개월
         end_date = today.strftime("%Y%m")
-        if include_history:
-            start_date = (today - timedelta(days=1280)).strftime("%Y%m")  # ~42개월
-        else:
-            start_date = (today - timedelta(days=460)).strftime("%Y%m")  # ~15개월
+        start_date = (today - timedelta(days=1280)).strftime("%Y%m")  # ~42개월
     else:
-        # 일간 데이터: 최근 200일 (6개월 + 여유)
         end_date = today.strftime("%Y%m%d")
         start_date = (today - timedelta(days=200)).strftime("%Y%m%d")
 
@@ -253,22 +250,16 @@ def get_ecos_indicator(series_id: str, include_history: bool = False) -> Optiona
             if yoy_value != 0:
                 yoy_change = ((value - yoy_value) / yoy_value) * 100
 
-        # 히스토리 데이터 구성
-        history = None
-        if include_history:
-            history = []
-            # 일간 데이터: 최근 200개 (약 7~8개월), 월간 데이터: 최근 36개 (3년)
-            max_points = 200 if cycle == "D" else 36
-            for row in rows[-max_points:]:
-                date_str = row.get("TIME", "")
-                if cycle == "M":
-                    # YYYYMM -> YYYY-MM
-                    date_str = f"{date_str[:4]}-{date_str[4:]}"
-                else:
-                    # YYYYMMDD -> YYYY-MM-DD
-                    date_str = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:]}"
-
-                history.append(HistoryPoint(date=date_str, value=float(row.get("DATA_VALUE", 0))))
+        # 히스토리 데이터 구성 — 항상 빌드 (캐시 통합)
+        history = []
+        max_points = 200 if cycle == "D" else 36
+        for row in rows[-max_points:]:
+            date_str = row.get("TIME", "")
+            if cycle == "M":
+                date_str = f"{date_str[:4]}-{date_str[4:]}"
+            else:
+                date_str = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:]}"
+            history.append(HistoryPoint(date=date_str, value=float(row.get("DATA_VALUE", 0))))
 
         # 상태 판단
         status, status_label, status_criteria = get_indicator_status(series_id, value, yoy_change)
@@ -290,6 +281,8 @@ def get_ecos_indicator(series_id: str, include_history: bool = False) -> Optiona
         )
 
         _set_cache(cache_key, indicator)
+        if not include_history:
+            return indicator.model_copy(update={"history": None})
         return indicator
 
     except requests.exceptions.RequestException as e:
@@ -315,11 +308,13 @@ def get_credit_spread(include_history: bool = False) -> Optional[EconomicIndicat
         logger.warning("ECOS_API_KEY가 설정되지 않았습니다.")
         return None
 
-    # 캐시 확인
-    cache_key = f"ecos_credit_spread_{include_history}"
+    # 캐시 확인 — 항상 히스토리 포함 버전을 기준으로 캐싱
+    cache_key = "ecos_credit_spread"
     cached = _get_cached(cache_key, ECOS_CACHE_TTL)
     if cached:
         logger.debug("신용 스프레드 캐시 히트")
+        if not include_history and cached.history is not None:
+            return cached.model_copy(update={"history": None})
         return cached
 
     stat_code = "817Y002"
@@ -392,23 +387,17 @@ def get_credit_spread(include_history: bool = False) -> Optional[EconomicIndicat
                 change = spread - prev_spread
                 change_percent = (change / prev_spread) * 100
 
-        # 히스토리 데이터 구성
-        history = None
-        if include_history:
-            history = []
-            # 날짜별로 스프레드 계산 (일간 데이터: 최근 200개)
-            min_len = min(len(treasury_rows), len(corporate_rows))
-            max_points = 200  # 약 7~8개월
-            for i in range(max(0, min_len - max_points), min_len):
-                date_str = treasury_rows[i].get("TIME", "")
-                # YYYYMMDD -> YYYY-MM-DD
-                date_str = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:]}"
-
-                t_value = float(treasury_rows[i].get("DATA_VALUE", 0))
-                c_value = float(corporate_rows[i].get("DATA_VALUE", 0))
-                spread_value = c_value - t_value
-
-                history.append(HistoryPoint(date=date_str, value=round(spread_value, 3)))
+        # 히스토리 데이터 구성 — 항상 빌드 (캐시 통합)
+        history = []
+        min_len = min(len(treasury_rows), len(corporate_rows))
+        max_points = 200
+        for i in range(max(0, min_len - max_points), min_len):
+            date_str = treasury_rows[i].get("TIME", "")
+            date_str = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:]}"
+            t_value = float(treasury_rows[i].get("DATA_VALUE", 0))
+            c_value = float(corporate_rows[i].get("DATA_VALUE", 0))
+            spread_value = c_value - t_value
+            history.append(HistoryPoint(date=date_str, value=round(spread_value, 3)))
 
         # 상태 판단
         status, status_label, status_criteria = get_indicator_status("KR_CREDIT_SPREAD", spread)
@@ -429,6 +418,8 @@ def get_credit_spread(include_history: bool = False) -> Optional[EconomicIndicat
         )
 
         _set_cache(cache_key, indicator)
+        if not include_history:
+            return indicator.model_copy(update={"history": None})
         return indicator
 
     except requests.exceptions.RequestException as e:
@@ -454,11 +445,13 @@ def get_yahoo_kr_indicator(symbol: str, include_history: bool = False) -> Option
         logger.error(f"알 수 없는 Yahoo 한국 심볼: {symbol}")
         return None
 
-    # 캐시 확인
-    cache_key = f"yahoo_kr_{symbol}_{include_history}"
+    # 캐시 확인 — 항상 히스토리 포함 버전을 기준으로 캐싱
+    cache_key = f"yahoo_kr_{symbol}"
     cached = _get_cached(cache_key, YAHOO_CACHE_TTL)
     if cached:
         logger.debug(f"Yahoo KR 캐시 히트: {symbol}")
+        if not include_history and cached.history is not None:
+            return cached.model_copy(update={"history": None})
         return cached
 
     try:
@@ -481,18 +474,17 @@ def get_yahoo_kr_indicator(symbol: str, include_history: bool = False) -> Option
         if change_percent:
             change_percent = change_percent * 100
 
-        # 히스토리 조회
+        # 히스토리 조회 — 항상 빌드 (캐시 통합)
         history = None
-        if include_history:
-            hist = ticker.history(period="6mo", interval="1d")
-            if not hist.empty:
-                history = []
-                for date, row in hist.iterrows():
-                    if isinstance(date, tuple):
-                        date = date[1]  # MultiIndex의 경우
-                    history.append(
-                        HistoryPoint(date=str(date)[:10], value=float(row.get("close", row.get("adjclose", 0))))
-                    )
+        hist = ticker.history(period="6mo", interval="1d")
+        if not hist.empty:
+            history = []
+            for date, row in hist.iterrows():
+                if isinstance(date, tuple):
+                    date = date[1]  # MultiIndex의 경우
+                history.append(
+                    HistoryPoint(date=str(date)[:10], value=float(row.get("close", row.get("adjclose", 0))))
+                )
 
         meta = YAHOO_KR_SYMBOLS[symbol]
 
@@ -515,6 +507,8 @@ def get_yahoo_kr_indicator(symbol: str, include_history: bool = False) -> Option
         )
 
         _set_cache(cache_key, indicator)
+        if not include_history and indicator.history is not None:
+            return indicator.model_copy(update={"history": None})
         return indicator
 
     except ImportError:

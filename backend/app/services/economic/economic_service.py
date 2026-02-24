@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 
 # 캐시 만료 시간 (초)
 CACHE_TTL_CURRENT = 300  # 5분
-CACHE_TTL_HISTORY = 3600  # 1시간
 
 # 캐시 저장소
 _cache: Dict[str, Dict[str, Any]] = {}
@@ -98,9 +97,12 @@ def get_yahoo_indicator(symbol: str, include_history: bool = False) -> Optional[
         logger.error("yahooquery가 설치되지 않았습니다")
         return None
 
-    cache_key = f"yahoo_{symbol}_{'history' if include_history else 'current'}"
+    # 캐시 확인 — 항상 히스토리 포함 버전을 기준으로 캐싱
+    cache_key = f"yahoo_{symbol}"
     cached = _get_cache(cache_key)
     if cached:
+        if not include_history and cached.history is not None:
+            return cached.model_copy(update={"history": None})
         return cached
 
     metadata = INDICATOR_METADATA.get(symbol, {"name": symbol, "metaphor": "", "description": "", "impact": ""})
@@ -129,29 +131,26 @@ def get_yahoo_indicator(symbol: str, include_history: bool = False) -> Optional[
             change = current_price - previous_close
             change_percent = (change / previous_close) * 100
 
-        # 히스토리 데이터
+        # 히스토리 데이터 — 항상 빌드 (캐시 통합)
         history_list = None
-        if include_history:
-            try:
-                # 6개월 히스토리 조회
-                hist = ticker.history(period="6mo", interval="1d")
-                if hist is not None and not hist.empty:
-                    history_list = []
-                    # MultiIndex 처리
-                    if isinstance(hist.index, tuple) or hasattr(hist.index, "get_level_values"):
-                        hist = hist.reset_index()
+        try:
+            hist = ticker.history(period="6mo", interval="1d")
+            if hist is not None and not hist.empty:
+                history_list = []
+                if isinstance(hist.index, tuple) or hasattr(hist.index, "get_level_values"):
+                    hist = hist.reset_index()
 
-                    for idx, row in hist.iterrows():
-                        date_val = row.get("date") if "date" in row else idx
-                        close_val = row.get("close") or row.get("adjclose")
+                for idx, row in hist.iterrows():
+                    date_val = row.get("date") if "date" in row else idx
+                    close_val = row.get("close") or row.get("adjclose")
 
-                        if close_val is not None:
-                            date_str = (
-                                date_val.strftime("%Y-%m-%d") if hasattr(date_val, "strftime") else str(date_val)[:10]
-                            )
-                            history_list.append(HistoryPoint(date=date_str, value=float(close_val)))
-            except Exception as e:
-                logger.warning(f"히스토리 조회 실패 ({symbol}): {e}")
+                    if close_val is not None:
+                        date_str = (
+                            date_val.strftime("%Y-%m-%d") if hasattr(date_val, "strftime") else str(date_val)[:10]
+                        )
+                        history_list.append(HistoryPoint(date=date_str, value=float(close_val)))
+        except Exception as e:
+            logger.warning(f"히스토리 조회 실패 ({symbol}): {e}")
 
         # 상태 판단
         status, status_label, status_criteria = get_indicator_status(symbol, float(current_price))
@@ -171,10 +170,11 @@ def get_yahoo_indicator(symbol: str, include_history: bool = False) -> Optional[
             status_criteria=status_criteria,
         )
 
-        # 캐시 저장
-        ttl = CACHE_TTL_HISTORY if include_history else CACHE_TTL_CURRENT
-        _set_cache(cache_key, indicator, ttl)
+        # 캐시 저장 — 항상 히스토리 포함 버전, TTL은 current 기준
+        _set_cache(cache_key, indicator, CACHE_TTL_CURRENT)
 
+        if not include_history and indicator.history is not None:
+            return indicator.model_copy(update={"history": None})
         return indicator
 
     except Exception as e:

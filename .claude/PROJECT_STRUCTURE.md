@@ -98,7 +98,7 @@ frontend/src/
 │   ├── economic/         # 경제 지표 (EconomicIndicators, SectorHeatmap, MarketReview/ 등)
 │   ├── layout/           # TopNav, PageHeader, PageContainer, ThemeProvider, AppLayout
 │   ├── pages/            # HomePage (Economic), PortfolioPage
-│   ├── portfolio/        # AIAnalysisTab, AnalysisHistory, CategoryMetrics, HeroSection, MainTabs, Sidebar, StockChart
+│   ├── portfolio/        # AIAnalysisTab, AIAnalysisComponents, AnalysisHistory, CategoryMetrics, HeroSection, MainTabs, Sidebar, StockChart
 │   ├── settings/         # Gemini/KIS 키 관리
 │   ├── stealth/          # 스텔스 모드 위장 (StealthHomePage, StealthPortfolioPage 등)
 │   └── ui/               # shadcn/ui 컴포넌트

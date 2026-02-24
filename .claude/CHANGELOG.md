@@ -5,6 +5,33 @@
 
 ## 최근 변경 이력
 
+### 2026-02-24: P3 2차 - AIAnalysisTab 리팩토링
+
+1. **AIAnalysisTab.tsx 383줄 → ~240줄 (-37%)**
+   - 헤더 4회 반복 → `AIAnalysisHeader` 서브컴포넌트로 통합
+   - 상태 카드 3회 반복 (no_key, error, initial) → `AIAnalysisStatusCard` 서브컴포넌트로 통합
+   - `AnalysisHistory` 모달 4회 → 최하단 1회로 통합
+   - 조건 분기를 `renderContent()` 내부 함수로 정리
+
+2. **AIAnalysisComponents.tsx 신규 생성 (~90줄)**
+   - `AIAnalysisHeader`: 제목 + 이력 버튼 + 선택적 추가 버튼
+   - `AIAnalysisStatusCard`: 아이콘 + 제목 + 설명 + 액션 버튼 (3개 상태 공용)
+
+3. **검증**: TypeScript 컴파일 0 errors, ESLint 통과
+
+### 2026-02-24: ECOS/FRED/Yahoo 캐시 통합 — 중복 API 호출 제거
+
+1. **문제**: 동일 지표를 `include_history=False`와 `True`로 각각 호출 시 캐시 키 불일치로 API 2회 호출
+   - 신용스프레드: `/economic` (False) + `/market-cycle` (True) → 2회
+   - KR_INDPRO, KR_CPI도 동일 패턴
+
+2. **수정**: 캐시를 항상 히스토리 포함 버전으로 저장, `include_history=False` 시 `model_copy(update={"history": None})`로 히스토리만 제거하여 반환
+   - `korea_economic_service.py`: `get_ecos_indicator`, `get_credit_spread`, `get_yahoo_kr_indicator` 3개 함수
+   - `fred_service.py`: `get_fred_indicator` 1개 함수
+   - `economic_service.py`: `get_yahoo_indicator` 1개 함수 + 미사용 `CACHE_TTL_HISTORY` 제거
+
+3. **효과**: 서버 시작 후 첫 요청만 API 호출, 이후 모든 `include_history` 조합이 캐시 히트
+
 ### 2026-02-23: S1-B - components/ 루트 파일 도메인별 재배치
 
 1. **components/ 루트 17개 파일 → 4개 도메인 디렉토리로 재배치**
