@@ -213,7 +213,10 @@ export function EconomicIndicators({ className }: EconomicIndicatorsProps) {
           <div className="text-center text-sm text-muted-foreground">데이터 업데이트 중...</div>
         )}
 
-        <MarketCycleSection country={country} isAdmin={user?.role === 'admin'} />
+        <MarketCycleSection
+          country={country === 'all' ? undefined : country}
+          isAdmin={user?.role === 'admin'}
+        />
 
         {/* 미국 지표 */}
         {country === 'us' && data && (

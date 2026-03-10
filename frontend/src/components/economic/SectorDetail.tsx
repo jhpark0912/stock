@@ -2,7 +2,7 @@ import { Treemap, ResponsiveContainer, Tooltip } from 'recharts';
 import { cn } from '@/lib/utils';
 import { X, Loader2, AlertCircle, Key } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getChangeColor, SECTOR_INFO } from './sectorConstants';
+import { SECTOR_INFO } from './sectorConstants';
 import { TreemapLegend } from './TreemapLegend';
 import { useSectorDetail } from '@/hooks/economic/useSectorDetail';
 
