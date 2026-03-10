@@ -261,41 +261,109 @@ deploy)
   ;;
 
 ssl-init)
-  log_info "SSL 인증서 초기 발급..."
+  echo "=========================================="
+  echo "  🔐 SSL 인증서 설정"
+  echo "=========================================="
+  echo ""
 
-  # .env에서 DOMAIN 읽기
+  # 사전 체크
   if [ ! -f .env ]; then
     log_error ".env 파일이 없습니다."
     exit 1
   fi
-
   source .env
 
   if [ -z "$DOMAIN" ]; then
-    log_error "DOMAIN 환경 변수가 설정되지 않았습니다."
+    log_error ".env에 DOMAIN이 설정되지 않았습니다. (예: DOMAIN=example.com)"
+    exit 1
+  fi
+
+  if [ ! -f "nginx/nginx.ssl.conf.template" ]; then
+    log_error "nginx/nginx.ssl.conf.template 파일이 없습니다."
     exit 1
   fi
 
   log_info "도메인: $DOMAIN"
-  read -p "이메일 주소를 입력하세요: " email
+  echo ""
 
-  if [ -z "$email" ]; then
-    log_error "이메일 주소가 필요합니다."
-    exit 1
+  # 1단계: 스택 기동 확인 (HTTP 모드 nginx로 시작)
+  log_info "1/4 컨테이너 기동 확인 (HTTP 모드)..."
+  docker compose $COMPOSE_FILES up -d
+  echo -n "nginx 준비 대기 중"
+  for i in $(seq 1 15); do
+    if curl -f -s "http://localhost/health" > /dev/null 2>&1; then
+      echo ""
+      log_success "nginx HTTP 응답 확인"
+      break
+    fi
+    echo -n "."
+    sleep 2
+  done
+  echo ""
+
+  # 2단계: 인증서 발급 (기존 인증서가 있으면 스킵)
+  log_info "2/4 SSL 인증서 확인..."
+  CERT_EXISTS=$(docker compose $COMPOSE_FILES run --rm certbot \
+    sh -c "test -f /etc/letsencrypt/live/${DOMAIN}/fullchain.pem && echo yes || echo no" 2>/dev/null || echo "no")
+
+  if [ "$CERT_EXISTS" = "yes" ]; then
+    log_success "기존 인증서 발견 → 인증서 발급 스킵"
+  else
+    read -p "이메일 주소를 입력하세요 (Let's Encrypt 알림용): " email
+    if [ -z "$email" ]; then
+      log_error "이메일 주소가 필요합니다."
+      exit 1
+    fi
+
+    log_info "Certbot 인증서 발급 중..."
+    docker compose $COMPOSE_FILES run --rm certbot certbot certonly \
+      --webroot -w /var/www/certbot \
+      --email "$email" \
+      -d "$DOMAIN" \
+      --agree-tos \
+      --non-interactive
+
+    if [ $? -ne 0 ]; then
+      log_error "인증서 발급 실패!"
+      echo ""
+      log_warning "확인사항:"
+      echo "  1. DNS A레코드가 이 서버 IP(${SERVER_IP:-?})를 가리키는지 확인"
+      echo "  2. GCP 방화벽에서 80, 443 포트가 열려있는지 확인"
+      echo "  3. 도메인: $DOMAIN"
+      exit 1
+    fi
+    log_success "인증서 발급 완료!"
+  fi
+  echo ""
+
+  # 3단계: nginx.conf를 SSL 버전으로 교체
+  log_info "3/4 nginx.conf SSL 버전으로 업데이트..."
+  DOMAIN="$DOMAIN" envsubst '${DOMAIN}' < nginx/nginx.ssl.conf.template > nginx/nginx.conf
+  log_success "nginx/nginx.conf → SSL 모드 적용"
+  echo ""
+
+  # 4단계: nginx 재시작
+  log_info "4/4 nginx 재시작..."
+  docker compose $COMPOSE_FILES restart nginx
+  sleep 3
+
+  if curl -f -s -k "https://localhost/health" > /dev/null 2>&1 || \
+     curl -f -s "https://$DOMAIN/health" > /dev/null 2>&1; then
+    log_success "HTTPS 응답 확인!"
+  else
+    log_warning "nginx 재시작 완료. 브라우저에서 확인하세요."
   fi
 
-  log_info "Certbot 실행 중..."
-  docker compose $COMPOSE_FILES exec certbot certbot certonly \
-    --webroot -w /var/www/certbot \
-    --email "$email" \
-    -d "$DOMAIN" \
-    --agree-tos \
-    --non-interactive
-
-  log_success "SSL 인증서 발급 완료!"
-  log_info "Nginx 재시작..."
-  docker compose $COMPOSE_FILES restart nginx
-  log_success "완료!"
+  echo ""
+  echo "=========================================="
+  log_success "  SSL 설정 완료!"
+  echo "  URL: https://$DOMAIN"
+  echo "  인증서 자동갱신: certbot 컨테이너가 12h마다 체크"
+  echo "=========================================="
+  echo ""
+  log_warning "git pull 후 nginx.conf가 HTTP 모드로 되돌아오면:"
+  echo "         ./deploy.sh ssl-init 재실행 (인증서 발급 자동 스킵)"
+  echo ""
   ;;
 
 *)

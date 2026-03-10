@@ -1,6 +1,7 @@
-# Nginx Reverse Proxy 설정 (HTTP 초기 모드)
-# - SSL 미설정 상태에서 서비스 가능한 HTTP 전용 설정
-# - SSL 활성화: ./deploy.sh ssl-init 실행 → nginx.ssl.conf.template으로 교체됨
+# Nginx Reverse Proxy 설정 (SSL 모드)
+# ⚠️  이 파일은 직접 수정하지 마세요.
+# ssl-init이 이 템플릿으로 nginx/nginx.conf를 생성합니다.
+# 설정 변경 후 → ./deploy.sh ssl-init 재실행
 
 events {
     worker_connections 1024;
@@ -44,16 +45,46 @@ http {
         server frontend:80;
     }
 
-    # HTTP 서버 (SSL 인증서 발급 전 - 직접 서비스)
+    # HTTP 서버 (ACME Challenge + HTTPS 리디렉션)
     server {
         listen 80;
         listen [::]:80;
-        server_name _;
+        server_name ${DOMAIN};
 
-        # Let's Encrypt ACME Challenge (ssl-init에서 사용)
         location /.well-known/acme-challenge/ {
             root /var/www/certbot;
         }
+
+        location / {
+            return 301 https://$host$request_uri;
+        }
+    }
+
+    # HTTPS 서버 (SSL Termination)
+    server {
+        listen 443 ssl;
+        http2 on;
+        listen [::]:443 ssl;
+        server_name ${DOMAIN};
+
+        ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+        ssl_trusted_certificate /etc/letsencrypt/live/${DOMAIN}/chain.pem;
+
+        ssl_protocols TLSv1.2 TLSv1.3;
+        ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384';
+        ssl_prefer_server_ciphers off;
+        ssl_session_cache shared:SSL:10m;
+        ssl_session_timeout 10m;
+        ssl_stapling on;
+        ssl_stapling_verify on;
+
+        # 보안 헤더
+        add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+        add_header X-Frame-Options "SAMEORIGIN" always;
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header X-XSS-Protection "1; mode=block" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
         # 악성 스캐너 차단
         location ~* \.(php|asp|aspx|jsp|cgi|pl|sh|bash)$ {
@@ -62,12 +93,6 @@ http {
         location ~* /(vendor|phpunit|laravel|wp-admin|wp-login|\.git|\.env|\.htaccess)/ {
             return 444;
         }
-
-        # 보안 헤더
-        add_header X-Frame-Options "SAMEORIGIN" always;
-        add_header X-Content-Type-Options "nosniff" always;
-        add_header X-XSS-Protection "1; mode=block" always;
-        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
 
         # Health Check
         location /health {
@@ -84,6 +109,8 @@ http {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Forwarded-Host $host;
+            proxy_set_header X-Forwarded-Port $server_port;
             proxy_connect_timeout 300s;
             proxy_send_timeout 300s;
             proxy_read_timeout 300s;
@@ -100,11 +127,21 @@ http {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header X-Forwarded-Host $host;
+            proxy_set_header X-Forwarded-Port $server_port;
             proxy_cache_bypass $http_upgrade;
+            add_header Cache-Control "no-cache, no-store, must-revalidate";
+            add_header Pragma "no-cache";
+            add_header Expires "0";
             proxy_connect_timeout 60s;
             proxy_send_timeout 60s;
             proxy_read_timeout 60s;
             limit_req zone=general_limit burst=20 nodelay;
+        }
+
+        # Let's Encrypt ACME Challenge (HTTPS에서도 접근)
+        location /.well-known/acme-challenge/ {
+            root /var/www/certbot;
         }
     }
 }
