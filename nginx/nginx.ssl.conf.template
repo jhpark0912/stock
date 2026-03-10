@@ -69,15 +69,16 @@ http {
 
         ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
         ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
-        ssl_trusted_certificate /etc/letsencrypt/live/${DOMAIN}/chain.pem;
+        # ssl_trusted_certificate /etc/letsencrypt/live/${DOMAIN}/chain.pem;
 
         ssl_protocols TLSv1.2 TLSv1.3;
         ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384';
         ssl_prefer_server_ciphers off;
         ssl_session_cache shared:SSL:10m;
         ssl_session_timeout 10m;
-        ssl_stapling on;
-        ssl_stapling_verify on;
+        # ssl_stapling: DuckDNS 등 OCSP URL 미제공 인증서는 비활성화
+        # ssl_stapling on;
+        # ssl_stapling_verify on;
 
         # 보안 헤더
         add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;

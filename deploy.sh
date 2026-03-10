@@ -303,7 +303,7 @@ ssl-init)
 
   # 2단계: 인증서 발급 (기존 인증서가 있으면 스킵)
   log_info "2/4 SSL 인증서 확인..."
-  CERT_EXISTS=$(docker compose $COMPOSE_FILES run --rm certbot \
+  CERT_EXISTS=$(docker compose $COMPOSE_FILES exec -T certbot \
     sh -c "test -f /etc/letsencrypt/live/${DOMAIN}/fullchain.pem && echo yes || echo no" 2>/dev/null || echo "no")
 
   if [ "$CERT_EXISTS" = "yes" ]; then
@@ -316,7 +316,7 @@ ssl-init)
     fi
 
     log_info "Certbot 인증서 발급 중..."
-    docker compose $COMPOSE_FILES run --rm certbot certbot certonly \
+    docker compose $COMPOSE_FILES exec certbot certbot certonly \
       --webroot -w /var/www/certbot \
       --email "$email" \
       -d "$DOMAIN" \
