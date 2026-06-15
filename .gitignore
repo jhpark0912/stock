@@ -467,3 +467,10 @@ nginx/certs/
 # Nginx 백업 파일
 nginx/*.backup
 nginx/*.bak
+
+# 브리핑 출력물 (런타임 생성)
+output/
+
+# Playwright MCP 임시 파일
+.playwright-mcp/
+briefing_preview.png
