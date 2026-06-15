@@ -6,14 +6,18 @@ pydantic>=2.0.0,<3.0.0
 # Stock Data
 yahooquery==2.4.1
 requests==2.31.0
-numpy==2.1.0
+numpy>=1.26.0,<3.0.0
 pandas==2.2.3
+pykrx>=1.0.35
 
 # Translation
 deep-translator==1.11.4
 
 # AI Analysis
 google-generativeai==0.8.3
+
+# Economic Indicators (FRED API)
+fredapi>=0.5.1
 
 # Environment Variables
 python-dotenv==1.0.0
@@ -25,3 +29,9 @@ sqlalchemy>=2.0.35
 python-jose[cryptography]==3.3.0
 passlib==1.7.4
 bcrypt==4.0.1
+
+# Encryption (API Key 암호화)
+cryptography>=41.0.0
+
+# GCP Secret Manager (선택적)
+google-cloud-secret-manager>=2.16.0

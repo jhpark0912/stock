@@ -1,0 +1,63 @@
+#!/bin/sh
+
+# ============================================
+# Commit Message Hook
+# ============================================
+
+# 색상 정의
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# 커밋 메시지 파일
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(cat "$COMMIT_MSG_FILE")
+
+# ============================================
+# 커밋 메시지 형식 검증
+# 형식: :[emoji]: [type] [message]
+# 예시: :sparkles: [feat] 새로운 기능 추가
+# ============================================
+
+# 유효한 타입 목록
+VALID_TYPES="feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert"
+
+# 이모지 패턴 (콜론 형식)
+EMOJI_PATTERN="^:[a-z_]+:"
+
+# 전체 패턴: :[emoji]: [type] message
+FULL_PATTERN="^:[a-z_]+: \[(${VALID_TYPES})\] .+"
+
+# Merge 커밋은 건너뛰기
+if echo "$COMMIT_MSG" | grep -qE "^Merge "; then
+    exit 0
+fi
+
+# 형식 검증
+if ! echo "$COMMIT_MSG" | grep -qE "$FULL_PATTERN"; then
+    echo ""
+    echo "${RED}❌ 커밋 메시지 형식이 올바르지 않습니다!${NC}"
+    echo ""
+    echo "${YELLOW}올바른 형식: ${NC}:[emoji]: [type] 메시지"
+    echo ""
+    echo "${GREEN}예시:${NC}"
+    echo "  :sparkles: [feat] 새로운 로그인 기능 추가"
+    echo "  :bug: [fix] 로그인 오류 수정"
+    echo "  :memo: [docs] README 업데이트"
+    echo "  :art: [style] 코드 포맷팅"
+    echo "  :recycle: [refactor] 인증 모듈 리팩토링"
+    echo "  :white_check_mark: [test] 단위 테스트 추가"
+    echo "  :wrench: [chore] 설정 파일 수정"
+    echo "  :zap: [perf] 쿼리 성능 개선"
+    echo "  :construction_worker: [ci] CI 파이프라인 수정"
+    echo "  :package: [build] 빌드 설정 변경"
+    echo "  :rewind: [revert] 이전 커밋 되돌리기"
+    echo ""
+    echo "${YELLOW}현재 메시지:${NC} $COMMIT_MSG"
+    echo ""
+    exit 1
+fi
+
+echo "${GREEN}✅ 커밋 메시지 형식이 올바릅니다.${NC}"
+exit 0

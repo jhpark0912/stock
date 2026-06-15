@@ -7,8 +7,12 @@ WORKDIR /app
 # package.json과 package-lock.json 복사
 COPY package*.json ./
 
-# 의존성 설치
-RUN npm ci
+# Husky 스킵 (Docker 빌드 시)
+ENV HUSKY=0
+
+# 의존성 설치 (BuildKit 캐시 마운트로 npm 패키지 다운로드 재사용)
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
 # 소스 코드 복사
 COPY . .

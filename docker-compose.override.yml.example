@@ -1,0 +1,29 @@
+# docker-compose.override.yml.example
+# 이 파일을 docker-compose.override.yml로 복사하여 환경에 맞게 수정하세요.
+# docker-compose.override.yml은 .gitignore에 포함되어 git에서 트래킹되지 않습니다.
+#
+# 사용법:
+#   cp docker-compose.override.yml.example docker-compose.override.yml
+#   # 필요한 부분 수정
+#   docker-compose up -d
+
+version: '3.8'
+
+services:
+  backend:
+    # 포트 변경 예시
+    # ports:
+    #   - "9000:8000"
+
+    # 환경변수 오버라이드 예시
+    # environment:
+    #   - LOG_LEVEL=DEBUG
+
+    # 볼륨 추가 예시
+    # volumes:
+    #   - ./custom-data:/app/custom
+
+  frontend:
+    # 포트 변경 예시
+    # ports:
+    #   - "3000:80"

@@ -3,7 +3,7 @@ export interface StockPrice {
   open: number;
   high: number;
   low: number;
-  close: number | null;  // 종가 추가
+  close: number | null; // 종가 추가
   volume: number;
 }
 
@@ -103,4 +103,56 @@ export interface ChartDataPoint {
   bb_upper: number | null;
   bb_middle: number | null;
   bb_lower: number | null;
+}
+
+// ============ AI 분석 요약 저장 관련 타입 ============
+
+export type InvestmentStrategy = 'buy' | 'hold' | 'sell';
+
+export interface AnalysisSummary {
+  summary: string; // 3줄 요약 (줄바꿈으로 구분)
+  strategy: InvestmentStrategy;
+}
+
+export interface SummaryRequest {
+  full_report: string;
+}
+
+export interface SummaryResponse {
+  success: boolean;
+  data: AnalysisSummary | null;
+  error: string | null;
+}
+
+export interface SavedAnalysis {
+  id: number;
+  ticker: string;
+  summary: string;
+  strategy: string;
+  current_price: number | null;
+  user_avg_price: number | null;
+  profit_loss_ratio: number | null;
+  full_report: string | null;
+  created_at: string;
+}
+
+export interface SaveAnalysisRequest {
+  summary: string;
+  strategy: InvestmentStrategy;
+  current_price?: number;
+  user_avg_price?: number;
+  profit_loss_ratio?: number;
+  full_report?: string;
+}
+
+export interface SaveAnalysisResponse {
+  success: boolean;
+  data: SavedAnalysis | null;
+  error: string | null;
+}
+
+export interface AnalysisListResponse {
+  success: boolean;
+  data: SavedAnalysis[] | null;
+  error: string | null;
 }

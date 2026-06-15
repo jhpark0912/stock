@@ -1,13 +1,16 @@
 """
 Pydantic 스키마 (API 요청/응답)
 """
-from pydantic import BaseModel, Field
-from typing import Optional
+
 from datetime import date, datetime
+from typing import Optional
+
+from pydantic import BaseModel, Field
 
 
 class PortfolioBase(BaseModel):
     ticker: str = Field(..., max_length=10)
+    display_name: Optional[str] = Field(None, max_length=50)  # 한글 이름 (예: 애플, 테슬라)
     purchase_price: Optional[float] = Field(None, ge=0)
     quantity: Optional[int] = Field(None, ge=0)
     purchase_date: Optional[date] = None
@@ -19,11 +22,14 @@ class PortfolioBase(BaseModel):
 
 class PortfolioCreate(PortfolioBase):
     """생성 요청"""
+
     pass
 
 
 class PortfolioUpdate(BaseModel):
     """수정 요청 (모든 필드 선택적)"""
+
+    display_name: Optional[str] = Field(None, max_length=50)  # 한글 이름 (예: 애플, 테슬라)
     purchase_price: Optional[float] = Field(None, ge=0)
     quantity: Optional[int] = Field(None, ge=0)
     purchase_date: Optional[date] = None
@@ -35,6 +41,7 @@ class PortfolioUpdate(BaseModel):
 
 class PortfolioResponse(PortfolioBase):
     """응답"""
+
     id: int
     created_at: datetime
     updated_at: datetime
@@ -45,6 +52,7 @@ class PortfolioResponse(PortfolioBase):
 
 class ApiResponse(BaseModel):
     """공통 응답"""
+
     success: bool
     data: Optional[list[PortfolioResponse] | PortfolioResponse] = None
     error: Optional[str] = None

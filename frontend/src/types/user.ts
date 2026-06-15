@@ -9,6 +9,8 @@
 export interface UserTicker {
   /** 매물 심볼 (예: AAPL, TSLA) */
   symbol: string;
+  /** 한글 이름 (예: 애플, 테슬라) */
+  displayName?: string | null;
   /** 매입가 (null이면 미입력) */
   purchasePrice: number | null;
   /** 보유 수량 */
