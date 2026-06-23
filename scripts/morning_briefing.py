@@ -52,14 +52,14 @@ KR_SECTOR_ETFS = {
 # ── 유틸리티 ──────────────────────────────────────────────
 
 def arrow(val):
-    """양수면 ▲, 음수면 ▼"""
+    """양수면 ▲(빨강), 음수면 ▼(파랑), 색상 포함 HTML 반환"""
     if val is None:
         return "N/A"
     if val > 0:
-        return f"▲ {abs(val):.2f}%"
+        return f'<span style="color:#dc2626;font-weight:600;">▲ {abs(val):.2f}%</span>'
     if val < 0:
-        return f"▼ {abs(val):.2f}%"
-    return "0.00%"
+        return f'<span style="color:#2563eb;font-weight:600;">▼ {abs(val):.2f}%</span>'
+    return '<span style="color:#6b7280;">0.00%</span>'
 
 
 def safe_pct(raw):
