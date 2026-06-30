@@ -16,9 +16,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 import requests
 from dotenv import load_dotenv
-from yahooquery import Ticker
 
 # ── 환경 설정 ──────────────────────────────────────────────
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -51,6 +52,47 @@ KR_SECTOR_ETFS = {
 
 # ── 유틸리티 ──────────────────────────────────────────────
 
+_YF_HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+
+
+def _fetch_yf_symbol(symbol: str) -> dict | None:
+    """Yahoo Finance v8/chart API로 단일 심볼 조회, meta dict 반환"""
+    try:
+        r = requests.get(
+            f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}",
+            params={"range": "1d", "interval": "1d"},
+            headers=_YF_HEADERS,
+            timeout=10,
+        )
+        if r.status_code != 200:
+            log.warning(f"Yahoo Finance {symbol}: HTTP {r.status_code}")
+            return None
+        results = r.json().get("chart", {}).get("result")
+        if not results:
+            return None
+        meta = results[0]["meta"]
+        price = meta.get("regularMarketPrice", 0)
+        prev = meta.get("chartPreviousClose", 0)
+        pct = ((price - prev) / prev * 100) if prev else 0
+        return {"price": price, "change_pct": pct}
+    except Exception as e:
+        log.warning(f"Yahoo Finance {symbol} 조회 실패: {e}")
+        return None
+
+
+def fetch_yf_prices(symbols: list[str]) -> dict[str, dict]:
+    """여러 심볼을 병렬로 조회하여 {symbol: {price, change_pct}} 반환"""
+    result = {}
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        futures = {pool.submit(_fetch_yf_symbol, sym): sym for sym in symbols}
+        for future in as_completed(futures):
+            sym = futures[future]
+            data = future.result()
+            if data:
+                result[sym] = data
+    return result
+
+
 def arrow(val):
     """양수면 ▲(빨강), 음수면 ▼(파랑), 색상 포함 HTML 반환"""
     if val is None:
@@ -62,13 +104,6 @@ def arrow(val):
     return '<span style="color:#6b7280;">0.00%</span>'
 
 
-def safe_pct(raw):
-    """yahooquery의 등락률(0.01=1%)을 %로 변환"""
-    if isinstance(raw, (int, float)):
-        return raw * 100
-    return None
-
-
 # ── A. 미국 시장 ─────────────────────────────────────────
 
 def fetch_us_market():
@@ -78,18 +113,17 @@ def fetch_us_market():
         "^SOX": "필라델피아 반도체", "^VIX": "VIX",
         "ES=F": "S&P500 선물", "NQ=F": "나스닥 선물",
     }
-    t = Ticker(list(tickers_map.keys()))
-    prices = t.price
+    prices = fetch_yf_prices(list(tickers_map.keys()))
     rows = []
     for sym, name in tickers_map.items():
-        p = prices.get(sym, {})
-        if isinstance(p, str):
+        p = prices.get(sym)
+        if not p:
             rows.append({"name": name, "price": "N/A", "change": "N/A"})
             continue
         rows.append({
             "name": name,
-            "price": f"{p.get('regularMarketPrice', 0):,.2f}",
-            "change": arrow(safe_pct(p.get("regularMarketChangePercent"))),
+            "price": f"{p['price']:,.2f}",
+            "change": arrow(p["change_pct"]),
         })
     return rows
 
@@ -97,18 +131,17 @@ def fetch_us_market():
 def fetch_us_sectors():
     """미국 GICS 11개 섹터 ETF"""
     symbols = list(US_SECTOR_ETFS.keys())
-    t = Ticker(symbols)
-    prices = t.price
+    prices = fetch_yf_prices(symbols)
     rows = []
     for sym in symbols:
-        p = prices.get(sym, {})
-        if isinstance(p, str):
+        p = prices.get(sym)
+        if not p:
             continue
         rows.append({
             "symbol": sym,
             "name": US_SECTOR_ETFS[sym],
-            "price": f"${p.get('regularMarketPrice', 0):,.2f}",
-            "change": arrow(safe_pct(p.get("regularMarketChangePercent"))),
+            "price": f"${p['price']:,.2f}",
+            "change": arrow(p["change_pct"]),
         })
     return rows
 
@@ -133,15 +166,14 @@ def fetch_us_rates():
         except Exception as e:
             log.warning(f"FRED 조회 실패: {e}")
 
-    # yahooquery 실시간 보완 (전일 대비 변화)
+    # Yahoo Finance 실시간 보완 (전일 대비 변화)
     rate_changes = {}
     try:
-        t = Ticker(["^TNX", "^FVX"])
-        prices = t.price
+        yf_rates = fetch_yf_prices(["^TNX", "^FVX"])
         for sym, label in [("^TNX", "10y_chg"), ("^FVX", "5y_chg")]:
-            p = prices.get(sym, {})
-            if not isinstance(p, str):
-                rate_changes[label] = round(p.get("regularMarketChange", 0) * 100, 1)  # bp
+            p = yf_rates.get(sym)
+            if p:
+                rate_changes[label] = round(p["change_pct"], 1)  # bp 근사
     except Exception as e:
         log.warning(f"금리 실시간 조회 실패: {e}")
 
@@ -166,18 +198,17 @@ def fetch_fomc_info():
 
 def fetch_kr_market():
     """코스피·코스닥 지수"""
-    t = Ticker(["^KS11", "^KQ11"])
-    prices = t.price
+    prices = fetch_yf_prices(["^KS11", "^KQ11"])
     rows = []
     for sym, name in [("^KS11", "코스피"), ("^KQ11", "코스닥")]:
-        p = prices.get(sym, {})
-        if isinstance(p, str):
+        p = prices.get(sym)
+        if not p:
             rows.append({"name": name, "price": "N/A", "change": "N/A"})
             continue
         rows.append({
             "name": name,
-            "price": f"{p.get('regularMarketPrice', 0):,.2f}",
-            "change": arrow(safe_pct(p.get("regularMarketChangePercent"))),
+            "price": f"{p['price']:,.2f}",
+            "change": arrow(p["change_pct"]),
         })
     return rows
 
@@ -185,18 +216,17 @@ def fetch_kr_market():
 def fetch_kr_sectors():
     """한국 KODEX 10개 섹터 ETF"""
     symbols = list(KR_SECTOR_ETFS.keys())
-    t = Ticker(symbols)
-    prices = t.price
+    prices = fetch_yf_prices(symbols)
     rows = []
     for sym in symbols:
-        p = prices.get(sym, {})
-        if isinstance(p, str):
+        p = prices.get(sym)
+        if not p:
             continue
         rows.append({
             "symbol": sym.replace(".KS", ""),
             "name": KR_SECTOR_ETFS[sym],
-            "price": f"₩{p.get('regularMarketPrice', 0):,.0f}",
-            "change": arrow(safe_pct(p.get("regularMarketChangePercent"))),
+            "price": f"₩{p['price']:,.0f}",
+            "change": arrow(p["change_pct"]),
         })
     return rows
 
@@ -230,20 +260,19 @@ def fetch_fx_commodities():
         "CL=F": ("WTI 유가", "$"), "GC=F": ("금", "$"),
         "BTC-USD": ("비트코인", "$"),
     }
-    t = Ticker(list(items.keys()))
-    prices = t.price
+    prices = fetch_yf_prices(list(items.keys()))
     rows = []
     for sym, (name, prefix) in items.items():
-        p = prices.get(sym, {})
-        if isinstance(p, str):
+        p = prices.get(sym)
+        if not p:
             rows.append({"name": name, "price": "N/A", "change": "N/A"})
             continue
-        val = p.get("regularMarketPrice", 0)
+        val = p["price"]
         fmt = f"{prefix}{val:,.2f}" if val < 100000 else f"{prefix}{val:,.0f}"
         rows.append({
             "name": name,
             "price": fmt,
-            "change": arrow(safe_pct(p.get("regularMarketChangePercent"))),
+            "change": arrow(p["change_pct"]),
         })
     return rows
 
